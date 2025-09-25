@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}
+Biblioteca de Cultivos - PlantAndes
+{% endblock title %}
+
+{% block content %}
+<section class="library-section">
+    <div class="container">
+        <h1 class="section-title">Biblioteca de Cultivos y Enfermedades</h1>
+        <p class="section-description" style="text-align: center; max-width: 800px; margin: -2rem auto 3rem;">
+            Explore nuestra base de datos para aprender a identificar enfermedades comunes en los cultivos andinos y descubra posibles tratamientos y suplementos.
+        </p>
+
+        <div class="library-grid">
+            {% for index in range(0, disease | length) %}
+            <div class="library-card">
+                <img src="{{ supplement_image[index] }}" alt="{{ disease[index] }}" class="library-card-img">
+                <div class="library-card-body">
+                    <h3 class="library-card-title">{{ disease[index] | replace("__", " ") | replace("_", " ") }}</h3>
+                    {% if index==3 or index==5 or index==7 or index==11 or index==15 or index==18 or index==20 or index==23 or index==24 or index==25 or index==28 or index==38 %}
+                        <span class="library-card-category category-healthy">Saludable</span>
+                    {% else %}
+                        <span class="library-card-category category-disease">Enfermedad</span>
+                    {% endif %}
+                    
+                    <div class="library-card-footer">
+                        <div class="plant-icon">
+                            {% if 'potato' in disease[index] %} <i class="fas fa-seedling" title="Papa"></i>
+                            {% elif 'tomato' in disease[index] %} <i class="fas fa-lemon" title="Tomate"></i>
+                            {% elif 'corn' in disease[index] %} <i class="fas fa-fan" title="Maíz"></i>
+                            {% else %} <i class="fas fa-leaf" title="Planta"></i>
+                            {% endif %}
+                        </div>
+                        <button class="info-button" aria-expanded="false">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="library-card-details" hidden>
+                    <h4>Descripción</h4>
+                    <p>Aquí iría la descripción detallada de la enfermedad '{{ disease[index] }}'.</p>
+                    <h4>Posible Tratamiento</h4>
+                    <p>Recomendación: <strong>{{ supplement_name[index] }}</strong>. Aquí irían los pasos para el tratamiento.</p>
+                    <a href="{{ buy[index] }}" target="_blank" class="analyze-button" style="width: 100%; justify-content: center;">Comprar Producto</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock content %}

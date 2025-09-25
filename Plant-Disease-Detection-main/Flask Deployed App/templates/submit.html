@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Resultados del Análisis
+{% endblock pagetitle %}
+
+{% block body %}
+<section class="results-section">
+    <div class="container">
+        <h1 class="section-title">Resultados del Análisis</h1>
+        <div class="results-container">
+            <!-- Columna de la imagen del usuario -->
+            <div class="user-image-container">
+                <h2 class="results-subtitle">Imagen Analizada</h2>
+                <img src="{{ url_for('static', filename=user_image.split('static/')[1]) }}" alt="Imagen subida por el usuario" class="user-image">
+            </div>
+
+            <!-- Columna de las predicciones -->
+            <div class="predictions-container">
+                <h2 class="results-subtitle">Top 3 Predicciones</h2>
+                {% for result in results %}
+                <div class="prediction-card">
+                    <div class="prediction-header" onclick="toggleDetails(this)">
+                        <div class="prediction-title">
+                            <span class="prediction-rank">#{{ loop.index }}</span>
+                            {{ result.disease_name }}
+                        </div>
+                        <div class="prediction-prob">
+                            <span>{{ result.probability }}%</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    <div class="prediction-details" {% if not loop.first %}style="display: none;"{% endif %}>
+                        <div class="details-section">
+                            <h4><i class="fas fa-info-circle"></i> Descripción</h4>
+                            <p>{{ result.description }}</p>
+                        </div>
+                        <div class="details-section">
+                            <h4><i class="fas fa-shield-alt"></i> Recomendaciones</h4>
+                            <p>{{ result.prevent }}</p>
+                        </div>
+                        <div class="details-section supplement-section">
+                            <div class="supplement-info">
+                                <h4><i class="fas fa-prescription-bottle-alt"></i> Tratamiento Sugerido</h4>
+                                <p>{{ result.supplement_name }}</p>
+                                <a href="{{ result.buy_link }}" target="_blank" class="analyze-button">
+                                    <i class="fas fa-shopping-cart"></i> Comprar Producto
+                                </a>
+                            </div>
+                            <div class="supplement-image">
+                                <img src="{{ result.supplement_image }}" alt="{{ result.supplement_name }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function toggleDetails(headerElement) {
+    const details = headerElement.nextElementSibling;
+    const icon = headerElement.querySelector('.fa-chevron-down');
+    
+    if (details.style.display === "none") {
+        details.style.display = "block";
+        icon.style.transform = "rotate(180deg)";
+    } else {
+        details.style.display = "none";
+        icon.style.transform = "rotate(0deg)";
+    }
+}
+</script>
+{% endblock body %}

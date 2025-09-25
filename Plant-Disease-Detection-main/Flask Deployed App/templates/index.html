@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}Detector de Enfermedades - PlantAndes{% endblock %}
+
+{% block content %}
+        <section class="detector-section">
+            <div class="container">
+                <h1 class="section-title">Detector de Enfermedades en Plantas Andinas</h1>
+                <p class="section-description">
+                    Sube una imagen de tu cultivo y nuestro sistema de inteligencia artificial la analizará para detectar posibles enfermedades.
+                </p>
+                
+                <div class="detector-card">
+                    <form action="{{ url_for('ai_engine_page') }}" method="POST" enctype="multipart/form-data">
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <p class="upload-text">Arrastra y suelta una imagen aquí o haz clic para seleccionar</p>
+                            <input type="file" id="image-input" name="image" accept="image/*" required>
+                            <label for="image-input" class="upload-button">Seleccionar Imagen</label>
+                            <p class="file-name" id="file-name">Ningún archivo seleccionado</p>
+                        </div>
+                        
+                        <button type="submit" class="analyze-button">
+                            <i class="fas fa-search"></i> Analizar Imagen
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="instructions">
+                    <h2 class="instructions-title">Instrucciones</h2>
+                    <ul class="instructions-list">
+                        <li><i class="fas fa-check-circle"></i> Asegúrate de que la imagen sea clara y esté bien iluminada</li>
+                        <li><i class="fas fa-check-circle"></i> Enfoca la cámara directamente a la parte afectada de la planta</li>
+                        <li><i class="fas fa-check-circle"></i> Evita sombras y reflejos que puedan interferir con el análisis</li>
+                        <li><i class="fas fa-check-circle"></i> El sistema puede detectar enfermedades en papas, maíz, quinua, tomates, manzanas y arándanos</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        {% if results %}
+        <section class="results-section" id="results">
+            <div class="container">
+                <h1 class="section-title">Resultados del Análisis</h1>
+                <div class="results-container">
+                    <!-- Columna de la imagen del usuario -->
+                    <div class="user-image-container">
+                        <h2 class="results-subtitle">Imagen Analizada</h2>
+                        <img src="{{ url_for('static', filename=user_image) }}" alt="Imagen subida por el usuario" class="user-image">
+                    </div>
+        
+                    <!-- Columna de las predicciones -->
+                    <div class="predictions-container">
+                        <h2 class="results-subtitle">Top 3 Predicciones</h2>
+                        {% for result in results %}
+                        <div class="prediction-card">
+                            <div class="prediction-header" onclick="toggleDetails(this)">
+                                <div class="prediction-title">
+                                    <span class="prediction-rank">#{{ loop.index }}</span>
+                                    {{ result.disease_name }}
+                                </div>
+                                <div class="prediction-prob">
+                                    <span class="
+                                        {% if result.probability > 70 %}prob-high
+                                        {% elif result.probability > 40 %}prob-medium
+                                        {% else %}prob-low
+                                        {% endif %}
+                                    ">{{ result.probability }}%
+                                    </span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="prediction-details" {% if not loop.first %}style="display: none;"{% endif %}>
+                                <div class="details-section">
+                                    <h4><i class="fas fa-info-circle"></i> Descripción</h4>
+                                    <p>{{ result.description }}</p>
+                                </div>
+                                <div class="details-section">
+                                    <h4><i class="fas fa-shield-alt"></i> Recomendaciones</h4>
+                                    <p>{{ result.prevent }}</p>
+                                </div>
+                                <div class="details-section supplement-section">
+                                    <div class="supplement-info">
+                                        <h4><i class="fas fa-prescription-bottle-alt"></i> Tratamiento Sugerido</h4>
+                                        <p>{{ result.supplement_name }}</p>
+                                        <a href="{{ result.buy_link }}" target="_blank" class="analyze-button">
+                                            <i class="fas fa-shopping-cart"></i> Comprar Producto
+                                        </a>
+                                    </div>
+                                    <div class="supplement-image">
+                                        <img src="{{ result.supplement_image }}" alt="{{ result.supplement_name }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleDetails(headerElement) {
+    const details = headerElement.nextElementSibling;
+    const icon = headerElement.querySelector('.fa-chevron-down');
+    
+    details.style.display = (details.style.display === "none" || details.style.display === "") ? "block" : "none";
+    icon.style.transform = details.style.display === "block" ? "rotate(180deg)" : "rotate(0deg)";
+}
+</script>
+
+<!-- Script condicional separado -->
+{% if results %}
+<script>
+window.addEventListener('load', function() {
+    const resultsElement = document.getElementById('results');
+    if (resultsElement) {
+        resultsElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Sobre Nosotros - PlantAndes{% endblock %}
+
+{% block content %}
+<section class="about-section" id="about-intro">
+    <div class="container">
+        <h1 class="section-title">Sobre PlantAndes</h1>
+        <div class="about-intro-content">
+            <img src="https://media.istockphoto.com/id/1469759726/es/foto/robot-y-mano-humana-con-luz-de-flash-con-iconos-de-interfaz-modernos-los-agricultores-analizan.jpg?s=612x612&w=0&k=20&c=zyF55a8nZkRXI3OdjXLlSod92cLs9zuyWMEt_kfBTgY=" alt="Equipo de PlantAndes" class="about-intro-image">
+            <div class="about-intro-text">
+                <h2>Uniendo Tecnología y Tradición Agrícola</h2>
+                <p>Somos un equipo apasionado por la tecnología y la agricultura, comprometido con el desarrollo de soluciones que generen un impacto positivo en las comunidades rurales andinas. Combinamos experiencia en inteligencia artificial y agronomía para crear PlantAndes, una herramienta diseñada para el agricultor moderno.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="value-prop-section">
+    <div class="container">
+        <h2 class="section-title">Nuestra Propuesta de Valor</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-card-icon"><i class="fas fa-crosshairs"></i></div>
+                <h3 class="feature-card-title">Alta Precisión</h3>
+                <p>Nuestro modelo de IA, entrenado con miles de imágenes, alcanza una precisión superior al 90% para un diagnóstico confiable.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-card-icon"><i class="fas fa-mobile-alt"></i></div>
+                <h3 class="feature-card-title">Accesibilidad</h3>
+                <p>Diseñado para funcionar en cualquier dispositivo con acceso a internet, sin necesidad de instalar aplicaciones complejas.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-card-icon"><i class="fas fa-users"></i></div>
+                <h3 class="feature-card-title">Enfoque Local</h3>
+                <p>Especializados en cultivos andinos, entendemos los desafíos específicos de la región y ofrecemos soluciones adaptadas.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="tech-details-section">
+    <div class="container">
+        <h2 class="section-title">El Poder de Nuestro Modelo</h2>
+
+        <!-- Bloque 1: Precisión -->
+        <div class="mission-content">
+            <div class="mission-text">
+                <h3>Precisión del 90%</h3>
+                <p>La precisión es la métrica clave que define la fiabilidad de nuestro modelo. Un 90% significa que 9 de cada 10 diagnósticos que proveemos son correctos, dándole al agricultor una alta confianza para tomar acciones y proteger su cosecha.</p>
+            </div>
+            <div class="mission-image">
+                <img src="..\static\img\recall.png" alt="Gráfica de Precisión del Modelo">
+            </div>
+        </div>
+
+        <!-- Bloque 2: Curva de Pérdida -->
+        <div class="mission-content mission-content--reversed">
+            <div class="mission-image">
+                <img src="..\static\img\plot_the_loss.png" alt="Curva de Pérdida del Entrenamiento">
+            </div>
+            <div class="mission-text">
+                <h3>Curva de Pérdida (Loss Curve)</h3>
+                <p>Esta gráfica demuestra que nuestro modelo ha aprendido correctamente. La línea azul (pérdida de entrenamiento) y la naranja (pérdida de validación) descienden y convergen, indicando que el modelo no solo memoriza, sino que generaliza bien para identificar enfermedades en nuevas imágenes.</p>
+            </div>
+        </div>
+
+        <!-- Bloque 1: ROC -->
+        <div class="mission-content">
+            <div class="mission-text">
+                <h3>Curva ROC</h3>
+                <p>Esta gráfica valida la excelente capacidad de diagnóstico de nuestro modelo. Con un AUC micro de 0.997, demuestra que el modelo distingue con alta precisión entre enfermedades específicas como el tizón del tomate y la sarna del manzano, minimizando tanto falsos positivos como falsos negativos en la clasificación.</p>
+            </div>
+            <div class="mission-image">
+                <img src="..\static\img\curva_roc.png" alt="Gráfica de Precisión del Modelo">
+            </div>
+        </div>
+
+        <!-- Bloque 3: Matriz de Confusión -->
+        <div class="mission-content mission-content--reversed">
+            <div class="mission-text">
+                <h3>Matriz de Confusión</h3>
+                <p>Esta matriz es un mapa detallado del rendimiento del modelo. La diagonal principal, fuertemente marcada, muestra un alto número de aciertos para cada tipo de enfermedad. Los valores fuera de la diagonal son mínimos, lo que significa que el modelo rara vez confunde una enfermedad con otra.</p>
+            </div>
+            <div class="mission-image">
+                <img src="..\static\img\plot_confusion.png" alt="Matriz de Confusión del Modelo">
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
+

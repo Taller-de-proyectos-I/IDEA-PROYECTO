@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Detección de Enfermedades en Plantas Andinas{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-plantix-style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.txt') }}" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="logo-text">Plant<span>Andes</span></div>
+            </div>
+            <button class="nav-toggle" id="nav-toggle" aria-label="toggle navigation">
+                <span class="hamburger"></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="{{ url_for('home_page') }}">Principal</a></li>
+                <li><a href="{{ url_for('market') }}">Biblioteca</a></li>
+                <li><a href="{{ url_for('ai_engine_page') }}">Entrenar</a></li>
+                <li><a href="{{ url_for('about_page') }}">Acerca de</a></li>
+                <li><a href="{{ url_for('contact') }}">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">Plant<span>Andes</span></div>
+            <p>Detección avanzada de enfermedades en cultivos andinos</p>
+            <ul class="footer-links">
+                <li><a href="{{ url_for('home_page') }}">Principal</a></li>
+                <li><a href="{{ url_for('market') }}">Biblioteca</a></li>
+                <li><a href="{{ url_for('ai_engine_page') }}">Entrenar</a></li>
+                <li><a href="{{ url_for('about_page') }}">Acerca de</a></li>
+                <li><a href="{{ url_for('contact') }}">Contacto</a></li>
+            </ul>
+            <div class="copyright">
+                &copy; 2025 PlantAndes - Todos los derechos reservados
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Script para menú hamburguesa
+        const navToggle = document.getElementById('nav-toggle');
+        const navLinks = document.getElementById('nav-links');
+
+        navToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Función para manejar la carga de archivos
+        function handleFileSelect(evt) {
+            const file = evt.target.files[0];
+            if (file) {
+                const fileName = file.name;
+                document.getElementById('file-name').textContent = fileName;
+            }
+        }
+
+        // Asignar evento al input de archivo
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('image-input');
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+        });
+
+        // Script para tarjetas de la biblioteca
+        document.addEventListener('DOMContentLoaded', function() {
+            const infoButtons = document.querySelectorAll('.info-button');
+            infoButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.library-card');
+                    const details = card.querySelector('.library-card-details');
+                    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+                    details.hidden = isExpanded;
+                    button.setAttribute('aria-expanded', !isExpanded);
+                });
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

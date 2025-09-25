@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}PlantAndes - Detección de Enfermedades en Cultivos Andinos{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="hero-title">Diagnóstico por IA para Cultivos Andinos</h1>
+        <p class="hero-description">
+            Identifique enfermedades en sus plantas con solo una foto. Nuestra tecnología le brinda un diagnóstico rápido y preciso para proteger su cosecha.
+        </p>
+        <a href="{{ url_for('ai_engine_page') }}" class="hero-button">
+            Motor IA
+        </a>
+    </div>
+</section>
+
+<!-- Mision/Vision Section -->
+<section class="mission-section">
+    <div class="container">
+        <div class="mission-content">
+            <div class="mission-text">
+                <h2 class="section-title" style="text-align: left; margin-bottom: 1rem;">Nuestra Misión</h2>
+                <p>Empoderar a los agricultores de la región andina con herramientas tecnológicas accesibles y efectivas para proteger sus cultivos, mejorar la productividad y asegurar la sostenibilidad agrícola.</p>
+            </div>
+            <div class="mission-image">
+                <img src="..\static\img\mision1.jpg" alt="Agricultor usando tecnología">
+            </div>
+        </div>
+
+        <div class="mission-content mission-content--reversed">
+            <div class="mission-image">
+                <img src="..\static\img\vision2.jpg" alt="Campo de cultivo andino">
+            </div>
+            <div class="mission-text">
+                <h2 class="section-title" style="text-align: left; margin-bottom: 1rem;">Nuestra Visión</h2>
+                <p>Ser la plataforma líder en agrotecnología en la región andina, creando un ecosistema donde la inteligencia artificial y el conocimiento ancestral se unen para resolver los desafíos del campo.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Detected Plants Gallery Section -->
+<section id="gallery" class="gallery-section">
+    <div class="container">
+        <h2 class="section-title">Ejemplos de Detección</h2>
+        <div class="gallery-grid">
+            <!-- Card 1: Papa -->
+            <div class="gallery-card">
+                <img src="..\static\img\papa_tizon.png" alt="Papa con Tizón Tardío" class="gallery-card-img">
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Papa con Tizón Tardío</h3>
+                    <p class="gallery-card-text">Nuestro sistema identifica las manchas características del Tizón Tardío en las hojas de papa.</p>
+                </div>
+            </div>
+            <!-- Card 2: Maíz -->
+            <div class="gallery-card">
+                <img src="..\static\img\maiz_sano.jpg" alt="Cultivo de Maíz Sano" class="gallery-card-img">
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Maíz Sano</h3>
+                    <p class="gallery-card-text">Verificamos la salud de tus cultivos, confirmando la ausencia de enfermedades comunes.</p>
+                </div>
+            </div>
+            <!-- Card 3: Quinua -->
+            <div class="gallery-card">
+                <img src="..\static\img\tomate_mancha.jpg" alt="Tomate con Mancha Foliar" class="gallery-card-img">
+                <div class="gallery-card-body">
+                    <h3 class="gallery-card-title">Tomate con Mancha Foliar</h3>
+                    <p class="gallery-card-text">Detectamos la Mancha Foliar Bacteriana en tomates para un tratamiento temprano.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials-section">
+    <div class="container">
+        <h2 class="section-title">Lo que dicen nuestros agricultores</h2>
+        <!-- El contenido de los testimonios que ya tenías iría aquí -->
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <!-- El contenido de las estadísticas que ya tenías iría aquí -->
+</section>
+{% endblock %}
