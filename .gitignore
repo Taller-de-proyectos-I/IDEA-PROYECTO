@@ -1,1 +1,19 @@
-~
+# Ignorar entorno virtual
+venv/
+
+# Ignorar cachés de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar notebooks temporales
+.ipynb_checkpoints/
+
+# Ignorar datasets grandes
+data/
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
+
