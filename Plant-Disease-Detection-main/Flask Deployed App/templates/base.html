@@ -78,20 +78,68 @@
             }
         });
 
-        // Script para tarjetas de la biblioteca
+        // --- Lógica Unificada y Robusta para Tarjetas Expandibles ---
         document.addEventListener('DOMContentLoaded', function() {
-            const infoButtons = document.querySelectorAll('.info-button');
-            infoButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const card = button.closest('.library-card');
-                    const details = card.querySelector('.library-card-details');
-                    const isExpanded = button.getAttribute('aria-expanded') === 'true';
-
-                    details.hidden = isExpanded;
-                    button.setAttribute('aria-expanded', !isExpanded);
+            // Para los resultados del análisis (index.html)
+            const predictionHeaders = document.querySelectorAll('.prediction-header');
+            predictionHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const details = this.nextElementSibling;
+                    const icon = this.querySelector('.fa-chevron-down');
+                    const isHidden = details.style.display === "none" || details.style.display === "";
+                    
+                    details.style.display = isHidden ? "block" : "none";
+                    icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
                 });
             });
+
+            // Para la biblioteca (market.html)
+            const infoButtons = document.querySelectorAll('.library-card .info-button');
+            const closeButtons = document.querySelectorAll('.library-card .card-close-button');
+
+            infoButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const currentCard = this.closest('.library-card');
+                    
+                    // Cerrar todas las demás tarjetas abiertas
+                    document.querySelectorAll('.library-card.is-expanded').forEach(card => {
+                        if (card !== currentCard) {
+                            card.classList.remove('is-expanded');
+                        }
+                    });
+
+                    // Abrir la tarjeta actual
+                    if (currentCard && !currentCard.classList.contains('is-expanded')) {
+                        currentCard.classList.add('is-expanded');
+                    }
+                });
+            });
+
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.closest('.library-card').classList.remove('is-expanded');
+                });
+            });
+
+            // --- Lógica para animaciones al hacer scroll ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, {
+                threshold: 0.1 // El elemento se considera visible cuando el 10% está en pantalla
+            });
+
+            // Observar todos los elementos que queremos animar
+            const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
+            elementsToAnimate.forEach(el => {
+                observer.observe(el);
+            });
+
         });
+                
     </script>
     
     {% block scripts %}{% endblock %}

@@ -12,12 +12,19 @@ Biblioteca de Cultivos - PlantAndes
         </p>
 
         <div class="library-grid">
-            {% for index in range(0, disease | length) %}
-            <div class="library-card">
-                <img src="{{ supplement_image[index] }}" alt="{{ disease[index] }}" class="library-card-img">
+            {% for index in range(diseases|length) %}
+            <div class="library-card" id="card-{{ loop.index }}">
+                <button class="card-close-button">
+                    <i class="fas fa-times"></i>
+                </button>
+                {% if diseases[index].image_url %}
+                    <img src="{{ diseases[index].image_url }}" alt="{{ diseases[index].disease_name_es }}" class="library-card-img">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x300.png?text=Imagen+no+disponible" alt="Imagen no disponible" class="library-card-img">
+                {% endif %}
                 <div class="library-card-body">
-                    <h3 class="library-card-title">{{ disease[index] | replace("__", " ") | replace("_", " ") }}</h3>
-                    {% if index==3 or index==5 or index==7 or index==11 or index==15 or index==18 or index==20 or index==23 or index==24 or index==25 or index==28 or index==38 %}
+                    <h3 class="library-card-title">{{ diseases[index].disease_name_es }}</h3>
+                    {% if 'healthy' in diseases[index].disease_name|lower %}
                         <span class="library-card-category category-healthy">Saludable</span>
                     {% else %}
                         <span class="library-card-category category-disease">Enfermedad</span>
@@ -25,9 +32,9 @@ Biblioteca de Cultivos - PlantAndes
                     
                     <div class="library-card-footer">
                         <div class="plant-icon">
-                            {% if 'potato' in disease[index] %} <i class="fas fa-seedling" title="Papa"></i>
-                            {% elif 'tomato' in disease[index] %} <i class="fas fa-lemon" title="Tomate"></i>
-                            {% elif 'corn' in disease[index] %} <i class="fas fa-fan" title="Maíz"></i>
+                            {% if 'papa' in diseases[index].disease_name_es|lower %} <i class="fas fa-seedling" title="Papa"></i>
+                            {% elif 'tomate' in diseases[index].disease_name_es|lower %} <i class="fas fa-lemon" title="Tomate"></i>
+                            {% elif 'maíz' in diseases[index].disease_name_es|lower %} <i class="fas fa-fan" title="Maíz"></i>
                             {% else %} <i class="fas fa-leaf" title="Planta"></i>
                             {% endif %}
                         </div>
@@ -36,12 +43,14 @@ Biblioteca de Cultivos - PlantAndes
                         </button>
                     </div>
                 </div>
-                <div class="library-card-details" hidden>
-                    <h4>Descripción</h4>
-                    <p>Aquí iría la descripción detallada de la enfermedad '{{ disease[index] }}'.</p>
-                    <h4>Posible Tratamiento</h4>
-                    <p>Recomendación: <strong>{{ supplement_name[index] }}</strong>. Aquí irían los pasos para el tratamiento.</p>
-                    <a href="{{ buy[index] }}" target="_blank" class="analyze-button" style="width: 100%; justify-content: center;">Comprar Producto</a>
+                <div class="library-card-details">
+                    <h4><i class="fas fa-info-circle"></i> Descripción</h4>
+                    <p>{{ diseases[index].description_es }}</p>
+                    <h4><i class="fas fa-prescription-bottle-alt"></i> Posible Tratamiento</h4>
+                    <p>Recomendación: <strong>{{ supplements[index].supplement_name_es }}</strong>. {{ diseases[index].steps_es }}</p>
+                    <div class="card-action-button">
+                        <a href="{{ supplements[index].buy_link }}" target="_blank" class="analyze-button">Comprar Producto</a>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -49,3 +58,4 @@ Biblioteca de Cultivos - PlantAndes
     </div>
 </section>
 {% endblock content %}
+{% block scripts %}{% endblock %}

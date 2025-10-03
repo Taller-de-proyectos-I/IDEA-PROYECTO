@@ -52,8 +52,8 @@
                     <div class="predictions-container">
                         <h2 class="results-subtitle">Top 3 Predicciones</h2>
                         {% for result in results %}
-                        <div class="prediction-card">
-                            <div class="prediction-header" onclick="toggleDetails(this)">
+                        <div class="prediction-card" id="prediction-{{ loop.index }}">
+                            <div class="prediction-header">
                                 <div class="prediction-title">
                                     <span class="prediction-rank">#{{ loop.index }}</span>
                                     {{ result.disease_name }}
@@ -101,15 +101,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-function toggleDetails(headerElement) {
-    const details = headerElement.nextElementSibling;
-    const icon = headerElement.querySelector('.fa-chevron-down');
-    
-    details.style.display = (details.style.display === "none" || details.style.display === "") ? "block" : "none";
-    icon.style.transform = details.style.display === "block" ? "rotate(180deg)" : "rotate(0deg)";
-}
-</script>
 
 <!-- Script condicional separado -->
 {% if results %}

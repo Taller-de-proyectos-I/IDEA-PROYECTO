@@ -127,7 +127,6 @@ header {
 
 /* === Hero Section === */
 .hero-section {
-    background: linear-gradient(rgba(0, 0, 0, 0.30), rgba(0, 0, 0, 0.5)), url('/static/img/bg3.jpg') no-repeat center center/cover;
     color: var(--white);
     padding: 8rem 2rem;
     display: flex;
@@ -135,18 +134,53 @@ header {
     justify-content: center;
     text-align: center;
     min-height: 60vh;
+    position: relative; /* Necesario para los pseudo-elementos */
+    overflow: hidden; /* Oculta cualquier desbordamiento */
+}
+
+/* Capa de superposición oscura (gradiente) */
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.30), rgba(0, 0, 0, 0.50));
+    z-index: 1; /* Se asegura que esté sobre las imágenes de fondo */
+}
+
+/* Contenedor para las imágenes del carrusel */
+.hero-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/static/img/bg3.jpg'); /* Primera imagen */
+    background-size: cover;
+    background-position: center;
+    z-index: 0; /* Detrás de todo */
+    animation: hero-carousel 12s linear infinite; /* Animación de 12 segundos */
 }
 
 .hero-title {
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1rem;
+    position: relative; /* Asegura que el texto esté sobre el gradiente */
+    z-index: 2;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 }
 
 .hero-description {
     font-size: 1.25rem;
     max-width: 800px;
     margin: 0 auto 2rem auto;
+    position: relative; /* Asegura que el texto esté sobre el gradiente */
+    z-index: 2;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .hero-button {
@@ -157,7 +191,38 @@ header {
     border-radius: 50px;
     text-decoration: none;
     font-weight: 700;
-    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Quitamos 'transform' para evitar conflictos */
+    position: relative; /* Asegura que el texto esté sobre el gradiente */
+    z-index: 2;
+    display: inline-block; /* CRUCIAL: Permite que 'transform' se aplique correctamente */
+    animation: pulse-animation 2.5s infinite ease-in-out;
+    will-change: transform; /* Optimización para el navegador */
+}
+
+/* Definición de la animación del carrusel */
+@keyframes hero-carousel {
+    0%, 45% {
+        background-image: url('/static/img/bg3.jpg'); /* Muestra la imagen 1 */
+    }
+    50%, 95% {
+        background-image: url('/static/img/bg2.jpg'); /* Muestra la imagen 2 */
+    }
+    100% {
+        background-image: url('/static/img/bg3.jpg'); /* Vuelve a la imagen 1 */
+    }
+}
+
+/* Animación de pulso para el botón */
+@keyframes pulse-animation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.10);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* === Secciones Generales === */
@@ -246,11 +311,13 @@ header {
 /* === Library Section (market.html) === */
 .library-section {
     padding: 5rem 0;
+    margin-bottom: 30%;
 }
 
 .library-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    align-items: start; 
     gap: 2rem;
 }
 
@@ -258,13 +325,18 @@ header {
     background: var(--white);
     border-radius: 12px;
     box-shadow: var(--shadow);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.3s ease;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, z-index 0s 0.3s;
+    z-index: 1;
+}
+
+.library-card.is-expanded {
+    z-index: 10;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, z-index 0s 0s;
 }
 
 .library-card:hover {
+    transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
 
@@ -311,6 +383,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-top: 1px solid #E2E8F0;
     margin-top: auto;
 }
 
@@ -333,10 +406,54 @@ header {
 }
 
 .library-card-details {
-    padding: 0 1.5rem 1.5rem 1.5rem;
-    border-top: 1px solid #E2E8F0; /* gray-200 */
-    background-color: #F7FAFC; /* gray-50 */
+    position: absolute;
+    top: 100%; /* Comienza justo debajo de la tarjeta */
+    left: 0;
+    right: 0;
+    background-color: var(--white);
+    padding: 1.5rem;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    z-index: -1; /* Detrás de la tarjeta por defecto */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
 }
+
+.library-card.is-expanded .library-card-details {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.card-close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: #E53E3E; /* red-500 */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 11;
+    display: none; /* Oculto por defecto */
+}
+
+.library-card.is-expanded .card-close-button {
+    display: flex;
+}
+
+.card-action-button {
+    margin-top: 1rem;
+    text-align: center;
+}
+
 /* === Gallery Section === */
 .gallery-section {
     background-color: var(--green-light);
@@ -486,6 +603,7 @@ header {
 .instructions {
     max-width: 800px;
     margin: 0 auto;
+    padding: 2rem 0;
 }
 .instructions-title {
     text-align: center;
@@ -536,7 +654,7 @@ footer {
 }
 .footer-content {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 0px auto;
 }
 .footer-logo {
     font-size: 1.8rem;
@@ -805,6 +923,7 @@ footer {
 /* === Contact Page === */
 .contact-section {
     padding: 5rem 0;
+    margin-bottom: 8%;
 }
 
 .contact-container {
@@ -929,3 +1048,32 @@ footer {
     background-color: var(--green-light);
     color: var(--green-dark);
 }
+
+/* === Animaciones de Scroll === */
+.animate-on-scroll {
+    opacity: 0;
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-in-from-left {
+    transform: translateX(-50px);
+}
+
+.fade-in-from-right {
+    transform: translateX(50px);
+}
+
+.zoom-in-effect {
+    transform: scale(0.9);
+}
+
+.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* Para escalonar la animación de las tarjetas de la galería */
+.gallery-card:nth-child(2) { transition-delay: 0.2s; }
+.gallery-card:nth-child(3) { transition-delay: 0.4s; }
+.feature-card:nth-child(2) { transition-delay: 0.2s; }
+.feature-card:nth-child(3) { transition-delay: 0.4s; }
