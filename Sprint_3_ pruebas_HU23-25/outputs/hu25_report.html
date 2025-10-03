@@ -1,0 +1,36 @@
+<html><head><meta charset='utf-8'><title>HU-25 Report</title></head><body><h1>HU-25 - Optimización del modelo</h1><h2>Comparativa</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>variant</th>
+      <th>size_mb</th>
+      <th>latency_ms</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>baseline_pytorch_fp32</td>
+      <td>0.210179</td>
+      <td>0.152511</td>
+    </tr>
+    <tr>
+      <td>pruned_pytorch_fp32</td>
+      <td>0.210067</td>
+      <td>0.147744</td>
+    </tr>
+    <tr>
+      <td>quantized_pytorch</td>
+      <td>0.060559</td>
+      <td>0.261839</td>
+    </tr>
+    <tr>
+      <td>torchscript</td>
+      <td>0.073788</td>
+      <td>0.117840</td>
+    </tr>
+    <tr>
+      <td>onnx_fp32</td>
+      <td>0.207940</td>
+      <td>0.035002</td>
+    </tr>
+  </tbody>
+</table><h2>Model files (models/)</h2><ul><li>model_optim.onnx - 0.208 MB</li><li>model_optim_quant_onnx.onnx - 0.058 MB</li><li>model_optim_ts.pt - 0.074 MB</li><li>model_original_saved.pth - 0.210 MB</li><li>model_pruned.pth - 0.210 MB</li><li>model_quantized.pth - 0.061 MB</li></ul></body></html>
