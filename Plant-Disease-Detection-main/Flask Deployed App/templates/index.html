@@ -85,6 +85,7 @@
                                         <a href="{{ result.buy_link }}" target="_blank" class="analyze-button">
                                             <i class="fas fa-shopping-cart"></i> Comprar Producto
                                         </a>
+
                                     </div>
                                     <div class="supplement-image">
                                         <img src="{{ result.supplement_image }}" alt="{{ result.supplement_name }}">
@@ -92,15 +93,255 @@
                                 </div>
                             </div>
                         </div>
+                        {% if loop.first %}
+                        <!-- Contenedor de activación del Asistente IA (solo para el primer resultado) -->
+                        <div id="ai-prompt-container" class="ai-prompt-container">
+                            <h3>¿Necesitas más ayuda?</h3>
+                            <p>Nuestro asistente de IA puede darte más detalles sobre el diagnóstico, ofrecerte planes de tratamiento alternativos y responder tus preguntas específicas.</p>
+                            <button id="activate-chat-button" class="analyze-button"><i class="fas fa-robot"></i> Activar Asistente IA</button>
+                        </div>
+                        {% endif %}
                         {% endfor %}
                     </div>
                 </div>
             </div>
+
+            <!-- Contenedor del Chat (inicialmente oculto) -->
+            <div id="chat-container-static" class="chat-container-static">
+                <div class="chat-header">
+                    <h3><i class="fas fa-robot"></i> Asistente de Diagnóstico</h3>
+                    <div class="chat-header-buttons">
+                        <button id="print-chat-button" class="chat-action-btn" title="Guardar o Imprimir Chat"><i class="fas fa-save"></i></button>
+                        <button id="clear-context-chat" class="chat-action-btn" title="Limpiar Chat"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
+                <div id="chat-body" class="chat-body">
+                    <div class="chat-message ai">
+                        <p>¡Hola! Soy tu asistente agrícola. Pregúntame lo que necesites sobre el diagnóstico principal: <strong>{{ results[0].disease_name if results else '' }}</strong>.</p>
+                    </div>
+                </div>
+                <div class="chat-footer">
+                    <div id="language-selector" class="language-selector">
+                        <button class="lang-btn active" data-lang="Español">Español</button>
+                        <button class="lang-btn" data-lang="Quechua">Quechua</button>
+                    </div>
+                    <form id="chat-form" data-context='{{ results[0] | tojson | safe if results else "{}" }}'>
+                        <input type="text" id="chat-input" placeholder="Ej: ¿Qué tan grave es esto? ¿Hay alternativas orgánicas?" autocomplete="off" required>
+                        <button type="submit" id="chat-send-button"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+
         </section>
         {% endif %}
 {% endblock %}
 
 {% block scripts %}
+<style>
+    /* Estilos para el contenedor de activación del chat */
+    .ai-prompt-container {
+        text-align: center;
+        background-color: var(--green-light);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 3rem auto 3rem auto;
+        max-width: 800px;
+    }
+    .ai-prompt-container h3 {
+        color: var(--green-dark);
+        margin-top: 0;
+    }
+
+    /* Estilos para el Contenedor de Chat Estático */
+    .chat-container-static {
+        display: none; /* Oculto por defecto, se activa con JS */
+        background-color: #fefefe;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        margin: 1.5rem auto 0 auto; /* Centrado y con menos margen superior */
+        max-width: 800px; /* Ancho máximo */
+        flex-direction: column;
+        max-height: 70vh; /* Altura máxima para el chat */
+    }
+    .chat-header {
+        padding: 1rem;
+        border-bottom: 1px solid #ddd;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+    }
+    .chat-header h3 { margin: 0; color: var(--green-dark); }
+    .chat-body { flex-grow: 1; padding: 1rem; overflow-y: auto; }
+    #chat-container-static .chat-message { max-width: 80%; margin-bottom: 1rem; padding: 0.75rem; border-radius: 10px; }
+    .chat-message.user { background-color: #DCF8C6; margin-left: auto; }
+    .chat-message.ai { background-color: #f1f1f1; }
+    .chat-footer { padding: 1rem; border-top: 1px solid #ddd; }
+    .language-selector {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .lang-btn {
+        background-color: #e2e8f0;
+        border: none;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: background-color 0.3s;
+    }
+    .lang-btn.active {
+        background-color: var(--green-medium);
+        color: white;
+    }
+    #chat-form { display: flex; gap: 0.5rem; }
+    #chat-input { flex-grow: 1; padding: 0.75rem; border: 1px solid #ccc; border-radius: 20px; }
+    #chat-send-button { background-color: var(--green-medium); color: white; border: none;
+        border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 1.2rem;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const activateChatButton = document.getElementById('activate-chat-button');
+    const aiPromptContainer = document.getElementById('ai-prompt-container');
+    const chatContainer = document.getElementById('chat-container-static');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatBody = document.getElementById('chat-body');
+    const langSelector = document.getElementById('language-selector');
+    const printChatButton = document.getElementById('print-chat-button');
+    const clearContextChatButton = document.getElementById('clear-context-chat');
+    let selectedLanguage = 'Español'; // Idioma por defecto
+
+    // Activar el chat
+    if (activateChatButton) {
+        activateChatButton.addEventListener('click', function() {
+            const isUserAuthenticated = {{ current_user.is_authenticated|tojson }};
+            if (isUserAuthenticated) {
+                aiPromptContainer.style.display = 'none'; // Oculta todo el contenedor de ayuda
+                chatContainer.style.display = 'flex'; // Muestra el chat
+            } else {
+                const loginModal = document.getElementById('login-required-modal');
+                if (loginModal) loginModal.style.display = 'flex';
+            }
+        });
+    }
+
+    // Manejar selección de idioma
+    if (langSelector) {
+        langSelector.addEventListener('click', function(e) {
+            if (e.target.classList.contains('lang-btn')) {
+                // Quitar clase 'active' de todos los botones
+                langSelector.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+                // Añadir clase 'active' al botón clickeado
+                e.target.classList.add('active');
+                selectedLanguage = e.target.dataset.lang;
+            }
+        });
+    }
+
+    // Manejar envío del formulario de chat
+    if (chatForm) {
+        chatForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const userMessage = chatInput.value.trim();
+            if (!userMessage) return;
+
+            appendChatMessage(userMessage, 'user');
+            chatInput.value = '';
+
+            // Obtener contexto del formulario
+            const context = JSON.parse(chatForm.dataset.context);
+
+            // Crear un nuevo div para la respuesta de la IA
+            const aiMessageDiv = appendChatMessage('', 'ai');
+            const aiMessageP = aiMessageDiv.querySelector('p');
+            aiMessageP.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // Indicador de carga
+
+            // La petición se ejecuta independientemente de la visibilidad del chat
+            fetch('{{ url_for("chat") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userMessage, context: context, language: selectedLanguage }),
+            })
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                aiMessageP.innerHTML = ''; // Limpiar spinner
+
+                function read() {
+                    reader.read().then(({ value, done }) => {
+                        if (done) {
+                            // Aquí podrías guardar el historial si fuera necesario
+                            return;
+                        }
+                        const chunk = decoder.decode(value, { stream: true });
+                        fullResponse += chunk;
+                        aiMessageP.innerHTML = marked.parse(fullResponse);
+                        chatBody.scrollTop = chatBody.scrollHeight;
+                        read(); // Leer el siguiente chunk
+                    });
+                }
+                read();
+            })
+            .catch(error => {
+                aiMessageP.querySelector('p').textContent = 'Lo siento, ocurrió un error al conectar con el asistente.';
+                console.error('Error en el streaming del chat:', error);
+            });
+        });
+    }
+
+    // Botón para limpiar el chat contextual
+    if (clearContextChatButton) {
+        clearContextChatButton.addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que quieres limpiar esta conversación?')) {
+                const initialMessage = `
+                    <div class="chat-message ai">
+                        <p>¡Hola! Soy tu asistente agrícola. Pregúntame lo que necesites sobre el diagnóstico principal: <strong>${chatForm.dataset.context ? JSON.parse(chatForm.dataset.context).disease_name : ''}</strong>.</p>
+                    </div>
+                `;
+                chatBody.innerHTML = initialMessage;
+            }
+        });
+    }
+
+    // Botón para imprimir/guardar el chat contextual
+    if (printChatButton) {
+        printChatButton.addEventListener('click', () => {
+            const chatContent = chatBody.innerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Conversación con Asistente IA - PlantAndes</title>
+                        <style>
+                            body { font-family: sans-serif; } .chat-message { max-width: 100%; margin-bottom: 1rem; padding: 0.75rem; border-radius: 10px; } .user { background-color: #DCF8C6; } .ai { background-color: #f1f1f1; }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>Conversación sobre: ${JSON.parse(chatForm.dataset.context).disease_name}</h2>
+                        ${chatContent}
+                    </body>
+                </html>`);
+            printWindow.document.close();
+            printWindow.print();
+        });
+    }
+
+    function appendChatMessage(message, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('chat-message', sender);
+        // Usar marked.parse para convertir markdown a HTML y renderizar negritas, etc.
+        messageDiv.innerHTML = `<p>${marked.parse(message)}</p>`;
+        chatBody.appendChild(messageDiv);
+        chatBody.scrollTop = chatBody.scrollHeight; // Auto-scroll al final
+        return messageDiv;
+    }
+});
+</script>
 
 <!-- Script condicional separado -->
 {% if results %}

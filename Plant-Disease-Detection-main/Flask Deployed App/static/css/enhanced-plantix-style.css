@@ -24,7 +24,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 95%;
     margin: 0 auto;
     padding: 0 2rem;
 }
@@ -46,8 +46,8 @@ header {
     justify-content: space-between;
     align-items: center;
     height: 80px;
-    padding: 0 2rem;
-    max-width: 1200px;
+    padding: 0 2.5%; /* Usamos porcentaje para el padding también */
+    max-width: 100%; /* La barra de navegación ocupará todo el ancho */
     margin: 0 auto;
 }
 
