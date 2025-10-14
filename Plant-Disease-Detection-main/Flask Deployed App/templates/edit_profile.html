@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Editar Perfil - PlantAndes{% endblock %}
+
+{% block content %}
+<section class="contact-section">
+    <div class="container" style="max-width: 700px;">
+        <h1 class="section-title">Editar Mi Perfil</h1>
+        <p class="section-description" style="text-align: center; max-width: 800px; margin: -2rem auto 3rem;">
+            Aquí puedes actualizar tu información personal y cambiar tu contraseña.
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="contact-form">
+            <form action="{{ url_for('edit_profile') }}" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="first_name">Nombres</label>
+                        <input type="text" id="first_name" name="first_name" value="{{ current_user.first_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Apellidos</label>
+                        <input type="text" id="last_name" name="last_name" value="{{ current_user.last_name }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="username">Nombre de Usuario</label>
+                    <input type="text" id="username" name="username" value="{{ current_user.username }}" disabled>
+                    <small>El nombre de usuario no se puede cambiar.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" id="email" name="email" value="{{ current_user.email }}" disabled>
+                    <small>El correo electrónico no se puede cambiar.</small>
+                </div>
+
+                <hr class="form-divider">
+
+                <h3 class="form-subtitle">Cambiar Contraseña (Opcional)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="new_password">Nueva Contraseña</label>
+                        <input type="password" id="new_password" name="new_password" placeholder="Deja en blanco para no cambiar">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirmar Nueva Contraseña</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Repite la nueva contraseña">
+                    </div>
+                </div>
+
+                <button type="submit" class="analyze-button" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </form>
+        </div>
+
+        <!-- Sección de Administración (Solo para Admins) -->
+        {% if current_user.role == 'admin' %}
+        <hr class="form-divider" style="margin-top: 5rem;">
+        <div class="admin-section">
+            <h2 class="section-title" style="font-size: 2rem;">Administración de Usuarios</h2>
+            <div class="user-table-container">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Rol Actual</th>
+                            <th>Cambiar Rol</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td><span class="role-badge role-{{ user.role }}">{{ user.role }}</span></td>
+                            <td>
+                                <form action="{{ url_for('update_user_role', user_id=user.id) }}" method="POST" class="role-form">
+                                    <select name="role" onchange="this.form.submit()">
+                                        <option value="user" {% if user.role == 'user' %}selected{% endif %}>Usuario</option>
+                                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar a este usuario? Esta acción no se puede deshacer.');">
+                                    <button type="submit" class="delete-button"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+    .form-divider { border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
+    .form-subtitle { text-align: center; color: var(--green-dark); margin-bottom: 1.5rem; }
+    .form-group small { font-size: 0.8rem; color: var(--text-light); margin-top: 0.25rem; display: block; }
+    input:disabled { background-color: #f7fafc; cursor: not-allowed; }
+
+    /* Estilos para la tabla de administración */
+    .user-table-container { overflow-x: auto; }
+    .user-table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+    .user-table th, .user-table td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .user-table th { background-color: #f7fafc; font-weight: 500; }
+    .role-badge { padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.8rem; font-weight: 700; text-transform: capitalize; }
+    .role-admin { background-color: #C53030; color: white; }
+    .role-user { background-color: #3182CE; color: white; }
+    .role-form select { padding: 0.5rem; border-radius: 6px; border: 1px solid #CBD5E0; }
+    .delete-button { background: none; border: none; color: #C53030; font-size: 1.2rem; cursor: pointer; }
+
+    @media (max-width: 600px) {
+        .form-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}

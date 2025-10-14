@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Mi Historial - PlantAndes{% endblock %}
+
+{% block content %} 
+<section class="history-section" style="padding-bottom: 0;">
+    <div class="container">
+        <h1 class="section-title">Mi Historial de Diagnósticos</h1>
+        <p class="section-description">
+            Aquí puedes ver todos los análisis que has realizado. Usa los filtros para encontrar diagnósticos específicos.
+        </p>
+
+        <!-- Formulario de Filtros -->
+        <div class="filter-card">
+            <form method="GET" action="{{ url_for('history') }}">
+                <div class="filter-controls">
+                    <div class="form-group">
+                        <label for="disease">Buscar por Enfermedad</label>
+                        <input type="text" id="disease" name="disease" placeholder="Escribe para filtrar..." value="{{ disease_filter }}" class="input-with-icon" style="background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22 fill=%22%23A0AEC0%22><path d=%22M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0s208 93.1 208 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z%22/></svg>'); background-repeat: no-repeat; background-position: 0.75rem center; background-size: 1em;">
+                    </div>
+                    <div class="form-group">
+                        <label for="start_date">Desde</label>
+                        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date">Hasta</label>
+                        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="analyze-button"><i class="fas fa-filter"></i> Filtrar</button>
+                    <a href="{{ url_for('history') }}" class="clear-filter-button">Limpiar Filtros</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Contenedor de Resultados -->
+        <div class="history-grid">
+            {% include '_history_results.html' %}
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Estilos para los campos de filtro */
+    .filter-card input[type="date"],
+    .filter-card input[type="text"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #CBD5E0;
+        border-radius: 8px;
+        font-family: var(--font-family);
+        font-size: 1rem;
+        box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
+    }
+    .filter-card { background-color: #fff; padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 3rem; }
+    .filter-controls { 
+        display: flex; 
+        flex-wrap: wrap;
+        justify-content: center; /* Centra los campos */
+        gap: 2.5rem; /* Aumentamos el espacio */
+    }
+    .filter-controls .form-group { flex-basis: 300px; /* Ancho base para cada campo */ }
+    .filter-actions { display: flex; gap: 1rem; margin-top: 1.5rem; align-items: center; }
+    .clear-filter-button { color: var(--text-light); text-decoration: none; }
+    .clear-filter-button:hover { text-decoration: underline; }
+    
+    /* Unificamos el estilo de los campos con icono */
+    .input-with-icon { padding-left: 2.5rem !important; }
+
+
+    /* Ajuste para que las tarjetas no se estiren */
+    .history-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Usamos auto-fill */
+        align-items: start; 
+        gap: 2rem; 
+    }
+
+    /* Estilos específicos para la información dentro de la tarjeta de historial */
+    .library-card-body {
+        display: flex;
+        flex-direction: column;
+        min-height: 150px; /* Altura mínima para consistencia */
+    }
+    .history-card-info { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 0.5rem; 
+        color: var(--text-light); 
+        font-size: 0.9rem; 
+        margin-top: auto; /* Empuja este bloque hacia abajo */
+    }
+    .history-card-info span { display: flex; align-items: center; gap: 0.5rem; }
+
+    /* Ajuste para el botón de info en el historial */
+    .history-footer .info-button {
+        background: none;
+        border: none;
+        color: var(--blue-sky);
+        cursor: pointer;
+        display: flex; 
+        align-items: center; 
+        gap: 0.5rem; 
+        font-size: 0.9rem; /* Texto más pequeño */
+    }
+    .history-footer { justify-content: flex-end; border-top: 1px solid #E2E8F0; padding-top: 1rem; margin-top: 1rem; display: flex; }
+
+    .no-results-card {
+        grid-column: 1 / -1; /* Ocupa todo el ancho de la grilla */
+        text-align: center;
+        padding: 4rem 2rem;
+        background-color: #f7fafc;
+        border-radius: 12px;
+    }
+    .no-results-card .fa-folder-open { font-size: 4rem; color: #cbd5e0; margin-bottom: 1.5rem; }
+    .no-results-card h3 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .no-results-card p { margin-bottom: 2rem; color: var(--text-light); }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.querySelector('.filter-card form');
+    const historyGrid = document.querySelector('.history-grid');
+    let searchTimeout;
+
+    // Función para inicializar los listeners de las tarjetas (ahora local)
+    function initializeCardListeners(container) {
+        const infoButtons = container.querySelectorAll('.library-card .info-button');
+        const closeButtons = container.querySelectorAll('.library-card .card-close-button');
+
+        infoButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const currentCard = this.closest('.library-card');
+                // Cerrar otras tarjetas antes de abrir la nueva
+                document.querySelectorAll('.history-grid .library-card.is-expanded').forEach(card => {
+                    if (card !== currentCard) card.classList.remove('is-expanded');
+                });
+                if (currentCard) currentCard.classList.toggle('is-expanded');
+            });
+        });
+
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.library-card').classList.remove('is-expanded');
+            });
+        });
+    }
+
+    // Llamada inicial para que las tarjetas funcionen al cargar la página
+    initializeCardListeners(historyGrid);
+
+    function handleFilterChange() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams(formData);
+            const url = `${filterForm.action}?${params.toString()}`;
+
+            // Actualizar la URL del navegador sin recargar
+            window.history.pushState({}, '', url);
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.text())
+            .then(html => {
+                historyGrid.innerHTML = html;
+                // Re-inicializar los listeners para las nuevas tarjetas
+                initializeCardListeners(historyGrid);
+            });
+        }, 400); // 400ms de retraso
+    }
+
+    // Escuchar cambios en todos los inputs del formulario
+    filterForm.addEventListener('input', handleFilterChange);
+
+    // Asegurarse de que el botón de "Filtrar" también use AJAX si se hace clic
+    filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleFilterChange();
+    });
+});
+</script>
+{% endblock %}
+
+```
+
+### 3. Activar el Enlace en el Menú de Usuario (`base.html`)
+
+Finalmente, modificamos el enlace "Mi Historial" en `base.html` para que apunte a la nueva ruta que creamos.
+
+```diff
+--- a/c:\Users\ACER\Desktop\IDEA-PROYECTO\Plant-Disease-Detection-main\Flask Deployed App\templates\base.html
++++ b/c:\Users\ACER\Desktop\IDEA-PROYECTO\Plant-Disease-Detection-main\Flask Deployed App\templates\base.html
+@@ -61,7 +61,7 @@
+                             <button id="close-user-menu" class="close-button">&times;</button>
+                         </div>
+                         <ul class="dropdown-links">
+-                            <li><a href="#"><i class="fas fa-history"></i> Mi Historial</a></li>
++                            <li><a href="{{ url_for('history') }}"><i class="fas fa-history"></i> Mi Historial</a></li>
+                             <li><a href="#"><i class="fas fa-user-edit"></i> Editar Perfil</a></li>
+                         </ul>
+                         <div class="dropdown-footer">
+
+```
+
+Con estos tres cambios, la historia de usuario **HU-14** está completa. Los usuarios ahora pueden acceder a su historial, verlo de una manera atractiva y filtrarlo para encontrar lo que buscan.
+
+<!--
+[PROMPT_SUGGESTION]Ahora, crea la página "Editar Perfil" para que los usuarios puedan cambiar su nombre y contraseña.[/PROMPT_SUGGESTION]
+[PROMPT_SUGGESTION]Implementa un dashboard de administrador para ver estadísticas de todos los usuarios.[/PROMPT_SUGGESTION]
+-->

@@ -17,16 +17,27 @@
 body {
     font-family: var(--font-family);
     color: var(--text-dark);
-    background-color: var(--background-light);
     margin: 0;
     padding-top: 80px; /* Espacio para el header fijo */
     overflow-x: hidden;
+
+    /* --- Lógica para Sticky Footer --- */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--background-light);
 }
 
 .container {
     max-width: 95%;
     margin: 0 auto;
     padding: 0 2rem;
+}
+
+/* El contenedor principal debe crecer para empujar el footer hacia abajo */
+main {
+    flex-grow: 1;
+    padding-bottom: 5rem; /* Espacio de respiro antes del footer */
 }
 
 /* === Header y Navegación === */
@@ -235,7 +246,7 @@ header {
 }
 
 .mission-section, .gallery-section, .stats-section, .testimonials-section, .detector-section, .about-section {
-    padding: 5rem 0;
+    padding-top: 5rem;
 }
 
 /* === Features Section === */
@@ -310,8 +321,6 @@ header {
 
 /* === Library Section (market.html) === */
 .library-section {
-    padding: 5rem 0;
-    margin-bottom: 30%;
 }
 
 .library-grid {
@@ -922,8 +931,7 @@ footer {
 
 /* === Contact Page === */
 .contact-section {
-    padding: 5rem 0;
-    margin-bottom: 8%;
+    padding-top: 5rem;
 }
 
 .contact-container {
@@ -1035,18 +1043,9 @@ footer {
     background-color: var(--green-light);
     color: var(--green-dark);
 }
-
-/* === Flash Messages === */
-.flash-message {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 500;
-}
-.flash-message.success {
-    background-color: var(--green-light);
-    color: var(--green-dark);
+.flash-message.danger {
+    background-color: #FED7D7; /* Un rojo muy suave */
+    color: #9B2C2C; /* Un rojo oscuro para el texto */
 }
 
 /* === Animaciones de Scroll === */

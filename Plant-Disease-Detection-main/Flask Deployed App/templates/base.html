@@ -27,6 +27,7 @@
             <ul class="nav-links" id="nav-links">
                 <li><a href="{{ url_for('home_page') }}">Principal</a></li>
                 <li><a href="{{ url_for('market') }}">Biblioteca</a></li>
+                <li><a href="{{ url_for('alerts_page') }}">Alertas</a></li>
                 <li><a href="{{ url_for('ai_engine_page') }}">Motor IA</a></li>
                 <li><a href="{{ url_for('about_page') }}">Acerca de</a></li>
                 <li><a href="{{ url_for('contact') }}">Contacto</a></li>
@@ -34,6 +35,27 @@
 
             <!-- Contenedor para los enlaces de autenticación (se alineará a la derecha) -->
             <div class="nav-auth-links" id="user-menu-container">
+                {% if current_user.is_authenticated %}
+                <!-- Icono de Notificaciones -->
+                <div id="notification-container" class="notification-container">
+                    <button id="notification-button" class="user-menu-button">
+                        <i class="fa-regular fa-bell"></i>
+                        {% if unread_notifications %}
+                        <span class="notification-badge">{{ unread_notifications|length }}</span>
+                        {% endif %}
+                    </button>
+                    <div id="notification-dropdown" class="user-menu-dropdown">
+                        <div class="dropdown-header"><h4>Notificaciones</h4></div>
+                        <ul class="notification-list">
+                            {% for notif in unread_notifications %}
+                                <li><a href="{{ url_for('mark_notification_as_read', notification_id=notif.id) }}">{{ notif.message }}</a></li>
+                            {% else %}
+                                <li class="no-notifications">No tienes notificaciones nuevas.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
                 <!-- Icono de Usuario Único -->
                 <button id="user-menu-button" class="user-menu-button">
                     <i class="fa-regular fa-user"></i>
@@ -51,8 +73,11 @@
                             <button id="close-user-menu" class="close-button">&times;</button>
                         </div>
                         <ul class="dropdown-links">
-                            <li><a href="#"><i class="fas fa-history"></i> Mi Historial</a></li>
-                            <li><a href="#"><i class="fas fa-user-edit"></i> Editar Perfil</a></li>
+                            <li><a href="{{ url_for('history') }}"><i class="fas fa-history"></i> Mi Historial</a></li>
+                            {% if current_user.role == 'admin' %}
+                            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                            {% endif %}
+                            <li><a href="{{ url_for('edit_profile') }}"><i class="fas fa-user-edit"></i> Editar Perfil</a></li>
                         </ul>
                         <div class="dropdown-footer">
                             <button id="logout-button" class="logout-button"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
@@ -97,6 +122,32 @@
                 justify-content: flex-end;
                 align-items: center;
                 position: relative; /* Necesario para el menú desplegable */
+            }
+
+            /* Estilos para notificaciones */
+            .notification-container { position: relative; }
+            .notification-badge {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background-color: #C53030; /* Rojo */
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                font-size: 0.75rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+            }
+            .notification-list { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; }
+            .notification-list li a { display: block; padding: 0.75rem 1rem; text-decoration: none; color: var(--text-dark); border-bottom: 1px solid #e2e8f0; }
+            .notification-list li a:hover { background-color: #f7fafc; }
+            .no-notifications {
+                padding: 1.5rem;
+                text-align: center;
+                color: var(--text-light);
             }
 
             /* Estilo para el nuevo botón de icono de usuario */
@@ -398,6 +449,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const userMenuContainer = document.getElementById('user-menu-container');
             const userMenuButton = document.getElementById('user-menu-button');
+            const notificationContainer = document.getElementById('notification-container');
+            const notificationButton = document.getElementById('notification-button');
             const userMenuDropdown = document.getElementById('user-menu-dropdown');
             const closeUserMenu = document.getElementById('close-user-menu');
             const logoutButton = document.getElementById('logout-button');
@@ -407,6 +460,13 @@
                 event.stopPropagation(); // Evita que el clic se propague al documento
                 userMenuDropdown.classList.toggle('is-active');
             });
+            
+            if (notificationButton) {
+                notificationButton.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    document.getElementById('notification-dropdown').classList.toggle('is-active');
+                });
+            }
 
             closeUserMenu.addEventListener('click', function() {
                 userMenuDropdown.classList.remove('is-active');
@@ -414,8 +474,11 @@
 
             // Cierra el menú si se hace clic fuera de él
             document.addEventListener('click', function(event) {
-                if (!userMenuContainer.contains(event.target)) {
+                if (userMenuDropdown && !userMenuContainer.contains(event.target)) {
                     userMenuDropdown.classList.remove('is-active');
+                }
+                if (notificationContainer && !notificationContainer.contains(event.target)) {
+                    document.getElementById('notification-dropdown').classList.remove('is-active');
                 }
             });
 
@@ -620,33 +683,35 @@
                 });
             });
 
-            // Para la biblioteca (market.html)
-            const infoButtons = document.querySelectorAll('.library-card .info-button');
-            const closeButtons = document.querySelectorAll('.library-card .card-close-button');
+            // Lógica de tarjetas solo para la página de la biblioteca (market.html)
+            if (document.querySelector('.library-section')) {
+                const infoButtons = document.querySelectorAll('.library-card .info-button');
+                const closeButtons = document.querySelectorAll('.library-card .card-close-button');
 
-            infoButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const currentCard = this.closest('.library-card');
-                    
-                    // Cerrar todas las demás tarjetas abiertas
-                    document.querySelectorAll('.library-card.is-expanded').forEach(card => {
-                        if (card !== currentCard) {
-                            card.classList.remove('is-expanded');
+                infoButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const currentCard = this.closest('.library-card');
+                        
+                        // Cerrar todas las demás tarjetas abiertas
+                        document.querySelectorAll('.library-card.is-expanded').forEach(card => {
+                            if (card !== currentCard) {
+                                card.classList.remove('is-expanded');
+                            }
+                        });
+
+                        // Abrir/Cerrar la tarjeta actual
+                        if (currentCard) {
+                            currentCard.classList.toggle('is-expanded');
                         }
                     });
-
-                    // Abrir la tarjeta actual
-                    if (currentCard && !currentCard.classList.contains('is-expanded')) {
-                        currentCard.classList.add('is-expanded');
-                    }
                 });
-            });
 
-            closeButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    this.closest('.library-card').classList.remove('is-expanded');
+                closeButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        this.closest('.library-card').classList.remove('is-expanded');
+                    });
                 });
-            });
+            }
 
             // --- Lógica para animaciones al hacer scroll ---
             const observer = new IntersectionObserver((entries) => {

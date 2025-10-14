@@ -9,12 +9,21 @@
                     Sube una imagen de tu cultivo y nuestro sistema de inteligencia artificial la analizará para detectar posibles enfermedades.
                 </p>
                 
+                <!-- Contenedor para mostrar mensajes flash (HU-18) -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <div class="detector-card">
                     <form action="{{ url_for('ai_engine_page') }}" method="POST" enctype="multipart/form-data">
                         <div class="upload-area" id="uploadArea">
                             <i class="fas fa-cloud-upload-alt upload-icon"></i>
                             <p class="upload-text">Arrastra y suelta una imagen aquí o haz clic para seleccionar</p>
-                            <input type="file" id="image-input" name="image" accept="image/*" required>
+                            <input type="file" id="image-input" name="image" accept="image/*" required multiple>
                             <label for="image-input" class="upload-button">Seleccionar Imagen</label>
                             <p class="file-name" id="file-name">Ningún archivo seleccionado</p>
                         </div>
@@ -45,11 +54,39 @@
                     <!-- Columna de la imagen del usuario -->
                     <div class="user-image-container">
                         <h2 class="results-subtitle">Imagen Analizada</h2>
-                        <img src="{{ url_for('static', filename=user_image) }}" alt="Imagen subida por el usuario" class="user-image">
+                        <img src="{{ url_for('static', filename=user_image) }}" alt="Imagen subida por el usuario" class="user-image" style="max-height: 400px; object-fit: contain;">
+                        
+                        <!-- Formulario para añadir notas (HU-17) -->
+                        {% if current_user.is_authenticated and new_diagnosis_id %}
+                        <div class="notes-form-container">
+                            <form id="notes-form" action="{{ url_for('update_notes') }}" method="POST">
+                                <input type="hidden" name="diagnosis_id" value="{{ new_diagnosis_id }}">
+                                <label for="diagnosis_notes"><i class="fas fa-pencil-alt"></i> Mis Notas</label>
+                                <textarea id="diagnosis_notes" name="notes" rows="4" placeholder="Añade un comentario sobre este diagnóstico... (ej: ubicación, estado del clima, etc.)"></textarea>
+                                <button type="submit" id="save-note-button" class="analyze-button">
+                                    <i class="fas fa-save"></i> <span>Guardar Nota</span>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
                     </div>
         
                     <!-- Columna de las predicciones -->
                     <div class="predictions-container">
+                        {% if consolidated_result %}
+                        <div class="consolidated-result-card">
+                            <h3><i class="fas fa-check-double"></i> Diagnóstico Consolidado</h3>
+                            <p>
+                                Basado en el análisis de <strong>{{ image_count }} imágenes</strong>, el diagnóstico más probable es:
+                            </p>
+                            <div class="consolidated-disease">
+                                {{ consolidated_result.disease_name }}
+                            </div>
+                            <div class="consolidated-prob">
+                                Confianza Promedio: <span>{{ consolidated_result.probability }}%</span>
+                            </div>
+                        </div>
+                        {% endif %}
                         <h2 class="results-subtitle">Top 3 Predicciones</h2>
                         {% for result in results %}
                         <div class="prediction-card" id="prediction-{{ loop.index }}">
@@ -106,6 +143,29 @@
                 </div>
             </div>
 
+            <!-- Modal de Retroalimentación (HU-22) -->
+            <div id="feedback-modal" class="feedback-modal">
+                <div id="feedback-container" class="feedback-modal-content">
+                    <button id="close-feedback-modal" class="feedback-close-button">&times;</button>
+                    <form id="feedback-form">
+                        <h4><i class="fas fa-star" style="color: #ffc107;"></i> ¿Qué tan preciso fue el diagnóstico?</h4>
+                        <p>Tu opinión nos ayuda a mejorar la precisión de nuestro modelo de IA.</p>
+                        <div class="star-rating">
+                            <input type="radio" id="5-stars" name="rating" value="5" /><label for="5-stars" class="star">&#9733;</label>
+                            <input type="radio" id="4-stars" name="rating" value="4" /><label for="4-stars" class="star">&#9733;</label>
+                            <input type="radio" id="3-stars" name="rating" value="3" /><label for="3-stars" class="star">&#9733;</label>
+                            <input type="radio" id="2-stars" name="rating" value="2" /><label for="2-stars" class="star">&#9733;</label>
+                            <input type="radio" id="1-star" name="rating" value="1" /><label for="1-star" class="star">&#9733;</label>
+                        </div>
+                        <textarea name="comment" placeholder="Déjanos un comentario adicional (opcional)"></textarea>
+                        <button type="submit" class="analyze-button">Enviar Opinión</button>
+                    </form>
+                    <div id="feedback-thanks" style="display: none;">
+                        <p><i class="fas fa-heart"></i> ¡Muchas gracias por tu ayuda!</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Contenedor del Chat (inicialmente oculto) -->
             <div id="chat-container-static" class="chat-container-static">
                 <div class="chat-header">
@@ -138,6 +198,100 @@
 
 {% block scripts %}
 <style>
+    /* Estilos para el resultado consolidado */
+    .consolidated-result-card {
+        background-color: var(--blue-sky);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .consolidated-result-card h3 {
+        margin-top: 0;
+        font-size: 1.5rem;
+    }
+    .consolidated-disease {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 1rem 0;
+    }
+    .consolidated-prob span { font-weight: bold; }
+
+     /* Estilos para el formulario de notas */
+    .notes-form-container { margin-top: 2rem; }
+    .notes-form-container label {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 1.2rem; font-weight: 500; color: var(--green-dark);
+        margin-bottom: 0.75rem;
+    }
+    .notes-form-container textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #CBD5E0;
+        border-radius: 8px;
+        font-family: var(--font-family);
+        font-size: 1rem;
+        box-sizing: border-box; /* Clave para que el padding no aumente el ancho */
+    }
+    #save-note-button { width: 100%; justify-content: center; margin-top: 1rem; }
+
+    /* Estilos para el formulario de feedback */
+    .feedback-modal {
+        display: none; /* ← SOLO ESTA LÍNEA DE DISPLAY */
+        position: fixed;
+        z-index: 3000;
+        left: 0; 
+        top: 0;
+        width: 100%; 
+        height: 100%;
+        background-color: rgba(0,0,0,0.6);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .feedback-modal-content {
+        background-color: var(--white);
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        animation: zoomIn 0.4s ease-out;
+    }
+    .feedback-close-button {
+        position: absolute; top: 0.5rem; right: 1rem;
+        font-size: 2rem; border: none; background: none; cursor: pointer; color: var(--text-light);
+    }
+    .feedback-modal-content h4 { margin-top: 0; font-size: 1.3rem; color: var(--text-dark); }
+    .feedback-modal-content p { color: var(--text-light); margin-top: -0.5rem; margin-bottom: 1.5rem; }
+    .star-rating { display: flex; flex-direction: row-reverse; justify-content: center; margin-bottom: 1rem; }
+    .star-rating input { display: none; }
+    .star-rating label { font-size: 2.5rem; color: #ccc; cursor: pointer; transition: color 0.2s; }
+    .star-rating input:checked ~ label,
+    .star-rating:not(:checked) > label:hover,
+    .star-rating:not(:checked) > label:hover ~ label { color: #ffc107; }
+    .feedback-modal-content textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 1rem;
+        min-height: 80px;
+    }
+    #feedback-thanks p {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: var(--green-dark);
+    }
+    @keyframes zoomIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
     /* Estilos para el contenedor de activación del chat */
     .ai-prompt-container {
         text-align: center;
@@ -205,27 +359,67 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const activateChatButton = document.getElementById('activate-chat-button');
-    const aiPromptContainer = document.getElementById('ai-prompt-container');
-    const chatContainer = document.getElementById('chat-container-static');
+    const notesForm = document.getElementById('notes-form');
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatBody = document.getElementById('chat-body');
     const langSelector = document.getElementById('language-selector');
-    const printChatButton = document.getElementById('print-chat-button');
     const clearContextChatButton = document.getElementById('clear-context-chat');
-    let selectedLanguage = 'Español'; // Idioma por defecto
+    const printChatButton = document.getElementById('print-chat-button');
+    const isUserAuthenticated = {{ current_user.is_authenticated|tojson }};
+    const showFeedbackForLoggedInUser = {{ show_feedback_form|tojson }};
+    const loginModal = document.getElementById('login-required-modal');
+    let selectedLanguage = 'Español'; // Valor inicial
 
-    // Activar el chat
+    // --- Lógica para guardar notas con AJAX (HU-17) ---
+    if (notesForm) {
+        notesForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Evita la recarga de la página
+
+            const saveButton = document.getElementById('save-note-button');
+            const buttonIcon = saveButton.querySelector('i');
+            const buttonText = saveButton.querySelector('span');
+            const originalText = buttonText.textContent;
+
+            // Mostrar estado de carga
+            buttonText.textContent = 'Guardando...';
+            saveButton.disabled = true;
+
+            const formData = new FormData(notesForm);
+
+            fetch(notesForm.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    buttonIcon.className = 'fas fa-check-circle';
+                    buttonText.textContent = '¡Guardado!';
+                    // Limpiar el textarea después de guardar
+                    document.getElementById('diagnosis_notes').value = '';
+                    // El botón y el textarea se quedan deshabilitados después de guardar
+                    document.getElementById('diagnosis_notes').disabled = true;
+                } else {
+                    buttonText.textContent = 'Error al guardar';
+                    saveButton.disabled = false; // Permitir reintentar
+                }
+            });
+        });
+    }
+
+    // --- Lógica para activar el chat contextual (HU-16) ---
     if (activateChatButton) {
+        const chatContainer = document.getElementById('chat-container-static');
         activateChatButton.addEventListener('click', function() {
-            const isUserAuthenticated = {{ current_user.is_authenticated|tojson }};
-            if (isUserAuthenticated) {
-                aiPromptContainer.style.display = 'none'; // Oculta todo el contenedor de ayuda
-                chatContainer.style.display = 'flex'; // Muestra el chat
-            } else {
-                const loginModal = document.getElementById('login-required-modal');
-                if (loginModal) loginModal.style.display = 'flex';
+            if (!isUserAuthenticated) {
+                loginModal.style.display = 'flex';
+                return;
             }
+            chatContainer.style.display = 'flex'; // Muestra el contenedor del chat
+            this.style.display = 'none'; // Oculta el botón de activación
+            // Scroll suave hacia el chat
+            chatContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     }
 
@@ -348,11 +542,94 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 window.addEventListener('load', function() {
     const resultsElement = document.getElementById('results');
+    const fileInput = document.getElementById('image-input');
+    const fileNameDisplay = document.getElementById('file-name');
+    const isUserAuthenticated = {{ current_user.is_authenticated|tojson }};
+    const showFeedbackForLoggedInUser = {{ show_feedback_form|tojson }};
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 1) {
+                fileNameDisplay.textContent = `${this.files.length} imágenes seleccionadas`;
+            } else if (this.files.length === 1) {
+                fileNameDisplay.textContent = this.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'Ningún archivo seleccionado';
+            }
+        });
+    }
+
     if (resultsElement) {
         resultsElement.scrollIntoView({ 
             behavior: 'smooth', 
             block: 'start' 
         });
+
+        // --- Lógica para el formulario de Feedback (HU-22) ---
+        const feedbackForm = document.getElementById('feedback-form');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const diagnosisIdForFeedback = "{{ new_diagnosis_id }}";
+
+        // ✅ SOLO MOSTRAR PARA USUARIOS AUTENTICADOS
+        if (isUserAuthenticated && feedbackModal && diagnosisIdForFeedback && showFeedbackForLoggedInUser) {
+            setTimeout(() => {
+                feedbackModal.style.display = 'flex'; // ✅ Cambiar a flex cuando se muestra
+            }, 800);
+        }
+
+        // ✅ Lógica para enviar el feedback
+        if (feedbackForm) {
+            feedbackForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Detiene la recarga de la página
+                const formData = new FormData(feedbackForm);
+                const rating = formData.get('rating');
+                const comment = formData.get('comment');
+
+                if (!rating) {
+                    alert('Por favor, selecciona una calificación de estrellas.');
+                    return;
+                }
+
+                // Enviar los datos al backend
+                fetch("{{ url_for('submit_feedback') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        diagnosis_id: diagnosisIdForFeedback,
+                        rating: parseInt(rating),
+                        comment: comment
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Ocultar el formulario y mostrar agradecimiento
+                        feedbackForm.style.display = 'none';
+                        document.getElementById('feedback-thanks').style.display = 'block';
+                        // Cerrar el modal después de un momento
+                        setTimeout(() => {
+                            feedbackModal.style.display = 'none';
+                        }, 2000); // Cierra después de 2 segundos
+                    }
+                });
+            });
+        }
+
+        // Cerrar modal
+        const closeFeedbackButton = document.getElementById('close-feedback-modal');
+        if (closeFeedbackButton) {
+            closeFeedbackButton.addEventListener('click', () => {
+                feedbackModal.style.display = 'none'; // ✅ Ocultar
+            });
+        }
+
+        if (feedbackModal) {
+            feedbackModal.addEventListener('click', (e) => { 
+                if (e.target === feedbackModal) {
+                    feedbackModal.style.display = 'none'; // ✅ Ocultar
+                }
+            });
+        }
     }
 });
 </script>

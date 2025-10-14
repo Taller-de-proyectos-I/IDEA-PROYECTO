@@ -12,11 +12,16 @@ import pickle
 from flask_mail import Mail, Message
 from email.header import Header
 from deep_translator import GoogleTranslator
+from datetime import datetime, time, timedelta
 from openai import OpenAI # Para la IA Generativa
 import requests # Importar la librería requests
+from collections import Counter # Para contar predicciones
+import pytz # Para manejar zonas horarias
 # --- IMPORTACIONES DE MODELOS Y AUTENTICACIÓN ---
-from models import db, User, Zone, Diagnosis 
+from models import db, User, Zone, Diagnosis, Notification
 from flask_migrate import Migrate
+from image_validator import check_blur_from_stream 
+from sqlalchemy import func
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 disease_info = pd.read_csv('disease_info.csv' , encoding='cp1252')
@@ -109,15 +114,57 @@ app = Flask(__name__)
 # --- CONFIGURACIÓN DE BASE DE DATOS ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///plantandes.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Aumentar el timeout para evitar errores de "database is locked" en SQLite
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'connect_args': {'timeout': 20}
+}
 
 # --- INICIALIZAR EXTENSIONES ---
 db.init_app(app)
 migrate = Migrate(app, db)
+
+# --- CONFIGURACIÓN DE ZONA HORARIA PARA SQLITE ---
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    """Establece la zona horaria de la sesión de SQLite a la hora local."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login' # Redirige a la página de login si se intenta acceder a una ruta protegida
 login_manager.login_message = "Por favor, inicie sesión para acceder a esta página."
 login_manager.login_message_category = "info"
+
+@app.template_filter('localtime')
+def localtime_filter(utc_dt):
+    """Filtro de Jinja2 para convertir una fecha UTC a la hora local de Perú."""
+    if not utc_dt:
+        return ""
+    local_tz = pytz.timezone('America/Lima')
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    return local_dt.strftime('%d/%m/%Y %I:%M %p') # Formato con AM/PM
+
+@app.context_processor
+def inject_notifications():
+    """Inyecta notificaciones no leídas en todas las plantillas para el usuario actual."""
+    if current_user.is_authenticated:
+        unread_notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).order_by(Notification.created_at.desc()).all()
+        return dict(unread_notifications=unread_notifications)
+    return dict(unread_notifications=[])
+
+@app.route('/notifications/read/<int:notification_id>')
+@login_required
+def mark_notification_as_read(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    if notification.user_id == current_user.id:
+        notification.is_read = True
+        db.session.commit()
+    return redirect(notification.link or url_for('home_page'))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -145,6 +192,9 @@ mail = Mail(app)
 @app.route('/logout')
 def logout():
     logout_user()
+    # Limpiar AMBOS contadores de la sesión al cerrar sesión
+    session.pop('analysis_count', None)
+    session.pop('feedback_shown_in_session', None)
     return redirect(url_for('home_page'))
 
 # --- RUTA PARA EL ASISTENTE DE IA GENERATIVA ---
@@ -293,6 +343,8 @@ def register():
         return redirect(url_for('home_page'))
     if request.method == 'POST':
         username = request.form.get('username')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
         email = request.form.get('email')
         password = request.form.get('password')
         zone_id = request.form.get('district') # El ID de la zona ahora viene del campo 'district'
@@ -306,7 +358,13 @@ def register():
             flash('El correo electrónico ya está registrado.', 'warning')
             return redirect(url_for('register'))
 
-        new_user = User(username=username, email=email, zone_id=zone_id, address=address)
+        new_user = User(
+            username=username, 
+            first_name=first_name,
+            last_name=last_name,
+            email=email, 
+            zone_id=zone_id, 
+            address=address)
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
@@ -336,6 +394,9 @@ def login():
 
         if user and user.check_password(password):
             login_user(user)
+            # Reiniciar el contador de análisis al iniciar sesión
+            session.pop('feedback_shown_in_session', None) # Asegurarse de limpiar el estado anterior
+            session['analysis_count'] = 0
             return redirect(url_for('home_page'))
         else:
             flash('Credenciales inválidas. Por favor, inténtalo de nuevo.', 'danger')
@@ -364,62 +425,408 @@ def contact():
 @app.route('/index', methods=['GET', 'POST'])
 def ai_engine_page():
     if request.method == 'POST':
-        image = request.files.get('image')
-        if not image:
+        show_feedback_form = False # Inicializamos la variable
+        images = request.files.getlist('image')
+        if not images or all(img.filename == '' for img in images):
             flash("No se seleccionó ninguna imagen.", "error")
             return redirect(request.url)
 
-        filename = secure_filename(image.filename)
-        file_path = os.path.join('static/uploads', filename)
-        # Asegurarse de que el directorio 'uploads' exista
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        image.save(file_path)
+        all_top_predictions = []
+        first_image_path = None
+        new_diagnosis_id = None
+        quality_scores = []
+
+        for image in images:
+            image_stream = image.read()
+            
+            # --- Validación de Calidad ---
+            quality_score, is_blurry = check_blur_from_stream(image_stream, threshold=100.0)
+            if is_blurry:
+                flash(f"La imagen parece borrosa (Puntuación de nitidez: {quality_score:.2f}). Para un mejor resultado, sube una imagen más nítida.", "danger")
+                return redirect(request.url)
+            
+            quality_scores.append(quality_score)
+
+            # --- Guardar y Predecir ---
+            filename = secure_filename(image.filename)
+            file_path = os.path.join('static/uploads', filename)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'wb') as f:
+                f.write(image_stream)
+            
+            if not first_image_path:
+                first_image_path = f"uploads/{filename}"
+
+            top_probs, top_indices = prediction(file_path)
+            
+            top_disease_idx = top_indices[0]
+            top_disease_name = disease_info.loc[top_disease_idx]['disease_name_es']
+            top_disease_prob = round(top_probs[0] * 100, 2)
+            all_top_predictions.append({'name': top_disease_name, 'prob': top_disease_prob})
+
+        # --- Lógica de Consolidación (HU-24) ---
+        consolidated_result = None
+        if len(images) > 1:
+            disease_counts = Counter(p['name'] for p in all_top_predictions)
+            most_common_disease_name = disease_counts.most_common(1)[0][0]
+            probs_for_common_disease = [p['prob'] for p in all_top_predictions if p['name'] == most_common_disease_name]
+            average_prob = round(sum(probs_for_common_disease) / len(probs_for_common_disease), 2)
+            consolidated_result = {
+                'disease_name': most_common_disease_name,
+                'probability': average_prob
+            }
         
-        # --- LÓGICA DE VALIDACIÓN DE CALIDAD (HU-18) ---
-        # Aquí iría tu función para chequear si la imagen es borrosa.
-        # from image_validator import check_blur
-        # quality_score, is_blurry = check_blur(file_path)
-        # if is_blurry:
-        #     flash(f"La imagen parece borrosa (Calidad: {quality_score:.2f}). Por favor, sube una imagen más nítida.", "warning")
-        #     return redirect(request.url)
-        # ------------------------------------------------
+        # --- GUARDAR EN BASE DE DATOS Y CALCULAR FEEDBACK ---
+        if current_user.is_authenticated:
+            # ✅ Obtener el contador ANTES de incrementarlo
+            current_analysis_count = session.get('analysis_count', 0)
+            
+            # ✅ Verificar si ya se mostró el feedback en esta sesión
+            feedback_already_shown = session.get('feedback_shown_in_session', False)
+            
+            # ✅ Decidir si mostrar el modal (segundo análisis Y no mostrado aún)
+            show_feedback_form = (current_analysis_count == 1 and not feedback_already_shown)
 
-        top_probs, top_indices = prediction(file_path)
+            # ✅ Si se va a mostrar, marcar como mostrado
+            if show_feedback_form:
+                session['feedback_shown_in_session'] = True
+            
+            # ✅ Incrementar el contador DESPUÉS de verificar
+            session['analysis_count'] = current_analysis_count + 1
 
-        results = []
-        for i in range(len(top_probs)):
-            idx = top_indices[i]
+            final_disease_name = consolidated_result['disease_name'] if consolidated_result else all_top_predictions[0]['name']
+            final_probability = consolidated_result['probability'] if consolidated_result else all_top_predictions[0]['prob']
+            avg_quality_score = round(sum(quality_scores) / len(quality_scores), 2) if quality_scores else 0
+
+            new_diagnosis = Diagnosis(
+                user_id=current_user.id,
+                image_path=first_image_path,
+                disease_name=final_disease_name,
+                probability=final_probability,
+                image_quality_score=avg_quality_score
+            )
+            db.session.add(new_diagnosis)
+            db.session.commit()
+            db.session.refresh(new_diagnosis) # Asegura que el objeto tenga todos los datos de la BD
+            new_diagnosis_id = new_diagnosis.id
+
+            check_and_generate_alerts(new_diagnosis) # Generar alertas con el diagnóstico guardado
+
+        # --- Preparar resultados para mostrar ---
+        first_image_prediction = prediction(os.path.join('static', first_image_path))
+        display_results = []
+        for i in range(len(first_image_prediction[0])):
+            idx = first_image_prediction[1][i]
+            prob = round(first_image_prediction[0][i] * 100, 2)
             disease_record = disease_info.loc[idx]
             supplement_record = supplement_info.loc[idx]
-
-            result = {
+            display_results.append({
                 'disease_name': disease_record['disease_name_es'],
-                'probability': round(top_probs[i] * 100, 2),
+                'probability': prob,
                 'description': disease_record['description_es'],
                 'prevent': disease_record['steps_es'],
                 'supplement_name': supplement_record['supplement_name_es'],
                 'supplement_image': supplement_record['supplement_image'],
                 'buy_link': supplement_record['buy_link']
-            }
-            results.append(result)
+            })
 
-        # --- GUARDAR EN BASE DE DATOS (HU-14) ---
-        if current_user.is_authenticated:
-            # Guardamos el resultado principal (top 1)
-            top_result = results[0]
-            new_diagnosis = Diagnosis(
-                user_id=current_user.id,
-                image_path=f"uploads/{filename}",
-                disease_name=top_result['disease_name'],
-                probability=top_result['probability']
-            )
-            db.session.add(new_diagnosis)
+        return render_template('index.html', 
+                               results=display_results, 
+                               user_image=first_image_path,
+                               new_diagnosis_id=new_diagnosis_id,
+                               consolidated_result=consolidated_result,
+                               image_count=len(images),
+                               show_feedback_form=show_feedback_form)
+
+    # Para peticiones GET
+    return render_template('index.html', show_feedback_form=False)
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    users = None
+    if current_user.role == 'admin':
+        # Un admin puede ver a todos los demás usuarios
+        users = User.query.filter(User.id != current_user.id).order_by(User.username).all()
+
+    if request.method == 'POST':
+        # Actualizar nombres y apellidos
+        current_user.first_name = request.form.get('first_name')
+        current_user.last_name = request.form.get('last_name')
+        
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        # Lógica para cambiar la contraseña (solo si se proporcionan nuevos valores)
+        if new_password:
+            if new_password != confirm_password:
+                flash('Las nuevas contraseñas no coinciden. Por favor, inténtalo de nuevo.', 'danger')
+                return redirect(url_for('edit_profile'))
+            
+            current_user.set_password(new_password)
+            flash('Tu contraseña ha sido actualizada con éxito.', 'success')
+
+        db.session.commit()
+        flash('Tu perfil ha sido actualizado con éxito.', 'success')
+        return redirect(url_for('edit_profile'))
+
+    return render_template('edit_profile.html', users=users)
+
+@app.route('/admin/update_role/<int:user_id>', methods=['POST'])
+@login_required
+def update_user_role(user_id):
+    if current_user.role != 'admin':
+        flash('No tienes permiso para realizar esta acción.', 'danger')
+        return redirect(url_for('home_page'))
+    
+    user_to_update = User.query.get_or_404(user_id)
+    user_to_update.role = request.form.get('role')
+    db.session.commit()
+    flash(f"El rol de {user_to_update.username} ha sido actualizado a '{user_to_update.role}'.", 'success')
+    return redirect(url_for('edit_profile'))
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    # Implementar la lógica de eliminación aquí
+    flash(f"Funcionalidad de eliminar usuario (ID: {user_id}) pendiente de implementación.", 'info')
+    return redirect(url_for('edit_profile'))
+
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    if current_user.role != 'admin':
+        flash('Acceso denegado. Esta sección es solo para administradores.', 'danger')
+        return redirect(url_for('home_page'))
+
+    # --- Estadísticas Clave ---
+    total_users = User.query.count()
+    total_diagnoses = Diagnosis.query.count()
+
+    # Nuevos usuarios en los últimos 7 días
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    new_users_count = User.query.filter(User.created_at >= seven_days_ago).count()
+
+    # Diagnósticos realizados hoy
+    today_start = datetime.combine(datetime.now(pytz.timezone('America/Lima')).date(), time.min)
+    diagnoses_today_count = Diagnosis.query.filter(Diagnosis.created_at >= today_start).count()
+
+    # --- Top 5s ---
+    # Usuarios más activos (con más diagnósticos)
+    most_active_users = db.session.query(
+        User.username, func.count(Diagnosis.id).label('diag_count')
+    ).join(Diagnosis).group_by(User.id).order_by(func.count(Diagnosis.id).desc()).limit(5).all()
+
+    # Enfermedades más comunes
+    most_common_diseases = db.session.query(
+        Diagnosis.disease_name, func.count(Diagnosis.id).label('disease_count')
+    ).group_by(Diagnosis.disease_name).order_by(func.count(Diagnosis.id).desc()).limit(5).all()
+
+    # --- Preparar datos para los gráficos ---
+    disease_labels = [d.disease_name for d in most_common_diseases]
+    disease_data = [d.disease_count for d in most_common_diseases]
+
+    user_labels = [u.username for u in most_active_users]
+    user_data = [u.diag_count for u in most_active_users]
+
+    return render_template('admin_dashboard.html',
+                           total_users=total_users, total_diagnoses=total_diagnoses,
+                           new_users_count=new_users_count, diagnoses_today_count=diagnoses_today_count,
+                           most_active_users=most_active_users, most_common_diseases=most_common_diseases,
+                           disease_labels=disease_labels, disease_data=disease_data,
+                           user_labels=user_labels, user_data=user_data)
+
+@app.route('/update_notes', methods=['POST'])
+@login_required
+def update_notes():
+    """Actualiza las notas de un diagnóstico existente."""
+    diagnosis_id = request.form.get('diagnosis_id')
+    notes = request.form.get('notes')
+    
+    diagnosis = Diagnosis.query.get_or_404(diagnosis_id)
+    
+    # Asegurarse de que el usuario solo pueda editar sus propios diagnósticos
+    if diagnosis.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'No tienes permiso para editar este diagnóstico.'}), 403
+
+    diagnosis.notes = notes
+    db.session.commit()
+    
+    # Devolver una respuesta JSON en lugar de redirigir
+    return jsonify({'success': True, 'message': 'Nota guardada con éxito.'})
+
+def check_and_generate_alerts(diagnosis):
+    """Verifica si un nuevo diagnóstico dispara una alerta y notifica a los usuarios."""
+    ALERT_THRESHOLD = 3
+    TIME_WINDOW_DAYS = 14
+    
+    user = User.query.get(diagnosis.user_id)
+    if not user or not user.zone_id:
+        return
+
+    # ✅ Usar la zona horaria de Perú para una comparación precisa
+    peru_tz = pytz.timezone('America/Lima')
+    start_date_window = datetime.now(peru_tz) - timedelta(days=TIME_WINDOW_DAYS)
+
+    # Contar casos de la misma enfermedad en la misma zona
+    case_count = db.session.query(func.count(Diagnosis.id))\
+        .join(User, User.id == Diagnosis.user_id)\
+        .filter(User.zone_id == user.zone_id)\
+        .filter(Diagnosis.disease_name == diagnosis.disease_name)\
+        .filter(Diagnosis.created_at >= start_date_window).scalar()
+
+    # Si el número de casos alcanza el umbral, verificamos si ya se envió una alerta para este brote.
+    if case_count >= ALERT_THRESHOLD:
+        alert_message_start = f"¡Alerta de brote! Se han detectado"
+        # ✅ Consulta corregida: ahora busca una notificación existente para la misma zona.
+        existing_notification = db.session.query(Notification).join(User).filter(
+            User.zone_id == user.zone_id,
+            Notification.message.like(f"%{diagnosis.disease_name}%"),
+            Notification.created_at >= start_date_window
+        )\
+            .first()
+
+        if not existing_notification:
+            message = f"{alert_message_start} {case_count} casos de '{diagnosis.disease_name}' en tu zona."
+            users_in_zone = User.query.filter_by(zone_id=user.zone_id).all()
+            for u in users_in_zone:
+                notif = Notification(user_id=u.id, message=message, link=url_for('alerts_page'))
+                db.session.add(notif)
             db.session.commit()
 
-        return render_template('index.html', results=results, user_image=f"uploads/{filename}")
+@app.route('/submit_feedback', methods=['POST'])
+def submit_feedback():
+    """Guarda la retroalimentación del usuario para un diagnóstico."""
+    data = request.json
+    diagnosis_id = data.get('diagnosis_id')
+    rating = data.get('rating')
+    comment = data.get('comment')
 
-    # Para peticiones GET, simplemente renderiza la página
-    return render_template('index.html')
+    if not diagnosis_id or not rating:
+        return jsonify({'success': False, 'message': 'Faltan datos.'}), 400
+
+    diagnosis = Diagnosis.query.get(diagnosis_id)
+    if diagnosis:
+        diagnosis.feedback_rating = rating
+        diagnosis.feedback_comment = comment
+        db.session.commit()
+        return jsonify({'success': True, 'message': '¡Gracias por tu retroalimentación!'})
+    
+    return jsonify({'success': False, 'message': 'Diagnóstico no encontrado.'}), 404
+
+@app.route('/history')
+@login_required
+def history():
+    """Muestra el historial de diagnósticos del usuario con opciones de filtrado."""
+    
+    # Obtener parámetros de filtro desde la URL
+    disease_filter = request.args.get('disease', '')
+    start_date_str = request.args.get('start_date', '')
+    end_date_str = request.args.get('end_date', '')
+
+    # Query base para los diagnósticos del usuario actual
+    query = Diagnosis.query.filter_by(user_id=current_user.id)
+
+    # Aplicar filtros si existen
+    if disease_filter:
+        query = query.filter(Diagnosis.disease_name.ilike(f'%{disease_filter}%'))
+    
+    if start_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            query = query.filter(Diagnosis.created_at >= start_date)
+        except ValueError:
+            flash('Formato de fecha de inicio inválido.', 'warning')
+
+    if end_date_str:
+        try:
+            # Incluir el día completo en el rango
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+            end_date = datetime.combine(end_date, time.max)
+            query = query.filter(Diagnosis.created_at <= end_date)
+        except ValueError:
+            flash('Formato de fecha de fin inválido.', 'warning')
+
+    # Ejecutar la consulta y ordenar
+    diagnoses_from_db = query.order_by(Diagnosis.created_at.desc()).all()
+
+    # Enriquecer cada diagnóstico con su descripción y recomendaciones
+    diagnoses_with_details = []
+    for diag in diagnoses_from_db:
+        # Buscar la información de la enfermedad en el DataFrame
+        disease_details_row = disease_info[disease_info['disease_name_es'] == diag.disease_name]
+        
+        if not disease_details_row.empty:
+            disease_details = disease_details_row.iloc[0]
+            diagnoses_with_details.append({
+                'image_path': diag.image_path,
+                'disease_name': diag.disease_name,
+                'probability': diag.probability,
+                'created_at': diag.created_at,
+                'description': disease_details['description_es'],
+                'recommendations': disease_details['steps_es'],
+                'notes': diag.notes # Añadimos las notas
+            })
+
+    # Si es una petición AJAX (para el filtrado en vivo), devolvemos solo el fragmento
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template('_history_results.html', diagnoses=diagnoses_with_details)
+
+    # Para la carga inicial de la página, renderizamos la página completa
+    return render_template('history.html',
+                           diagnoses=diagnoses_with_details,
+                           disease_filter=disease_filter,
+                           start_date=start_date_str,
+                           end_date=end_date_str)
+
+@app.route('/alerts')
+def alerts_page():
+    """Muestra una página con alertas de brotes de enfermedades por zona."""
+    
+    # 1. Definir la regla para un brote
+    ALERT_THRESHOLD = 3  # A partir de 3 casos se considera alerta
+    TIME_WINDOW_DAYS = 14 # En los últimos 14 días
+
+    # Calcular la fecha de inicio para la ventana de tiempo
+    # ✅ Usar la zona horaria de Perú para una comparación precisa
+    peru_tz = pytz.timezone('America/Lima')
+    start_date = datetime.now(peru_tz) - timedelta(days=TIME_WINDOW_DAYS)
+
+    # 2. Consultar la base de datos para encontrar brotes
+    # Agrupamos por zona y enfermedad, y contamos los diagnósticos recientes
+    outbreaks = db.session.query(
+        Diagnosis.disease_name,
+        Zone.district_name,
+        Zone.province_name,
+        func.count(Diagnosis.id).label('case_count')
+    ).join(User, User.id == Diagnosis.user_id)\
+     .join(Zone, Zone.id == User.zone_id)\
+     .filter(Diagnosis.created_at >= start_date)\
+     .group_by(Diagnosis.disease_name, Zone.id)\
+     .having(func.count(Diagnosis.id) >= ALERT_THRESHOLD)\
+     .order_by(func.count(Diagnosis.id).desc())\
+     .all()
+
+    # 3. Procesar los resultados para la plantilla
+    alerts = []
+    for outbreak in outbreaks:
+        count = outbreak.case_count
+        risk_level = ''
+        if count >= 10:
+            risk_level = 'Alto'
+        elif count >= 5:
+            risk_level = 'Moderado'
+        else:
+            risk_level = 'Bajo'
+        
+        alerts.append({
+            'disease': outbreak.disease_name,
+            'location': f"{outbreak.district_name}, {outbreak.province_name}",
+            'count': count,
+            'risk': risk_level
+        })
+
+    return render_template('alerts.html', alerts=alerts)
 
 @app.route('/mobile-device')
 def mobile_device_detected_page():

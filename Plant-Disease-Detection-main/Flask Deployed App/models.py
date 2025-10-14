@@ -10,15 +10,19 @@ class User(UserMixin, db.Model):
     """Modelo de Usuario con integración para Flask-Login."""
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     address = db.Column(db.String(255), nullable=True) # Campo para la dirección exacta
 
     zone_id = db.Column(db.Integer, db.ForeignKey('zone.id'), nullable=False)
     zone = db.relationship('Zone', backref=db.backref('users', lazy=True))
 
     diagnoses = db.relationship('Diagnosis', backref='user', lazy='dynamic')
+
+    role = db.Column(db.String(20), nullable=False, default='user') # Roles: 'user', 'admin'
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -45,10 +49,21 @@ class Diagnosis(db.Model):
     image_path = db.Column(db.String(255), nullable=False)
     disease_name = db.Column(db.String(100), nullable=False)
     probability = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     notes = db.Column(db.Text, nullable=True)
     severity = db.Column(db.String(50), nullable=True)
     image_quality_score = db.Column(db.Float, nullable=True)
     feedback_rating = db.Column(db.Integer, nullable=True)
     feedback_comment = db.Column(db.Text, nullable=True)
+
+class Notification(db.Model):
+    """Modelo para las notificaciones de los usuarios."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    link = db.Column(db.String(255), nullable=True) # Enlace para redirigir al usuario
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic'))
