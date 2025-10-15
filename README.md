@@ -72,7 +72,7 @@ Para ejecutar el proyecto localmente, sigue estos pasos:
 
 1.  **Clonar el Repositorio:**
     ```bash
-    git clone https://github.com/tu-usuario/tu-repositorio.git
+    git clone https://github.com/Taller-de-proyectos-I/plantandes.git
     cd "Flask Deployed App"
     ```
 
