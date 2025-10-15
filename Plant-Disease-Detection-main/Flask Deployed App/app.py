@@ -10,6 +10,7 @@ import torch
 import pandas as pd
 import pickle
 from flask_mail import Mail, Message
+import io, csv
 from email.header import Header
 from deep_translator import GoogleTranslator
 from datetime import datetime, time, timedelta
@@ -21,7 +22,7 @@ import pytz # Para manejar zonas horarias
 from models import db, User, Zone, Diagnosis, Notification
 from flask_migrate import Migrate
 from image_validator import check_blur_from_stream 
-from sqlalchemy import func
+from sqlalchemy import func, event
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 disease_info = pd.read_csv('disease_info.csv' , encoding='cp1252')
@@ -119,12 +120,29 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'connect_args': {'timeout': 20}
 }
 
+# --- CONFIGURACIÓN DE INTERNACIONALIZACIÓN (i18n) ---
+app.config['LANGUAGES'] = {
+    'es': 'Español',
+    'qu': 'Quechua'
+}
+app.config['BABEL_DEFAULT_LOCALE'] = 'es'
+
 # --- INICIALIZAR EXTENSIONES ---
 db.init_app(app)
 migrate = Migrate(app, db)
+from flask_babel import Babel, gettext
+
+babel = Babel()
+def get_locale():
+    # 1. Usar el idioma de la sesión si está disponible
+    if 'language' in session and session['language'] in app.config['LANGUAGES']:
+        return session['language']
+    # 2. De lo contrario, usar el idioma preferido del navegador
+    return request.accept_languages.best_match(app.config['LANGUAGES'].keys())
+
+babel.init_app(app, locale_selector=get_locale)
 
 # --- CONFIGURACIÓN DE ZONA HORARIA PARA SQLITE ---
-from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 @event.listens_for(Engine, "connect")
@@ -137,7 +155,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login' # Redirige a la página de login si se intenta acceder a una ruta protegida
-login_manager.login_message = "Por favor, inicie sesión para acceder a esta página."
+login_manager.login_message = gettext("Por favor, inicie sesión para acceder a esta página.")
 login_manager.login_message_category = "info"
 
 @app.template_filter('localtime')
@@ -148,6 +166,13 @@ def localtime_filter(utc_dt):
     local_tz = pytz.timezone('America/Lima')
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
     return local_dt.strftime('%d/%m/%Y %I:%M %p') # Formato con AM/PM
+
+@app.route('/language/<lang>')
+def set_language(lang):
+    if lang in app.config['LANGUAGES']:
+        session['language'] = lang
+    # Redirigir a la página anterior o a la página principal
+    return redirect(request.referrer or url_for('home_page'))
 
 @app.context_processor
 def inject_notifications():
@@ -352,10 +377,10 @@ def register():
 
         # Validaciones
         if User.query.filter_by(username=username).first():
-            flash('El nombre de usuario ya existe.', 'warning')
+            flash(gettext('El nombre de usuario ya existe.'), 'warning')
             return redirect(url_for('register'))
         if User.query.filter_by(email=email).first():
-            flash('El correo electrónico ya está registrado.', 'warning')
+            flash(gettext('El correo electrónico ya está registrado.'), 'warning')
             return redirect(url_for('register'))
 
         new_user = User(
@@ -369,7 +394,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        flash('¡Registro exitoso! Ahora puedes iniciar sesión.', 'success')
+        flash(gettext('¡Registro exitoso! Ahora puedes iniciar sesión.'), 'success')
         return redirect(url_for('login'))
 
     # Preparar datos para los desplegables dinámicos
@@ -399,7 +424,7 @@ def login():
             session['analysis_count'] = 0
             return redirect(url_for('home_page'))
         else:
-            flash('Credenciales inválidas. Por favor, inténtalo de nuevo.', 'danger')
+            flash(gettext('Credenciales inválidas. Por favor, inténtalo de nuevo.'), 'danger')
 
     return render_template('login.html')
 
@@ -418,7 +443,7 @@ def contact():
         msg.html = render_template('email_template.html', name=name, email=email, message_body=message_body)
         mail.send(msg)
         
-        flash('¡Gracias por tu mensaje! Nos pondremos en contacto contigo pronto.', 'success')
+        flash(gettext('¡Gracias por tu mensaje! Nos pondremos en contacto contigo pronto.'), 'success')
         return redirect(url_for('contact'))
     return render_template('contact-us.html')
 
@@ -428,7 +453,7 @@ def ai_engine_page():
         show_feedback_form = False # Inicializamos la variable
         images = request.files.getlist('image')
         if not images or all(img.filename == '' for img in images):
-            flash("No se seleccionó ninguna imagen.", "error")
+            flash(gettext("No se seleccionó ninguna imagen."), "error")
             return redirect(request.url)
 
         all_top_predictions = []
@@ -442,7 +467,7 @@ def ai_engine_page():
             # --- Validación de Calidad ---
             quality_score, is_blurry = check_blur_from_stream(image_stream, threshold=100.0)
             if is_blurry:
-                flash(f"La imagen parece borrosa (Puntuación de nitidez: {quality_score:.2f}). Para un mejor resultado, sube una imagen más nítida.", "danger")
+                flash(gettext("La imagen parece borrosa (Puntuación de nitidez: %(score).2f). Para un mejor resultado, sube una imagen más nítida.", score=quality_score), "danger")
                 return redirect(request.url)
             
             quality_scores.append(quality_score)
@@ -560,14 +585,14 @@ def edit_profile():
         # Lógica para cambiar la contraseña (solo si se proporcionan nuevos valores)
         if new_password:
             if new_password != confirm_password:
-                flash('Las nuevas contraseñas no coinciden. Por favor, inténtalo de nuevo.', 'danger')
+                flash(gettext('Las nuevas contraseñas no coinciden. Por favor, inténtalo de nuevo.'), 'danger')
                 return redirect(url_for('edit_profile'))
             
             current_user.set_password(new_password)
-            flash('Tu contraseña ha sido actualizada con éxito.', 'success')
+            flash(gettext('Tu contraseña ha sido actualizada con éxito.'), 'success')
 
         db.session.commit()
-        flash('Tu perfil ha sido actualizado con éxito.', 'success')
+        flash(gettext('Tu perfil ha sido actualizado con éxito.'), 'success')
         return redirect(url_for('edit_profile'))
 
     return render_template('edit_profile.html', users=users)
@@ -576,7 +601,7 @@ def edit_profile():
 @login_required
 def update_user_role(user_id):
     if current_user.role != 'admin':
-        flash('No tienes permiso para realizar esta acción.', 'danger')
+        flash(gettext('No tienes permiso para realizar esta acción.'), 'danger')
         return redirect(url_for('home_page'))
     
     user_to_update = User.query.get_or_404(user_id)
@@ -589,14 +614,14 @@ def update_user_role(user_id):
 @login_required
 def delete_user(user_id):
     # Implementar la lógica de eliminación aquí
-    flash(f"Funcionalidad de eliminar usuario (ID: {user_id}) pendiente de implementación.", 'info')
+    flash(gettext("Funcionalidad de eliminar usuario (ID: %(user_id)s) pendiente de implementación.", user_id=user_id), 'info')
     return redirect(url_for('edit_profile'))
 
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
     if current_user.role != 'admin':
-        flash('Acceso denegado. Esta sección es solo para administradores.', 'danger')
+        flash(gettext('Acceso denegado. Esta sección es solo para administradores.'), 'danger')
         return redirect(url_for('home_page'))
 
     # --- Estadísticas Clave ---
@@ -635,6 +660,51 @@ def admin_dashboard():
                            most_active_users=most_active_users, most_common_diseases=most_common_diseases,
                            disease_labels=disease_labels, disease_data=disease_data,
                            user_labels=user_labels, user_data=user_data)
+
+@app.route('/admin/export/diagnoses')
+@login_required
+def export_diagnoses():
+    """
+    Genera y sirve un archivo CSV con datos de diagnóstico anonimizados.
+    """
+    if current_user.role != 'admin':
+        flash(gettext('Acceso denegado.'), 'danger')
+        return redirect(url_for('home_page'))
+
+    # 1. Realizar la consulta a la base de datos, uniendo las tablas para obtener datos de zona.
+    # Se seleccionan explícitamente los campos para anonimizar los datos.
+    query = db.session.query(
+        Diagnosis.id,
+        Diagnosis.disease_name,
+        Diagnosis.probability,
+        Diagnosis.created_at,
+        Diagnosis.feedback_rating,
+        Diagnosis.feedback_comment,
+        Diagnosis.image_quality_score,
+        Zone.district_name,
+        Zone.province_name,
+        Zone.department_name
+    ).join(User, User.id == Diagnosis.user_id)\
+     .join(Zone, Zone.id == User.zone_id)\
+     .order_by(Diagnosis.created_at.desc()).all()
+
+    # 2. Crear el archivo CSV en memoria
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Escribir la fila de encabezado
+    header = ['id_diagnostico', 'enfermedad', 'probabilidad', 'fecha_creacion', 
+              'calificacion_feedback', 'comentario_feedback', 'calidad_imagen',
+              'distrito', 'provincia', 'departamento']
+    writer.writerow(header)
+
+    # Escribir las filas de datos
+    for row in query:
+        writer.writerow(row)
+
+    # 3. Preparar la respuesta para la descarga
+    output.seek(0)
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition": f"attachment;filename=diagnosticos_anonimizados_{datetime.now().strftime('%Y-%m-%d')}.csv"})
 
 @app.route('/update_notes', methods=['POST'])
 @login_required
@@ -745,7 +815,7 @@ def history():
             end_date = datetime.combine(end_date, time.max)
             query = query.filter(Diagnosis.created_at <= end_date)
         except ValueError:
-            flash('Formato de fecha de fin inválido.', 'warning')
+            flash(gettext('Formato de fecha de fin inválido.'), 'warning')
 
     # Ejecutar la consulta y ordenar
     diagnoses_from_db = query.order_by(Diagnosis.created_at.desc()).all()
@@ -842,6 +912,11 @@ def market():
     return render_template('market.html', 
                            diseases=disease_info.to_dict(orient='records'),
                            supplements=supplement_info.to_dict(orient='records'))
+
+@app.route('/manual')
+def user_manual():
+    """Muestra la página del manual de usuario."""
+    return render_template('manual.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

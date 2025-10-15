@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard de Administrador - PlantAndes{% endblock %}
+{% block title %}{{ _('Dashboard de Administrador') }} - PlantAndes{% endblock %}
 
 {% block content %}
 <section class="admin-dashboard-section">
     <div class="container">
-        <h1 class="section-title">Dashboard de Administrador</h1>
+        <h1 class="section-title">{{ _('Dashboard de Administrador') }}</h1>
         <p class="section-description" style="text-align: center; max-width: 800px; margin: -2rem auto 3rem;">
             Una vista general de la actividad y estadísticas de la plataforma.
         </p>
@@ -15,28 +15,28 @@
                 <div class="stat-icon"><i class="fas fa-users"></i></div>
                 <div class="stat-info">
                     <div class="stat-number">{{ total_users }}</div>
-                    <div class="stat-label">Usuarios Registrados</div>
+                    <div class="stat-label">{{ _('Usuarios Registrados') }}</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-microscope"></i></div>
                 <div class="stat-info">
                     <div class="stat-number">{{ total_diagnoses }}</div>
-                    <div class="stat-label">Análisis Totales</div>
+                    <div class="stat-label">{{ _('Análisis Totales') }}</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
                 <div class="stat-info">
                     <div class="stat-number">{{ new_users_count }}</div>
-                    <div class="stat-label">Nuevos Usuarios (7 días)</div>
+                    <div class="stat-label">{{ _('Nuevos Usuarios (7 días)') }}</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
                 <div class="stat-info">
                     <div class="stat-number">{{ diagnoses_today_count }}</div>
-                    <div class="stat-label">Análisis de Hoy</div>
+                    <div class="stat-label">{{ _('Análisis de Hoy') }}</div>
                 </div>
             </div>
         </div>
@@ -45,15 +45,15 @@
         <div class="top-lists-grid">
             <!-- Top Usuarios Activos -->
             <div class="list-card">
-                <h3 class="list-title"><i class="fas fa-trophy"></i> Usuarios Más Activos</h3>
+                <h3 class="list-title"><i class="fas fa-trophy"></i> {{ _('Usuarios Más Activos') }}</h3>
                 <ul class="top-list">
                     {% for user in most_active_users %}
                     <li>
                         <span class="list-item-name">{{ user.username }}</span>
-                        <span class="list-item-count">{{ user.diag_count }} análisis</span>
+                        <span class="list-item-count">{{ ngettext('%(num)s análisis', '%(num)s análisis', user.diag_count) }}</span>
                     </li>
                     {% else %}
-                    <li class="empty-list">No hay datos de actividad.</li>
+                    <li class="empty-list">{{ _('No hay datos de actividad.') }}</li>
                     {% endfor %}
                 </ul>
                 <div class="chart-container" style="margin-top: 2rem;">
@@ -63,19 +63,35 @@
 
             <!-- Top Enfermedades Comunes -->
             <div class="list-card">
-                <h3 class="list-title"><i class="fas fa-viruses"></i> Enfermedades Más Comunes</h3>
+                <h3 class="list-title"><i class="fas fa-viruses"></i> {{ _('Enfermedades Más Comunes') }}</h3>
                 <ul class="top-list">
                     {% for disease in most_common_diseases %}
                     <li>
                         <span class="list-item-name">{{ disease.disease_name }}</span>
-                        <span class="list-item-count">{{ disease.disease_count }} casos</span>
+                        <span class="list-item-count">{{ ngettext('%(num)s caso', '%(num)s casos', disease.disease_count) }}</span>
                     </li>
                     {% else %}
-                    <li class="empty-list">No hay diagnósticos registrados.</li>
+                    <li class="empty-list">{{ _('No hay diagnósticos registrados.') }}</li>
                     {% endfor %}
                 </ul>
                 <div class="chart-container" style="margin-top: 2rem;">
                     <canvas id="commonDiseasesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila de Reportes y Exportaciones -->
+        <div class="reports-section">
+            <div class="list-card">
+                <h3 class="list-title"><i class="fas fa-file-csv"></i> {{ _('Reportes y Exportaciones') }}</h3>
+                <div class="report-item">
+                    <div class="report-info">
+                        <h4>{{ _('Exportar Datos de Diagnósticos') }}</h4>
+                        <p>{{ _('Descarga un archivo CSV con todos los registros de diagnósticos. Los datos personales como nombres de usuario y correos han sido eliminados para proteger la privacidad.') }}</p>
+                    </div>
+                    <a href="{{ url_for('export_diagnoses') }}" class="analyze-button">
+                        <i class="fas fa-download"></i> {{ _('Descargar Reporte') }}
+                    </a>
                 </div>
             </div>
         </div>
@@ -153,6 +169,23 @@
     .chart-container {
         position: relative;
         height: 350px;
+    }
+
+    .reports-section {
+        margin-top: 4rem;
+    }
+    .report-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+    .report-info h4 { margin: 0 0 0.5rem 0; font-size: 1.1rem; color: var(--text-dark); }
+    .report-info p { margin: 0; color: var(--text-light); max-width: 600px; }
+    .report-item .analyze-button {
+        flex-shrink: 0; /* Evita que el botón se encoja */
     }
 </style>
 {% endblock %}

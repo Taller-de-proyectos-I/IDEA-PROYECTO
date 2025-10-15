@@ -25,16 +25,28 @@
             </button>
             <!-- Los enlaces de navegación ahora están separados para un mejor control del layout -->
             <ul class="nav-links" id="nav-links">
-                <li><a href="{{ url_for('home_page') }}">Principal</a></li>
-                <li><a href="{{ url_for('market') }}">Biblioteca</a></li>
-                <li><a href="{{ url_for('alerts_page') }}">Alertas</a></li>
-                <li><a href="{{ url_for('ai_engine_page') }}">Motor IA</a></li>
-                <li><a href="{{ url_for('about_page') }}">Acerca de</a></li>
-                <li><a href="{{ url_for('contact') }}">Contacto</a></li>
+                <li><a href="{{ url_for('home_page') }}">{{ _('Principal') }}</a></li>
+                <li><a href="{{ url_for('market') }}">{{ _('Biblioteca') }}</a></li>
+                <li><a href="{{ url_for('alerts_page') }}">{{ _('Alertas') }}</a></li>
+                <li><a href="{{ url_for('ai_engine_page') }}">{{ _('Motor IA') }}</a></li>
+                <li><a href="{{ url_for('about_page') }}">{{ _('Acerca de') }}</a></li>
+                <li><a href="{{ url_for('contact') }}">{{ _('Contacto') }}</a></li>
+                <li><a href="{{ url_for('user_manual') }}">{{ _('Manual') }}</a></li>
             </ul>
 
             <!-- Contenedor para los enlaces de autenticación (se alineará a la derecha) -->
             <div class="nav-auth-links" id="user-menu-container">
+                <!-- Selector de Idioma -->
+                <div class="language-selector-nav">
+                    <i class="fas fa-globe"></i>
+                    <ul class="language-dropdown">
+                        {% for lang_code, lang_name in config.LANGUAGES.items() %}
+                        <li>
+                            <a href="{{ url_for('set_language', lang=lang_code) }}" class="{{ 'active' if session.get('language', 'es') == lang_code else '' }}">{{ lang_name }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
                 {% if current_user.is_authenticated %}
                 <!-- Icono de Notificaciones -->
                 <div id="notification-container" class="notification-container">
@@ -45,12 +57,12 @@
                         {% endif %}
                     </button>
                     <div id="notification-dropdown" class="user-menu-dropdown">
-                        <div class="dropdown-header"><h4>Notificaciones</h4></div>
+                        <div class="dropdown-header"><h4>{{ _('Notificaciones') }}</h4></div>
                         <ul class="notification-list">
                             {% for notif in unread_notifications %}
                                 <li><a href="{{ url_for('mark_notification_as_read', notification_id=notif.id) }}">{{ notif.message }}</a></li>
                             {% else %}
-                                <li class="no-notifications">No tienes notificaciones nuevas.</li>
+                                <li class="no-notifications">{{ _('No tienes notificaciones nuevas.') }}</li>
                             {% endfor %}
                         </ul>
                     </div>
@@ -73,27 +85,27 @@
                             <button id="close-user-menu" class="close-button">&times;</button>
                         </div>
                         <ul class="dropdown-links">
-                            <li><a href="{{ url_for('history') }}"><i class="fas fa-history"></i> Mi Historial</a></li>
+                            <li><a href="{{ url_for('history') }}"><i class="fas fa-history"></i> {{ _('Mi Historial') }}</a></li>
                             {% if current_user.role == 'admin' %}
-                            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> {{ _('Dashboard') }}</a></li>
                             {% endif %}
-                            <li><a href="{{ url_for('edit_profile') }}"><i class="fas fa-user-edit"></i> Editar Perfil</a></li>
+                            <li><a href="{{ url_for('edit_profile') }}"><i class="fas fa-user-edit"></i> {{ _('Editar Perfil') }}</a></li>
                         </ul>
                         <div class="dropdown-footer">
-                            <button id="logout-button" class="logout-button"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+                            <button id="logout-button" class="logout-button"><i class="fas fa-sign-out-alt"></i> {{ _('Cerrar Sesión') }}</button>
                             <!-- Contenedor para la confirmación de logout -->
                             <div id="logout-confirm-container" class="logout-confirm-container">
-                                <p>¿Seguro que quieres salir?</p>
+                                <p>{{ _('¿Seguro que quieres salir?') }}</p>
                                 <div class="confirm-buttons">
-                                    <a href="{{ url_for('logout') }}" class="confirm-yes">Sí, salir</a>
-                                    <button id="logout-no" class="confirm-no">No</button>
+                                    <a href="{{ url_for('logout') }}" class="confirm-yes">{{ _('Sí, salir') }}</a>
+                                    <button id="logout-no" class="confirm-no">{{ _('No') }}</button>
                                 </div>
                             </div>
                         </div>
                     {% else %}
                         <!-- Vista para usuario no logueado -->
                         <div class="dropdown-header">
-                            <h4>Mi Cuenta</h4>
+                            <h4>{{ _('Mi Cuenta') }}</h4>
                             <button id="close-user-menu" class="close-button">&times;</button>
                         </div>
                         <ul class="dropdown-links is-disabled">
@@ -101,9 +113,9 @@
                             <li><a href="#"><i class="fas fa-user-edit"></i> Mi Perfil</a></li>
                         </ul>
                         <div class="dropdown-footer">
-                            <a href="{{ url_for('login') }}" class="login-prompt-button">Iniciar Sesión</a>
+                            <a href="{{ url_for('login') }}" class="login-prompt-button">{{ _('Iniciar Sesión') }}</a>
                             <p class="register-prompt">
-                                ¿No tienes cuenta? <a href="{{ url_for('register') }}">Regístrate aquí</a>
+                                {{ _('¿No tienes cuenta?') }} <a href="{{ url_for('register') }}">{{ _('Regístrate aquí') }}</a>
                             </p>
                         </div>
                     {% endif %}
@@ -123,6 +135,35 @@
                 align-items: center;
                 position: relative; /* Necesario para el menú desplegable */
             }
+            .language-selector-nav {
+                position: relative;
+                margin-right: 1.5rem;
+            }
+            .language-selector-nav > .fa-globe {
+                color: var(--text-light);
+                font-size: 1.4rem;
+                cursor: pointer;
+            }
+            .language-dropdown {
+                display: none;
+                position: absolute;
+                right: -10px;
+                top: 120%;
+                background-color: var(--white);
+                box-shadow: var(--shadow);
+                border-radius: 8px;
+                list-style: none;
+                padding: 0.5rem 0;
+                margin: 0;
+                z-index: 1200;
+            }
+            .language-dropdown.is-active {
+                display: block;
+                opacity: 1; /* Para consistencia con otros menús */
+            }
+            .language-dropdown a { display: block; padding: 0.5rem 1.5rem; text-decoration: none; color: var(--text-dark); white-space: nowrap; }
+            .language-dropdown a:hover { background-color: #f7fafc; }
+            .language-dropdown a.active { font-weight: bold; color: var(--green-dark); }
 
             /* Estilos para notificaciones */
             .notification-container { position: relative; }
@@ -302,8 +343,8 @@
             <p>Detección avanzada de enfermedades en cultivos andinos</p>
             <ul class="footer-links">
                 <li><a href="{{ url_for('home_page') }}">Principal</a></li>
-                <li><a href="{{ url_for('market') }}">Biblioteca</a></li>
-                <li><a href="{{ url_for('ai_engine_page') }}">Motoro IA</a></li>
+                <li><a href="{{ url_for('market') }}">Biblioteca</a></li>                
+                <li><a href="{{ url_for('user_manual') }}">Manual de Usuario</a></li>
                 <li><a href="{{ url_for('about_page') }}">Acerca de</a></li>
                 <li><a href="{{ url_for('contact') }}">Contacto</a></li>
             </ul>
@@ -455,6 +496,8 @@
             const closeUserMenu = document.getElementById('close-user-menu');
             const logoutButton = document.getElementById('logout-button');
             const logoutConfirmContainer = document.getElementById('logout-confirm-container');
+            const langSelectorNav = document.querySelector('.language-selector-nav');
+            const langDropdown = document.querySelector('.language-dropdown');
 
             userMenuButton.addEventListener('click', function(event) {
                 event.stopPropagation(); // Evita que el clic se propague al documento
@@ -468,6 +511,11 @@
                 });
             }
 
+            langSelectorNav.addEventListener('click', function(event) {
+                event.stopPropagation();
+                langDropdown.classList.toggle('is-active');
+            });
+
             closeUserMenu.addEventListener('click', function() {
                 userMenuDropdown.classList.remove('is-active');
             });
@@ -479,6 +527,9 @@
                 }
                 if (notificationContainer && !notificationContainer.contains(event.target)) {
                     document.getElementById('notification-dropdown').classList.remove('is-active');
+                }
+                if (langDropdown && !langSelectorNav.contains(event.target)) {
+                    langDropdown.classList.remove('is-active');
                 }
             });
 
