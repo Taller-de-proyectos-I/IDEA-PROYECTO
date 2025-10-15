@@ -26,7 +26,7 @@
 
 PlantAndes es una aplicación web monolítica construida con el microframework Flask en Python. La arquitectura está diseñada para ser modular y escalable, separando las responsabilidades en componentes lógicos.
 
-![Diagrama de Arquitectura de PlantAndes](URL_DEL_DIAGRAMA_AQUI)
+![Diagrama de Arquitectura de PlantAndes](https://www.sngular.com/images/1/1398/original/arquitectura-monolitica-vs-arquitectura-microservicios.webp)
 
 *   **Frontend (Cliente):**
     *   **Tecnologías:** HTML5, CSS3, JavaScript (ES6).
