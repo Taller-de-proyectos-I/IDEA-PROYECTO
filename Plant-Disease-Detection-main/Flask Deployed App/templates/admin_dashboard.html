@@ -185,7 +185,7 @@
     .report-info h4 { margin: 0 0 0.5rem 0; font-size: 1.1rem; color: var(--text-dark); }
     .report-info p { margin: 0; color: var(--text-light); max-width: 600px; }
     .report-item .analyze-button {
-        flex-shrink: 0; /* Evita que el botón se encoja */
+        flex-shrink: 0;
     }
 </style>
 {% endblock %}
@@ -228,13 +228,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            stepSize: 1 // Para que el eje Y vaya de 1 en 1 si los números son pequeños
+                            stepSize: 1
                         }
                     }
                 },
                 plugins: {
                     legend: {
-                        display: false // Ocultamos la leyenda para un look más limpio
+                        display: false
                     }
                 }
             }
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }]
             },
             options: {
-                indexAxis: 'y', // Esto hace que el gráfico sea horizontal
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {

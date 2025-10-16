@@ -1,16 +1,18 @@
+# ==============================================================================
+# Script de Respaldo para PlantAndes
+#
+# Copyright (c) 2025 Yersson Calderon Romero. Todos los derechos reservados.
+#
+# Autor: Yersson Calderon Romero
+#
+# ==============================================================================
+
 import os
 import shutil
 import datetime
 import zipfile
 
 def create_backup(source_paths, backup_dir, retention_days=7):
-    """
-    Crea un respaldo comprimido de los archivos y directorios especificados.
-
-    :param source_paths: Lista de rutas de archivos/directorios a respaldar.
-    :param backup_dir: Directorio donde se guardarán los respaldos.
-    :param retention_days: Número de días que se conservarán los respaldos antiguos.
-    """
     # 1. Crear el directorio de respaldos si no existe
     os.makedirs(backup_dir, exist_ok=True)
 
@@ -71,11 +73,14 @@ if __name__ == "__main__":
     # --- CONFIGURACIÓN ---
     # Rutas de los archivos y directorios importantes a respaldar
     PATHS_TO_BACKUP = [
-        'plantandes.db',                # La base de datos principal
-        'plant_disease_model_2.pt',     # El modelo de IA
-        'static/uploads'                # Las imágenes subidas por los usuarios
+        'plantandes.db',
+        'plant_disease_model_2.pt',
+        'static/uploads'
     ]
     # Directorio donde se guardarán los archivos .zip de respaldo
-    BACKUP_DESTINATION = 'D:\Backups_plant_dissease' # ¡IMPORTANTE! Cambia esto a una ruta segura, preferiblemente en otro disco o en la nube.
-
+    BACKUP_DESTINATION = 'D:\\Backups_plant_dissease' 
     create_backup(PATHS_TO_BACKUP, BACKUP_DESTINATION)
+
+# ==============================================================================
+# Fin del script de respaldo.
+# ==============================================================================

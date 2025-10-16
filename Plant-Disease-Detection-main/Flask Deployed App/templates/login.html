@@ -10,11 +10,10 @@
         </p>
 
         <style>
-            /* Estilos mejorados para mensajes flash */
             .flash-message.warning, .flash-message.danger {
-                background-color: #FFF5F5; /* Un fondo rojo muy claro */
-                color: #C53030; /* Un color de texto rojo oscuro */
-                border-left: 5px solid #C53030; /* Borde izquierdo para énfasis */
+                background-color: #FFF5F5;
+                color: #C53030;
+                border-left: 5px solid #C53030;
             }
         </style>
         {% with messages = get_flashed_messages(with_categories=true) %}

@@ -1,3 +1,13 @@
+# ==============================================================================
+# PlantAndes - Detección de Enfermedades en Cultivos Andinos
+#
+# Copyright (c) 2025 JherzonDev. Todos los derechos reservados.
+#
+# Autor: JherzonDev
+#
+# Este software se proporciona "tal cual", sin garantía de ningún tipo.
+# ==============================================================================
+
 import os
 from flask import Flask, flash, redirect, render_template, request, url_for, session, jsonify, Response
 from werkzeug.utils import secure_filename
@@ -14,17 +24,18 @@ import io, csv
 from email.header import Header
 from deep_translator import GoogleTranslator
 from datetime import datetime, time, timedelta
-from openai import OpenAI # Para la IA Generativa
-import requests # Importar la librería requests
-from collections import Counter # Para contar predicciones
-import pytz # Para manejar zonas horarias
+from openai import OpenAI
+import requests
+from collections import Counter
+import pytz
 # --- IMPORTACIONES DE MODELOS Y AUTENTICACIÓN ---
 from models import db, User, Zone, Diagnosis, Notification
 from flask_migrate import Migrate
-from image_validator import check_blur_from_stream 
+from image_validator import check_blur_from_stream
 from sqlalchemy import func, event
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
+# --- Formato encoder para las calumnas y contenido que contenga caracteres especiales ---
 disease_info = pd.read_csv('disease_info.csv' , encoding='cp1252')
 supplement_info = pd.read_csv('supplement_info.csv',encoding='cp1252')
 
@@ -147,14 +158,15 @@ from sqlalchemy.engine import Engine
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    """Establece la zona horaria de la sesión de SQLite a la hora local."""
+    """Activa las claves foráneas en SQLite al establecer una conexión."""
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login' # Redirige a la página de login si se intenta acceder a una ruta protegida
+# Redirige a la página de login si se intenta acceder a una ruta protegida
+login_manager.login_view = 'login' 
 login_manager.login_message = gettext("Por favor, inicie sesión para acceder a esta página.")
 login_manager.login_message_category = "info"
 
@@ -165,7 +177,7 @@ def localtime_filter(utc_dt):
         return ""
     local_tz = pytz.timezone('America/Lima')
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
-    return local_dt.strftime('%d/%m/%Y %I:%M %p') # Formato con AM/PM
+    return local_dt.strftime('%d/%m/%Y %I:%M %p')
 
 @app.route('/language/<lang>')
 def set_language(lang):
@@ -176,7 +188,7 @@ def set_language(lang):
 
 @app.context_processor
 def inject_notifications():
-    """Inyecta notificaciones no leídas en todas las plantillas para el usuario actual."""
+    """Inyecta las notificaciones no leídas en todas las plantillas para el usuario actual."""
     if current_user.is_authenticated:
         unread_notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).order_by(Notification.created_at.desc()).all()
         return dict(unread_notifications=unread_notifications)
@@ -185,6 +197,7 @@ def inject_notifications():
 @app.route('/notifications/read/<int:notification_id>')
 @login_required
 def mark_notification_as_read(notification_id):
+    """Marca una notificación como leída y redirige al enlace asociado."""
     notification = Notification.query.get_or_404(notification_id)
     if notification.user_id == current_user.id:
         notification.is_read = True
@@ -195,11 +208,11 @@ def mark_notification_as_read(notification_id):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Clave secreta para mensajes flash
+# Clave secreta para mensajes flash \ entorno local 
 app.secret_key = os.environ.get('SECRET_KEY', 'una-clave-secreta-por-defecto-para-desarrollo')
 
 # --- Configuración de la API de IA Generativa (DeepSeek) ---
-app.config['DEEPSEEK_API_KEY'] = os.environ.get('DEEPSEEK_API_KEY', '') # Reemplaza con tu clave o usa variables de entorno
+app.config['DEEPSEEK_API_KEY'] = os.environ.get('DEEPSEEK_API_KEY', '')
 
 ai_client = OpenAI(api_key=app.config['DEEPSEEK_API_KEY'], base_url="https://api.deepseek.com")
 
@@ -217,7 +230,7 @@ mail = Mail(app)
 @app.route('/logout')
 def logout():
     logout_user()
-    # Limpiar AMBOS contadores de la sesión al cerrar sesión
+    # Limpiar contadores de la sesión al cerrar sesión
     session.pop('analysis_count', None)
     session.pop('feedback_shown_in_session', None)
     return redirect(url_for('home_page'))
@@ -226,15 +239,16 @@ def logout():
 @app.route('/chat', methods=['POST'])
 @login_required
 def chat():
+    """Maneja las peticiones al chat contextual de diagnóstico."""
     data = request.json
     user_message = data.get('message')
-    context = data.get('context')
-    language = data.get('language', 'Español') # Obtener idioma, por defecto Español
+    context = data.get('context') 
+    language = data.get('language', 'Español')
 
     if not user_message or not context:
         return jsonify({'error': 'Falta mensaje o contexto'}), 400
 
-    # Prompt de sistema para guiar a la IA
+    # Prompt de sistema: Define la "personalidad" y el rol del asistente de IA.
     system_prompt = (
         "Eres 'AndesGPT', un asistente experto en agronomía y fitopatología, especializado en cultivos andinos. "
         "Tu propósito es ayudar a los agricultores a entender y manejar las enfermedades de sus plantas. "
@@ -242,7 +256,7 @@ def chat():
         f"Utiliza el siguiente contexto para responder la pregunta del usuario. No inventes información. Responde siempre en el idioma: {language}."
     )
 
-    # Combinar contexto y pregunta del usuario
+    # Prompt de usuario: Combina el contexto del diagnóstico con la pregunta específica del usuario.
     full_prompt = (
         f"Contexto del diagnóstico:\n"
         f"- Enfermedad detectada: {context.get('disease_name')}\n"
@@ -253,6 +267,7 @@ def chat():
     )
 
     def generate():
+        """Función generadora para la respuesta en streaming."""
         try:
             stream = ai_client.chat.completions.create(
                 model="deepseek-chat",
@@ -282,7 +297,7 @@ def general_chat():
     if not user_message:
         return jsonify({'error': 'Falta mensaje'}), 400
 
-    system_prompt = (
+    system_prompt = ( # Personalidad del asistente para el chat general.
         "Eres 'AndesGPT', un asistente experto en agronomía y fitopatología, especializado en cultivos andinos. "
         "Tu propósito es ayudar a los agricultores. Si te preguntan sobre una enfermedad específica, anímales a usar el 'Motor IA' "
         "y subir una foto para un diagnóstico preciso. Puedes responder preguntas generales sobre agricultura, "
@@ -290,6 +305,7 @@ def general_chat():
     )
 
     def generate():
+        """Función generadora para enviar la respuesta de la IA en trozos (streaming)."""
         try:
             stream = ai_client.chat.completions.create(
                 model="deepseek-chat",
@@ -310,7 +326,7 @@ def general_chat():
 
 @app.cli.command("seed-zones")
 def seed_zones():
-    """Pobla la base de datos con todos los distritos de Perú desde una API externa."""
+    """Poblar la base de datos con todos los distritos de Perú desde una API externa."""
     if Zone.query.first():
         print("Las zonas ya han sido añadidas anteriormente.")
         return
@@ -325,17 +341,14 @@ def seed_zones():
 
         new_zones = []
 
-        # Nivel 1: Departamentos
         for dep_name, provincias in ubigeos.items():
             if not isinstance(provincias, dict):
                 continue
 
-            # Nivel 2: Provincias
             for prov_name, distritos in provincias.items():
                 if not isinstance(distritos, dict):
                     continue
 
-                # Nivel 3: Distritos
                 for dist_name, dist_data in distritos.items():
                     if not isinstance(dist_data, dict):
                         continue
@@ -359,7 +372,7 @@ def seed_zones():
 
 @app.route('/')
 def home_page():
-    return render_template('home.html') # This is now the main landing page
+    return render_template('home.html')
 
 # --- RUTAS DE AUTENTICACIÓN ---
 @app.route('/register', methods=['GET', 'POST'])
@@ -372,7 +385,7 @@ def register():
         last_name = request.form.get('last_name')
         email = request.form.get('email')
         password = request.form.get('password')
-        zone_id = request.form.get('district') # El ID de la zona ahora viene del campo 'district'
+        zone_id = request.form.get('district')
         address = request.form.get('address')
 
         # Validaciones
@@ -384,11 +397,11 @@ def register():
             return redirect(url_for('register'))
 
         new_user = User(
-            username=username, 
+            username=username,
             first_name=first_name,
             last_name=last_name,
-            email=email, 
-            zone_id=zone_id, 
+            email=email,
+            zone_id=zone_id,
             address=address)
         new_user.set_password(password)
         db.session.add(new_user)
@@ -399,13 +412,13 @@ def register():
 
     # Preparar datos para los desplegables dinámicos
     all_zones_objects = Zone.query.order_by(Zone.department_name, Zone.province_name, Zone.district_name).all()
-    
+
     # Obtenemos una lista única y ordenada de departamentos
     departments = sorted(list(set(z.department_name for z in all_zones_objects)))
-    
+
     # Convertimos la lista de objetos a una lista de diccionarios (JSON serializable)
     all_zones_serializable = [{'id': z.id, 'district_name': z.district_name, 'province_name': z.province_name, 'department_name': z.department_name} for z in all_zones_objects]
-    
+
     return render_template('register.html', departments=departments, all_zones=all_zones_serializable)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -420,7 +433,7 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             # Reiniciar el contador de análisis al iniciar sesión
-            session.pop('feedback_shown_in_session', None) # Asegurarse de limpiar el estado anterior
+            session.pop('feedback_shown_in_session', None)
             session['analysis_count'] = 0
             return redirect(url_for('home_page'))
         else:
@@ -436,7 +449,7 @@ def contact():
         message_body = request.form['message']
 
         subject = f"Nuevo Mensaje de Contacto de: {name}"
-        msg = Message(subject=Header(subject, 'utf-8'), # El destinatario podría ser una variable de entorno
+        msg = Message(subject=Header(subject, 'utf-8'),
                       recipients=['71827961@continental.edu.pe'],
                       reply_to=email)
 
@@ -449,10 +462,12 @@ def contact():
 
 @app.route('/index', methods=['GET', 'POST'])
 def ai_engine_page():
+    """Página principal del motor de IA para el diagnóstico de enfermedades."""
     if request.method == 'POST':
-        show_feedback_form = False # Inicializamos la variable
+        show_feedback_form = False
         images = request.files.getlist('image')
         if not images or all(img.filename == '' for img in images):
+            # Si no se sube ninguna imagen, se muestra un error.
             flash(gettext("No se seleccionó ninguna imagen."), "error")
             return redirect(request.url)
 
@@ -461,35 +476,37 @@ def ai_engine_page():
         new_diagnosis_id = None
         quality_scores = []
 
+        # 1. Procesar cada imagen subida.
         for image in images:
             image_stream = image.read()
-            
+
             # --- Validación de Calidad ---
             quality_score, is_blurry = check_blur_from_stream(image_stream, threshold=100.0)
             if is_blurry:
                 flash(gettext("La imagen parece borrosa (Puntuación de nitidez: %(score).2f). Para un mejor resultado, sube una imagen más nítida.", score=quality_score), "danger")
                 return redirect(request.url)
-            
+
             quality_scores.append(quality_score)
 
-            # --- Guardar y Predecir ---
+            # Guardar la imagen temporalmente para la predicción.
             filename = secure_filename(image.filename)
             file_path = os.path.join('static/uploads', filename)
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             with open(file_path, 'wb') as f:
                 f.write(image_stream)
-            
+
             if not first_image_path:
                 first_image_path = f"uploads/{filename}"
-
+            # Realizar la predicción con el modelo CNN.
             top_probs, top_indices = prediction(file_path)
-            
+
+            # Guardar solo la predicción principal (top 1) de cada imagen.
             top_disease_idx = top_indices[0]
             top_disease_name = disease_info.loc[top_disease_idx]['disease_name_es']
             top_disease_prob = round(top_probs[0] * 100, 2)
             all_top_predictions.append({'name': top_disease_name, 'prob': top_disease_prob})
 
-        # --- Lógica de Consolidación (HU-24) ---
+        # --- Lógica de Consolidación para subir varias imagenes ---
         consolidated_result = None
         if len(images) > 1:
             disease_counts = Counter(p['name'] for p in all_top_predictions)
@@ -500,23 +517,23 @@ def ai_engine_page():
                 'disease_name': most_common_disease_name,
                 'probability': average_prob
             }
-        
-        # --- GUARDAR EN BASE DE DATOS Y CALCULAR FEEDBACK ---
+
+        # 3. Guardar diagnóstico y gestionar la lógica de feedback para usuarios autenticados.
         if current_user.is_authenticated:
-            # ✅ Obtener el contador ANTES de incrementarlo
+            # Se usa la sesión para contar cuántos análisis ha hecho el usuario.
             current_analysis_count = session.get('analysis_count', 0)
-            
-            # ✅ Verificar si ya se mostró el feedback en esta sesión
+
+            # Para no molestar al usuario, el feedback se pide solo una vez por sesión.
             feedback_already_shown = session.get('feedback_shown_in_session', False)
-            
-            # ✅ Decidir si mostrar el modal (segundo análisis Y no mostrado aún)
+
+            # El modal de feedback se muestra en el segundo análisis de la sesión.
             show_feedback_form = (current_analysis_count == 1 and not feedback_already_shown)
 
-            # ✅ Si se va a mostrar, marcar como mostrado
+            # Si se muestra el modal, se marca para no volver a mostrarlo.
             if show_feedback_form:
                 session['feedback_shown_in_session'] = True
-            
-            # ✅ Incrementar el contador DESPUÉS de verificar
+
+            # Incrementar el contador para el próximo análisis.
             session['analysis_count'] = current_analysis_count + 1
 
             final_disease_name = consolidated_result['disease_name'] if consolidated_result else all_top_predictions[0]['name']
@@ -532,12 +549,14 @@ def ai_engine_page():
             )
             db.session.add(new_diagnosis)
             db.session.commit()
-            db.session.refresh(new_diagnosis) # Asegura que el objeto tenga todos los datos de la BD
+            db.session.refresh(new_diagnosis)
             new_diagnosis_id = new_diagnosis.id
 
-            check_and_generate_alerts(new_diagnosis) # Generar alertas con el diagnóstico guardado
+            # Después de guardar, se verifica si este nuevo caso genera una alerta de brote.
+            check_and_generate_alerts(new_diagnosis)
 
-        # --- Preparar resultados para mostrar ---
+        # 4. Preparar los resultados detallados para mostrar en la plantilla.
+        # Se usan las predicciones de la *primera* imagen para mostrar el top 3.
         first_image_prediction = prediction(os.path.join('static', first_image_path))
         display_results = []
         for i in range(len(first_image_prediction[0])):
@@ -555,8 +574,8 @@ def ai_engine_page():
                 'buy_link': supplement_record['buy_link']
             })
 
-        return render_template('index.html', 
-                               results=display_results, 
+        return render_template('index.html',
+                               results=display_results,
                                user_image=first_image_path,
                                new_diagnosis_id=new_diagnosis_id,
                                consolidated_result=consolidated_result,
@@ -569,25 +588,26 @@ def ai_engine_page():
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
+    """Permite a un usuario editar su perfil y al administrador gestionar otros usuarios."""
     users = None
     if current_user.role == 'admin':
-        # Un admin puede ver a todos los demás usuarios
+        # admin puede ver a todos los demás usuarios
         users = User.query.filter(User.id != current_user.id).order_by(User.username).all()
 
     if request.method == 'POST':
         # Actualizar nombres y apellidos
         current_user.first_name = request.form.get('first_name')
         current_user.last_name = request.form.get('last_name')
-        
+
         new_password = request.form.get('new_password')
         confirm_password = request.form.get('confirm_password')
 
-        # Lógica para cambiar la contraseña (solo si se proporcionan nuevos valores)
+        # Lógica para cambiar la contraseña (solo si se proporcionan nuevos valores).
         if new_password:
             if new_password != confirm_password:
                 flash(gettext('Las nuevas contraseñas no coinciden. Por favor, inténtalo de nuevo.'), 'danger')
                 return redirect(url_for('edit_profile'))
-            
+
             current_user.set_password(new_password)
             flash(gettext('Tu contraseña ha sido actualizada con éxito.'), 'success')
 
@@ -600,10 +620,11 @@ def edit_profile():
 @app.route('/admin/update_role/<int:user_id>', methods=['POST'])
 @login_required
 def update_user_role(user_id):
+    """Ruta para que un administrador cambie el rol de otro usuario."""
     if current_user.role != 'admin':
         flash(gettext('No tienes permiso para realizar esta acción.'), 'danger')
         return redirect(url_for('home_page'))
-    
+
     user_to_update = User.query.get_or_404(user_id)
     user_to_update.role = request.form.get('role')
     db.session.commit()
@@ -613,13 +634,14 @@ def update_user_role(user_id):
 @app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
 @login_required
 def delete_user(user_id):
-    # Implementar la lógica de eliminación aquí
+    # TODO: Implementar la lógica de eliminación de usuario
     flash(gettext("Funcionalidad de eliminar usuario (ID: %(user_id)s) pendiente de implementación.", user_id=user_id), 'info')
     return redirect(url_for('edit_profile'))
 
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
+    """Muestra el panel de administración con estadísticas de la plataforma."""
     if current_user.role != 'admin':
         flash(gettext('Acceso denegado. Esta sección es solo para administradores.'), 'danger')
         return redirect(url_for('home_page'))
@@ -628,11 +650,11 @@ def admin_dashboard():
     total_users = User.query.count()
     total_diagnoses = Diagnosis.query.count()
 
-    # Nuevos usuarios en los últimos 7 días
+    # Nuevos usuarios en los últimos 7 días.
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     new_users_count = User.query.filter(User.created_at >= seven_days_ago).count()
 
-    # Diagnósticos realizados hoy
+    # Diagnósticos realizados hoy, considerando la zona horaria de Perú.
     today_start = datetime.combine(datetime.now(pytz.timezone('America/Lima')).date(), time.min)
     diagnoses_today_count = Diagnosis.query.filter(Diagnosis.created_at >= today_start).count()
 
@@ -665,7 +687,7 @@ def admin_dashboard():
 @login_required
 def export_diagnoses():
     """
-    Genera y sirve un archivo CSV con datos de diagnóstico anonimizados.
+    Se genera y sirve un archivo CSV con datos de diagnóstico anonimizados.
     """
     if current_user.role != 'admin':
         flash(gettext('Acceso denegado.'), 'danger')
@@ -693,7 +715,7 @@ def export_diagnoses():
     writer = csv.writer(output)
 
     # Escribir la fila de encabezado
-    header = ['id_diagnostico', 'enfermedad', 'probabilidad', 'fecha_creacion', 
+    header = ['id_diagnostico', 'enfermedad', 'probabilidad', 'fecha_creacion',
               'calificacion_feedback', 'comentario_feedback', 'calidad_imagen',
               'distrito', 'provincia', 'departamento']
     writer.writerow(header)
@@ -712,33 +734,33 @@ def update_notes():
     """Actualiza las notas de un diagnóstico existente."""
     diagnosis_id = request.form.get('diagnosis_id')
     notes = request.form.get('notes')
-    
+
     diagnosis = Diagnosis.query.get_or_404(diagnosis_id)
-    
+
     # Asegurarse de que el usuario solo pueda editar sus propios diagnósticos
     if diagnosis.user_id != current_user.id:
         return jsonify({'success': False, 'message': 'No tienes permiso para editar este diagnóstico.'}), 403
 
     diagnosis.notes = notes
     db.session.commit()
-    
-    # Devolver una respuesta JSON en lugar de redirigir
+
+    # Devolver una respuesta JSON para que el frontend la maneje con AJAX.
     return jsonify({'success': True, 'message': 'Nota guardada con éxito.'})
 
 def check_and_generate_alerts(diagnosis):
     """Verifica si un nuevo diagnóstico dispara una alerta y notifica a los usuarios."""
     ALERT_THRESHOLD = 3
     TIME_WINDOW_DAYS = 14
-    
+
     user = User.query.get(diagnosis.user_id)
     if not user or not user.zone_id:
         return
 
-    # ✅ Usar la zona horaria de Perú para una comparación precisa
+    # Usar la zona horaria de Perú para asegurar que la ventana de tiempo sea correcta.
     peru_tz = pytz.timezone('America/Lima')
     start_date_window = datetime.now(peru_tz) - timedelta(days=TIME_WINDOW_DAYS)
 
-    # Contar casos de la misma enfermedad en la misma zona
+    # Contar casos de la misma enfermedad en la misma zona geográfica dentro de la ventana de tiempo.
     case_count = db.session.query(func.count(Diagnosis.id))\
         .join(User, User.id == Diagnosis.user_id)\
         .filter(User.zone_id == user.zone_id)\
@@ -748,7 +770,7 @@ def check_and_generate_alerts(diagnosis):
     # Si el número de casos alcanza el umbral, verificamos si ya se envió una alerta para este brote.
     if case_count >= ALERT_THRESHOLD:
         alert_message_start = f"¡Alerta de brote! Se han detectado"
-        # ✅ Consulta corregida: ahora busca una notificación existente para la misma zona.
+        # Evitar duplicados: buscar si ya existe una notificación para este brote.
         existing_notification = db.session.query(Notification).join(User).filter(
             User.zone_id == user.zone_id,
             Notification.message.like(f"%{diagnosis.disease_name}%"),
@@ -756,6 +778,7 @@ def check_and_generate_alerts(diagnosis):
         )\
             .first()
 
+        # Si no hay una notificación previa, se crea una para todos los usuarios de la zona.
         if not existing_notification:
             message = f"{alert_message_start} {case_count} casos de '{diagnosis.disease_name}' en tu zona."
             users_in_zone = User.query.filter_by(zone_id=user.zone_id).all()
@@ -781,14 +804,14 @@ def submit_feedback():
         diagnosis.feedback_comment = comment
         db.session.commit()
         return jsonify({'success': True, 'message': '¡Gracias por tu retroalimentación!'})
-    
+
     return jsonify({'success': False, 'message': 'Diagnóstico no encontrado.'}), 404
 
 @app.route('/history')
 @login_required
 def history():
     """Muestra el historial de diagnósticos del usuario con opciones de filtrado."""
-    
+
     # Obtener parámetros de filtro desde la URL
     disease_filter = request.args.get('disease', '')
     start_date_str = request.args.get('start_date', '')
@@ -800,8 +823,8 @@ def history():
     # Aplicar filtros si existen
     if disease_filter:
         query = query.filter(Diagnosis.disease_name.ilike(f'%{disease_filter}%'))
-    
-    if start_date_str:
+
+    if start_date_str: # Filtro por fecha de inicio.
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             query = query.filter(Diagnosis.created_at >= start_date)
@@ -809,8 +832,8 @@ def history():
             flash('Formato de fecha de inicio inválido.', 'warning')
 
     if end_date_str:
+        # Filtro por fecha de fin. Se incluye el día completo en el rango.
         try:
-            # Incluir el día completo en el rango
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
             end_date = datetime.combine(end_date, time.max)
             query = query.filter(Diagnosis.created_at <= end_date)
@@ -820,12 +843,12 @@ def history():
     # Ejecutar la consulta y ordenar
     diagnoses_from_db = query.order_by(Diagnosis.created_at.desc()).all()
 
-    # Enriquecer cada diagnóstico con su descripción y recomendaciones
+    # Enriquecer cada diagnóstico con su descripción y recomendaciones desde el DataFrame en memoria.
     diagnoses_with_details = []
     for diag in diagnoses_from_db:
         # Buscar la información de la enfermedad en el DataFrame
         disease_details_row = disease_info[disease_info['disease_name_es'] == diag.disease_name]
-        
+
         if not disease_details_row.empty:
             disease_details = disease_details_row.iloc[0]
             diagnoses_with_details.append({
@@ -835,10 +858,10 @@ def history():
                 'created_at': diag.created_at,
                 'description': disease_details['description_es'],
                 'recommendations': disease_details['steps_es'],
-                'notes': diag.notes # Añadimos las notas
+                'notes': diag.notes
             })
 
-    # Si es una petición AJAX (para el filtrado en vivo), devolvemos solo el fragmento
+    # Si es una petición AJAX (desde el filtro), devolvemos solo el fragmento HTML.
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render_template('_history_results.html', diagnoses=diagnoses_with_details)
 
@@ -852,18 +875,16 @@ def history():
 @app.route('/alerts')
 def alerts_page():
     """Muestra una página con alertas de brotes de enfermedades por zona."""
-    
     # 1. Definir la regla para un brote
     ALERT_THRESHOLD = 3  # A partir de 3 casos se considera alerta
     TIME_WINDOW_DAYS = 14 # En los últimos 14 días
 
-    # Calcular la fecha de inicio para la ventana de tiempo
-    # ✅ Usar la zona horaria de Perú para una comparación precisa
+    # Usar la zona horaria de Perú para una comparación de fechas precisa.
     peru_tz = pytz.timezone('America/Lima')
     start_date = datetime.now(peru_tz) - timedelta(days=TIME_WINDOW_DAYS)
 
     # 2. Consultar la base de datos para encontrar brotes
-    # Agrupamos por zona y enfermedad, y contamos los diagnósticos recientes
+    # se agrupa por zona y enfermedad, y contamos los diagnósticos recientes
     outbreaks = db.session.query(
         Diagnosis.disease_name,
         Zone.district_name,
@@ -877,7 +898,7 @@ def alerts_page():
      .order_by(func.count(Diagnosis.id).desc())\
      .all()
 
-    # 3. Procesar los resultados para la plantilla
+    # 3. Procesar los resultados para la plantilla, asignando un nivel de riesgo.
     alerts = []
     for outbreak in outbreaks:
         count = outbreak.case_count
@@ -888,7 +909,7 @@ def alerts_page():
             risk_level = 'Moderado'
         else:
             risk_level = 'Bajo'
-        
+
         alerts.append({
             'disease': outbreak.disease_name,
             'location': f"{outbreak.district_name}, {outbreak.province_name}",
@@ -908,10 +929,10 @@ def about_page():
 
 @app.route('/market', methods=['GET', 'POST'])
 def market():
-    # La ruta ahora solo sirve los datos pre-traducidos, haciéndola instantánea.
-    return render_template('market.html', 
-                           diseases=disease_info.to_dict(orient='records'),
-                           supplements=supplement_info.to_dict(orient='records'))
+    """Muestra la biblioteca de enfermedades y suplementos."""
+    return render_template('market.html',
+                        diseases=disease_info.to_dict(orient='records'),
+                        supplements=supplement_info.to_dict(orient='records'))
 
 @app.route('/manual')
 def user_manual():
@@ -920,3 +941,8 @@ def user_manual():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+# ==============================================================================
+# Fin del archivo app.py
+# Autor del Script: JherzonDev
+# ==============================================================================

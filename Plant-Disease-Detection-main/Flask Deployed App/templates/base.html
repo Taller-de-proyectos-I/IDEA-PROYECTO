@@ -1,3 +1,11 @@
+<!--
+/********************************************************************************
+ * PlantAndes - Plantilla Base
+ *
+ * Copyright (c) 2025 JherzonDev. Todos los derechos reservados.
+ * Autor: JherzonDev
+ ********************************************************************************/
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -23,7 +31,7 @@
             <button class="nav-toggle" id="nav-toggle" aria-label="toggle navigation">
                 <span class="hamburger"></span>
             </button>
-            <!-- Los enlaces de navegación ahora están separados para un mejor control del layout -->
+            
             <ul class="nav-links" id="nav-links">
                 <li><a href="{{ url_for('home_page') }}">{{ _('Principal') }}</a></li>
                 <li><a href="{{ url_for('market') }}">{{ _('Biblioteca') }}</a></li>
@@ -34,7 +42,7 @@
                 <li><a href="{{ url_for('user_manual') }}">{{ _('Manual') }}</a></li>
             </ul>
 
-            <!-- Contenedor para los enlaces de autenticación (se alineará a la derecha) -->
+            
             <div class="nav-auth-links" id="user-menu-container">
                 <!-- Selector de Idioma -->
                 <div class="language-selector-nav">
@@ -93,7 +101,7 @@
                         </ul>
                         <div class="dropdown-footer">
                             <button id="logout-button" class="logout-button"><i class="fas fa-sign-out-alt"></i> {{ _('Cerrar Sesión') }}</button>
-                            <!-- Contenedor para la confirmación de logout -->
+                            
                             <div id="logout-confirm-container" class="logout-confirm-container">
                                 <p>{{ _('¿Seguro que quieres salir?') }}</p>
                                 <div class="confirm-buttons">
@@ -126,14 +134,14 @@
             /* Ajuste para centrar los links principales */
             .navbar {
                 display: grid;
-                grid-template-columns: auto 1fr auto; /* Logo | Links | Auth */
+                grid-template-columns: auto 1fr auto;
                 align-items: center;
             }
             .nav-auth-links {
                 display: flex;
                 justify-content: flex-end;
                 align-items: center;
-                position: relative; /* Necesario para el menú desplegable */
+                position: relative;
             }
             .language-selector-nav {
                 position: relative;
@@ -158,8 +166,8 @@
                 z-index: 1200;
             }
             .language-dropdown.is-active {
-                display: block;
-                opacity: 1; /* Para consistencia con otros menús */
+                display: block; 
+                opacity: 1;
             }
             .language-dropdown a { display: block; padding: 0.5rem 1.5rem; text-decoration: none; color: var(--text-dark); white-space: nowrap; }
             .language-dropdown a:hover { background-color: #f7fafc; }
@@ -171,7 +179,7 @@
                 position: absolute;
                 top: -5px;
                 right: -5px;
-                background-color: #C53030; /* Rojo */
+                background-color: #C53030;
                 color: white;
                 border-radius: 50%;
                 width: 20px;
@@ -192,11 +200,11 @@
             }
 
             /* Estilo para el nuevo botón de icono de usuario */
-            .user-menu-button {
+            .user-menu-button { 
                 background: none;
                 border: none;
                 cursor: pointer;
-                font-size: 1.5em; /* Tamaño del icono */
+                font-size: 1.5em;
                 color: var(--text-light);
                 transition: color 0.3s ease;
             }
@@ -207,7 +215,7 @@
             /* Estilos para el menú desplegable */
             .user-menu-dropdown {
                 position: absolute;
-                top: 120%; /* Posición debajo del botón */
+                top: 120%;
                 right: 0;
                 background-color: var(--white);
                 border-radius: 12px;
@@ -284,20 +292,20 @@
                 text-align: center;
             }
             .logout-button, .login-prompt-button {
-                display: inline-block; /* Ajuste para que respete el padding */
+                display: inline-block;
                 width: 100%;
                 padding: 0.75rem;
                 border-radius: 8px;
                 text-decoration: none;
                 font-weight: 500;
                 text-align: center;
-                box-sizing: border-box; /* Asegura que el padding no cause desbordamiento */
-                border: none; /* Para el botón de logout */
-                cursor: pointer; /* Para el botón de logout */
-                font-size: 1rem; /* Para el botón de logout */
+                box-sizing: border-box;
+                border: none;
+                cursor: pointer;
+                font-size: 1rem;
             }
             .logout-confirm-container {
-                display: none; /* Oculto por defecto */
+                display: none;
                 margin-top: 1rem;
                 text-align: center;
             }
@@ -445,16 +453,16 @@
         }
         .chat-header-buttons {
             display: flex;
-            gap: 0.5rem; /* Espacio entre los botones */
+            gap: 0.5rem;
         }
         .chat-header {
             padding: 1rem;
             border-bottom: 1px solid #ddd;
-            display: flex; /* Cambiado para alinear elementos */
+            display: flex;
             justify-content: space-between;
             align-items: center;
             background-color: var(--green-light);
-            position: relative; /* Para posicionar el botón de cierre */
+            position: relative;
         }
         .chat-header h3 { margin: 0; color: var(--green-dark); }
         .chat-modal .chat-close-button { 
@@ -500,7 +508,7 @@
             const langDropdown = document.querySelector('.language-dropdown');
 
             userMenuButton.addEventListener('click', function(event) {
-                event.stopPropagation(); // Evita que el clic se propague al documento
+                event.stopPropagation();
                 userMenuDropdown.classList.toggle('is-active');
             });
             
@@ -556,6 +564,7 @@
             const generalChatModal = document.getElementById('general-chat-modal');
             const closeGeneralChatModal = document.getElementById('close-general-chat-modal');
             const generalChatForm = document.getElementById('general-chat-form');
+            // ... (resto de selectores)
             const generalChatInput = document.getElementById('general-chat-input');
             const generalChatBody = document.getElementById('general-chat-body');
             const generalLangSelector = document.getElementById('general-language-selector');
@@ -565,6 +574,7 @@
             const isUserAuthenticated = {{ current_user.is_authenticated|tojson }};
             let generalSelectedLanguage = 'Español';
 
+            // --- Lógica para el botón flotante (FAB) del chat general ---
             generalChatFab.addEventListener('click', () => {
                 if (!isUserAuthenticated) {
                     loginModal.style.display = 'flex';
@@ -584,7 +594,7 @@
                 }
             });
 
-
+            // Cierra los modales si se hace clic fuera de su contenido.
             window.addEventListener('click', (event) => {
                 if (event.target == generalChatModal) {
                     generalChatModal.style.display = 'none';
@@ -594,6 +604,7 @@
                 }
             });
 
+            // Maneja el cambio de idioma en el chat general.
             generalLangSelector.addEventListener('click', function(e) {
                 if (e.target.classList.contains('lang-btn')) {
                     generalLangSelector.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
@@ -602,6 +613,7 @@
                 }
             });
 
+            // Limpia el historial del chat del sessionStorage y resetea la vista.
             if (clearGeneralChatButton) {
                 clearGeneralChatButton.addEventListener('click', (e) => {
                     e.stopPropagation(); // Evita que se cierre el modal
@@ -612,6 +624,7 @@
                 });
             }
 
+            // Botones para cerrar los modales.
             if (closeGeneralChatModal) {
                 closeGeneralChatModal.addEventListener('click', () => {
                     generalChatModal.style.display = 'none';
@@ -624,6 +637,7 @@
                 });
             }
 
+            // --- Lógica para el envío de mensajes en el chat general ---
             generalChatForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const userMessage = generalChatInput.value.trim();
@@ -632,11 +646,12 @@
                 appendGeneralChatMessage(userMessage, 'user');
                 generalChatInput.value = '';
 
+                // Muestra un indicador de carga mientras se espera la respuesta.
                 const aiMessageDiv = appendGeneralChatMessage('', 'ai');
                 const aiMessageParagraph = aiMessageDiv.querySelector('p');
                 aiMessageParagraph.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-                // La petición se ejecuta y no se detiene al ocultar el modal
+                // Petición al backend para obtener la respuesta de la IA.
                 fetch('{{ url_for("general_chat") }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -649,21 +664,21 @@
                         const reader = response.body.getReader();
                         const decoder = new TextDecoder();
                         let fullResponse = '';
-                        aiMessageParagraph.innerHTML = ''; // Limpiar spinner
+                        aiMessageParagraph.innerHTML = '';
 
+                        // Función recursiva para leer la respuesta en streaming.
                         function processText() {
                             reader.read().then(({ value, done }) => {
                                 if (done) {
-                                    // La generación terminó, el historial ya está guardado.
                                     return;
                                 }
                                 const chunk = decoder.decode(value, { stream: true });
                                 fullResponse += chunk;
 
-                                // Actualizamos el contenido del párrafo en el DOM
+                                // Actualiza el contenido del párrafo en el DOM, renderizando Markdown.
                                 aiMessageParagraph.innerHTML = marked.parse(fullResponse);
 
-                                // Guardamos todo el cuerpo del chat en sessionStorage
+                                // Guarda todo el cuerpo del chat en sessionStorage para persistencia.
                                 sessionStorage.setItem('generalChatHistory', generalChatBody.innerHTML);
 
                                 // Hacemos scroll solo si el modal está visible
@@ -671,7 +686,7 @@
                                     generalChatBody.scrollTop = generalChatBody.scrollHeight;
                                 }
 
-                                processText(); // Llamada recursiva para seguir leyendo
+                                processText();
                             });
                         }
                         processText();
@@ -683,6 +698,7 @@
                     });
             });
 
+            // Función auxiliar para añadir un mensaje al cuerpo del chat.
             function appendGeneralChatMessage(message, sender) {
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('chat-message', sender);
@@ -693,6 +709,7 @@
                 return messageDiv;
             }
 
+            // Limpia el historial del chat si el ID de usuario cambia (al iniciar/cerrar sesión).
             const currentUserId = {{ current_user.id|tojson if current_user.is_authenticated else 'null' }};
             if (sessionStorage.getItem('chatUserId') != currentUserId) {
                 sessionStorage.removeItem('generalChatHistory');
@@ -772,7 +789,7 @@
                     }
                 });
             }, {
-                threshold: 0.1 // El elemento se considera visible cuando el 10% está en pantalla
+                threshold: 0.1
             });
 
             // Observar todos los elementos que queremos animar
@@ -783,5 +800,10 @@
         });
     </script>
     {% block scripts %}{% endblock %}
+<!--
+/********************************************************************************
+ * Fin de la Plantilla Base - PlantAndes
+ ********************************************************************************/
+-->
 </body>
 </html>

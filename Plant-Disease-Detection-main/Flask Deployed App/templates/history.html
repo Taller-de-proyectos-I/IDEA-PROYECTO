@@ -1,3 +1,11 @@
+<!--
+/********************************************************************************
+ * PlantAndes - Página de Historial de Diagnósticos
+ *
+ * Copyright (c) 2025 JherzonDev. Todos los derechos reservados.
+ * Autor: JherzonDev
+ ********************************************************************************/
+-->
 {% extends 'base.html' %}
 {% block title %}Mi Historial - PlantAndes{% endblock %}
 
@@ -50,16 +58,16 @@
         border-radius: 8px;
         font-family: var(--font-family);
         font-size: 1rem;
-        box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
+        box-sizing: border-box;
     }
     .filter-card { background-color: #fff; padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 3rem; }
     .filter-controls { 
         display: flex; 
         flex-wrap: wrap;
-        justify-content: center; /* Centra los campos */
-        gap: 2.5rem; /* Aumentamos el espacio */
+        justify-content: center;
+        gap: 2.5rem;
     }
-    .filter-controls .form-group { flex-basis: 300px; /* Ancho base para cada campo */ }
+    .filter-controls .form-group { flex-basis: 300px;}
     .filter-actions { display: flex; gap: 1rem; margin-top: 1.5rem; align-items: center; }
     .clear-filter-button { color: var(--text-light); text-decoration: none; }
     .clear-filter-button:hover { text-decoration: underline; }
@@ -71,7 +79,7 @@
     /* Ajuste para que las tarjetas no se estiren */
     .history-grid { 
         display: grid; 
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Usamos auto-fill */
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         align-items: start; 
         gap: 2rem; 
     }
@@ -80,7 +88,7 @@
     .library-card-body {
         display: flex;
         flex-direction: column;
-        min-height: 150px; /* Altura mínima para consistencia */
+        min-height: 150px;
     }
     .history-card-info { 
         display: flex; 
@@ -88,7 +96,7 @@
         gap: 0.5rem; 
         color: var(--text-light); 
         font-size: 0.9rem; 
-        margin-top: auto; /* Empuja este bloque hacia abajo */
+        margin-top: auto;
     }
     .history-card-info span { display: flex; align-items: center; gap: 0.5rem; }
 
@@ -101,12 +109,12 @@
         display: flex; 
         align-items: center; 
         gap: 0.5rem; 
-        font-size: 0.9rem; /* Texto más pequeño */
+        font-size: 0.9rem;
     }
     .history-footer { justify-content: flex-end; border-top: 1px solid #E2E8F0; padding-top: 1rem; margin-top: 1rem; display: flex; }
 
     .no-results-card {
-        grid-column: 1 / -1; /* Ocupa todo el ancho de la grilla */
+        grid-column: 1 / -1;
         text-align: center;
         padding: 4rem 2rem;
         background-color: #f7fafc;
@@ -125,7 +133,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const historyGrid = document.querySelector('.history-grid');
     let searchTimeout;
 
-    // Función para inicializar los listeners de las tarjetas (ahora local)
+    // Función para inicializar los listeners de las tarjetas.
+    // Se debe llamar cada vez que se actualiza el contenido del historial.
     function initializeCardListeners(container) {
         const infoButtons = container.querySelectorAll('.library-card .info-button');
         const closeButtons = container.querySelectorAll('.library-card .card-close-button');
@@ -151,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Llamada inicial para que las tarjetas funcionen al cargar la página
     initializeCardListeners(historyGrid);
 
+    // Función que se ejecuta cuando el usuario modifica un filtro.
     function handleFilterChange() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
@@ -158,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const params = new URLSearchParams(formData);
             const url = `${filterForm.action}?${params.toString()}`;
 
-            // Actualizar la URL del navegador sin recargar
+            // Actualiza la URL del navegador para que se pueda copiar y compartir.
             window.history.pushState({}, '', url);
 
             fetch(url, {
@@ -167,16 +177,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.text())
             .then(html => {
                 historyGrid.innerHTML = html;
-                // Re-inicializar los listeners para las nuevas tarjetas
                 initializeCardListeners(historyGrid);
             });
-        }, 400); // 400ms de retraso
+        }, 400);
     }
 
-    // Escuchar cambios en todos los inputs del formulario
+    // Escuchar cambios en todos los inputs del formulario para un filtrado en tiempo real.
     filterForm.addEventListener('input', handleFilterChange);
 
-    // Asegurarse de que el botón de "Filtrar" también use AJAX si se hace clic
     filterForm.addEventListener('submit', function(e) {
         e.preventDefault();
         handleFilterChange();
@@ -184,31 +192,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-
-```
-
-### 3. Activar el Enlace en el Menú de Usuario (`base.html`)
-
-Finalmente, modificamos el enlace "Mi Historial" en `base.html` para que apunte a la nueva ruta que creamos.
-
-```diff
---- a/c:\Users\ACER\Desktop\IDEA-PROYECTO\Plant-Disease-Detection-main\Flask Deployed App\templates\base.html
-+++ b/c:\Users\ACER\Desktop\IDEA-PROYECTO\Plant-Disease-Detection-main\Flask Deployed App\templates\base.html
-@@ -61,7 +61,7 @@
-                             <button id="close-user-menu" class="close-button">&times;</button>
-                         </div>
-                         <ul class="dropdown-links">
--                            <li><a href="#"><i class="fas fa-history"></i> Mi Historial</a></li>
-+                            <li><a href="{{ url_for('history') }}"><i class="fas fa-history"></i> Mi Historial</a></li>
-                             <li><a href="#"><i class="fas fa-user-edit"></i> Editar Perfil</a></li>
-                         </ul>
-                         <div class="dropdown-footer">
-
-```
-
-Con estos tres cambios, la historia de usuario **HU-14** está completa. Los usuarios ahora pueden acceder a su historial, verlo de una manera atractiva y filtrarlo para encontrar lo que buscan.
-
 <!--
-[PROMPT_SUGGESTION]Ahora, crea la página "Editar Perfil" para que los usuarios puedan cambiar su nombre y contraseña.[/PROMPT_SUGGESTION]
-[PROMPT_SUGGESTION]Implementa un dashboard de administrador para ver estadísticas de todos los usuarios.[/PROMPT_SUGGESTION]
+/********************************************************************************
+ * Fin de la Página de Historial - PlantAndes
+ ********************************************************************************/
 -->

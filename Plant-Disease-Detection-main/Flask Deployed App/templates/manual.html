@@ -127,7 +127,7 @@
 
     @media (max-width: 768px) {
         .screenshot-placeholder {
-            grid-template-columns: 1fr; /* Una sola columna en pantallas pequeñas */
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -135,22 +135,10 @@
 
 {% block scripts %}
 <script>
-    // Marcar el enlace del menú como activo si estamos en la página del manual
     document.addEventListener('DOMContentLoaded', function() {
         const navLinks = document.querySelectorAll('.nav-links a');
         navLinks.forEach(link => {
-            // Puedes añadir una clase 'active' si el enlace coincide con la página actual
-            // Esto es opcional, pero mejora la UX.
         });
     });
 </script>
 {% endblock %}
-```
-
-### 3. Añadir el Enlace en el Pie de Página (`base.html`)
-
-Haremos que el manual sea accesible desde cualquier página a través del footer.
-
-```diff
---- a/c:\Users\ACER\Desktop\IDEA-PROYECTO\Plant-Disease-Detection-main\Flask Deployed App\templates\base.html
-+++ b/c:\Users\ACER\Desktop\IDEA-PROYECTO\Plant-Disease-Detection-main\Flask Deployed App\templates\base.html

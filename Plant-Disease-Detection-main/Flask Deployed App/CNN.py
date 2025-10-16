@@ -1,3 +1,11 @@
+# ==============================================================================
+# Arquitectura del Modelo de Red Neuronal Convolucional (CNN)
+#
+# Copyright (c) 2025 JherzonDev. Todos los derechos reservados.
+#
+# Autor: JherzonDev
+#
+# ==============================================================================
 import pandas as pd
 import torch.nn as nn
 
@@ -104,3 +112,6 @@ idx_to_classes = {0: 'Apple___Apple_scab',
                   36: 'Tomato___Tomato_Yellow_Leaf_Curl_Virus',
                   37: 'Tomato___Tomato_mosaic_virus',
                   38: 'Tomato___healthy'}
+# ==============================================================================
+# Fin de la definición del modelo CNN.
+# ==============================================================================

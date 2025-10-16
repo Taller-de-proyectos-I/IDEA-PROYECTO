@@ -1,3 +1,11 @@
+<!--
+/********************************************************************************
+ * PlantAndes - Página del Motor de IA
+ *
+ * Copyright (c) 2025 Yersson Calderon Romero. Todos los derechos reservados.
+ * Autor: Yersson Calderon Romero
+ ********************************************************************************/
+-->
 {% extends 'base.html' %}
 {% block title %}{{ _('Detector de Enfermedades') }} - PlantAndes{% endblock %}
 
@@ -9,7 +17,7 @@
                     {{ _('Sube una imagen de tu cultivo y nuestro sistema de inteligencia artificial la analizará para detectar posibles enfermedades.') }}
                 </p>
                 
-                <!-- Contenedor para mostrar mensajes flash (HU-18) -->
+                <!-- Contenedor para mostrar mensajes flash -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -56,7 +64,7 @@
                         <h2 class="results-subtitle">{{ _('Imagen Analizada') }}</h2>
                         <img src="{{ url_for('static', filename=user_image) }}" alt="Imagen subida por el usuario" class="user-image" style="max-height: 400px; object-fit: contain;">
                         
-                        <!-- Formulario para añadir notas (HU-17) -->
+                        <!-- Formulario para añadir notas -->
                         {% if current_user.is_authenticated and new_diagnosis_id %}
                         <div class="notes-form-container">
                             <form id="notes-form" action="{{ url_for('update_notes') }}" method="POST">
@@ -143,7 +151,7 @@
                 </div>
             </div>
 
-            <!-- Modal de Retroalimentación (HU-22) -->
+            <!-- Modal de Retroalimentación -->
             <div id="feedback-modal" class="feedback-modal">
                 <div id="feedback-container" class="feedback-modal-content">
                     <button id="close-feedback-modal" class="feedback-close-button">&times;</button>
@@ -232,13 +240,13 @@
         border-radius: 8px;
         font-family: var(--font-family);
         font-size: 1rem;
-        box-sizing: border-box; /* Clave para que el padding no aumente el ancho */
+        box-sizing: border-box;
     }
     #save-note-button { width: 100%; justify-content: center; margin-top: 1rem; }
 
     /* Estilos para el formulario de feedback */
     .feedback-modal {
-        display: none; /* ← SOLO ESTA LÍNEA DE DISPLAY */
+        display: none;
         position: fixed;
         z-index: 3000;
         left: 0; 
@@ -308,14 +316,14 @@
 
     /* Estilos para el Contenedor de Chat Estático */
     .chat-container-static {
-        display: none; /* Oculto por defecto, se activa con JS */
+        display: none; 
         background-color: #fefefe;
         border-radius: 12px;
         box-shadow: var(--shadow);
-        margin: 1.5rem auto 0 auto; /* Centrado y con menos margen superior */
-        max-width: 800px; /* Ancho máximo */
+        margin: 1.5rem auto 0 auto; 
+        max-width: 800px; 
         flex-direction: column;
-        max-height: 70vh; /* Altura máxima para el chat */
+        max-height: 70vh; 
     }
     .chat-header {
         padding: 1rem;
@@ -369,9 +377,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const isUserAuthenticated = {{ current_user.is_authenticated|tojson }};
     const showFeedbackForLoggedInUser = {{ show_feedback_form|tojson }};
     const loginModal = document.getElementById('login-required-modal');
-    let selectedLanguage = 'Español'; // Valor inicial
+    let selectedLanguage = 'Español';
 
-    // --- Lógica para guardar notas con AJAX (HU-17) ---
+    // --- Lógica para guardar notas con AJAX ---
     if (notesForm) {
         notesForm.addEventListener('submit', function(e) {
             e.preventDefault(); // Evita la recarga de la página
@@ -402,13 +410,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('diagnosis_notes').disabled = true;
                 } else {
                     buttonText.textContent = 'Error al guardar';
-                    saveButton.disabled = false; // Permitir reintentar
+                    saveButton.disabled = false;
                 }
             });
         });
     }
 
-    // --- Lógica para activar el chat contextual (HU-16) ---
+    // --- Lógica para activar el chat contextual ---
     if (activateChatButton) {
         const chatContainer = document.getElementById('chat-container-static');
         activateChatButton.addEventListener('click', function() {
@@ -416,8 +424,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 loginModal.style.display = 'flex';
                 return;
             }
-            chatContainer.style.display = 'flex'; // Muestra el contenedor del chat
-            this.style.display = 'none'; // Oculta el botón de activación
+            chatContainer.style.display = 'flex';
+            this.style.display = 'none';
             // Scroll suave hacia el chat
             chatContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
@@ -427,9 +435,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (langSelector) {
         langSelector.addEventListener('click', function(e) {
             if (e.target.classList.contains('lang-btn')) {
-                // Quitar clase 'active' de todos los botones
                 langSelector.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-                // Añadir clase 'active' al botón clickeado
                 e.target.classList.add('active');
                 selectedLanguage = e.target.dataset.lang;
             }
@@ -452,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Crear un nuevo div para la respuesta de la IA
             const aiMessageDiv = appendChatMessage('', 'ai');
             const aiMessageP = aiMessageDiv.querySelector('p');
-            aiMessageP.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // Indicador de carga
+            aiMessageP.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             // La petición se ejecuta independientemente de la visibilidad del chat
             fetch('{{ url_for("chat") }}', {
@@ -464,19 +470,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let fullResponse = '';
-                aiMessageP.innerHTML = ''; // Limpiar spinner
+                aiMessageP.innerHTML = '';
 
                 function read() {
                     reader.read().then(({ value, done }) => {
                         if (done) {
-                            // Aquí podrías guardar el historial si fuera necesario
                             return;
                         }
                         const chunk = decoder.decode(value, { stream: true });
                         fullResponse += chunk;
                         aiMessageP.innerHTML = marked.parse(fullResponse);
                         chatBody.scrollTop = chatBody.scrollHeight;
-                        read(); // Leer el siguiente chunk
+                        read();
                     });
                 }
                 read();
@@ -531,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Usar marked.parse para convertir markdown a HTML y renderizar negritas, etc.
         messageDiv.innerHTML = `<p>${marked.parse(message)}</p>`;
         chatBody.appendChild(messageDiv);
-        chatBody.scrollTop = chatBody.scrollHeight; // Auto-scroll al final
+        chatBody.scrollTop = chatBody.scrollHeight;
         return messageDiv;
     }
 });
@@ -565,22 +570,22 @@ window.addEventListener('load', function() {
             block: 'start' 
         });
 
-        // --- Lógica para el formulario de Feedback (HU-22) ---
+        // --- Lógica para el formulario de Feedback ---
         const feedbackForm = document.getElementById('feedback-form');
         const feedbackModal = document.getElementById('feedback-modal');
         const diagnosisIdForFeedback = "{{ new_diagnosis_id }}";
 
-        // ✅ SOLO MOSTRAR PARA USUARIOS AUTENTICADOS
+        // Mostrar modal de feedback solo a usuarios autenticados bajo ciertas condiciones
         if (isUserAuthenticated && feedbackModal && diagnosisIdForFeedback && showFeedbackForLoggedInUser) {
             setTimeout(() => {
-                feedbackModal.style.display = 'flex'; // ✅ Cambiar a flex cuando se muestra
+                feedbackModal.style.display = 'flex';
             }, 800);
         }
 
-        // ✅ Lógica para enviar el feedback
+        // Lógica para enviar el feedback
         if (feedbackForm) {
             feedbackForm.addEventListener('submit', function(e) {
-                e.preventDefault(); // Detiene la recarga de la página
+                e.preventDefault();
                 const formData = new FormData(feedbackForm);
                 const rating = formData.get('rating');
                 const comment = formData.get('comment');
@@ -609,7 +614,7 @@ window.addEventListener('load', function() {
                         // Cerrar el modal después de un momento
                         setTimeout(() => {
                             feedbackModal.style.display = 'none';
-                        }, 2000); // Cierra después de 2 segundos
+                        }, 2000);
                     }
                 });
             });
@@ -619,14 +624,14 @@ window.addEventListener('load', function() {
         const closeFeedbackButton = document.getElementById('close-feedback-modal');
         if (closeFeedbackButton) {
             closeFeedbackButton.addEventListener('click', () => {
-                feedbackModal.style.display = 'none'; // ✅ Ocultar
+                feedbackModal.style.display = 'none';
             });
         }
 
         if (feedbackModal) {
             feedbackModal.addEventListener('click', (e) => { 
                 if (e.target === feedbackModal) {
-                    feedbackModal.style.display = 'none'; // ✅ Ocultar
+                    feedbackModal.style.display = 'none';
                 }
             });
         }
@@ -635,3 +640,8 @@ window.addEventListener('load', function() {
 </script>
 {% endif %}
 {% endblock %}
+<!--
+/********************************************************************************
+ * Fin de la Página del Motor de IA - PlantAndes
+ ********************************************************************************/
+-->

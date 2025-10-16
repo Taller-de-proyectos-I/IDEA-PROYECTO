@@ -18,7 +18,7 @@ body {
     font-family: var(--font-family);
     color: var(--text-dark);
     margin: 0;
-    padding-top: 80px; /* Espacio para el header fijo */
+    padding-top: 80px; 
     overflow-x: hidden;
 
     /* --- Lógica para Sticky Footer --- */
@@ -37,7 +37,7 @@ body {
 /* El contenedor principal debe crecer para empujar el footer hacia abajo */
 main {
     flex-grow: 1;
-    padding-bottom: 5rem; /* Espacio de respiro antes del footer */
+    padding-bottom: 5rem; 
 }
 
 /* === Header y Navegación === */
@@ -57,8 +57,8 @@ header {
     justify-content: space-between;
     align-items: center;
     height: 80px;
-    padding: 0 2.5%; /* Usamos porcentaje para el padding también */
-    max-width: 100%; /* La barra de navegación ocupará todo el ancho */
+    padding: 0 2.5%; 
+    max-width: 100%; 
     margin: 0 auto;
 }
 
@@ -145,8 +145,8 @@ header {
     justify-content: center;
     text-align: center;
     min-height: 60vh;
-    position: relative; /* Necesario para los pseudo-elementos */
-    overflow: hidden; /* Oculta cualquier desbordamiento */
+    position: relative; 
+    overflow: hidden; 
 }
 
 /* Capa de superposición oscura (gradiente) */
@@ -158,7 +158,7 @@ header {
     width: 100%;
     height: 100%;
     background: linear-gradient(rgba(0, 0, 0, 0.30), rgba(0, 0, 0, 0.50));
-    z-index: 1; /* Se asegura que esté sobre las imágenes de fondo */
+    z-index: 1; 
 }
 
 /* Contenedor para las imágenes del carrusel */
@@ -169,18 +169,18 @@ header {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('/static/img/bg3.jpg'); /* Primera imagen */
+    background-image: url('/static/img/bg3.jpg');
     background-size: cover;
     background-position: center;
-    z-index: 0; /* Detrás de todo */
-    animation: hero-carousel 12s linear infinite; /* Animación de 12 segundos */
+    z-index: 0;
+    animation: hero-carousel 12s linear infinite;
 }
 
 .hero-title {
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    position: relative; /* Asegura que el texto esté sobre el gradiente */
+    position: relative;
     z-index: 2;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 }
@@ -189,7 +189,7 @@ header {
     font-size: 1.25rem;
     max-width: 800px;
     margin: 0 auto 2rem auto;
-    position: relative; /* Asegura que el texto esté sobre el gradiente */
+    position: relative;
     z-index: 2;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
@@ -202,24 +202,24 @@ header {
     border-radius: 50px;
     text-decoration: none;
     font-weight: 700;
-    transition: background-color 0.3s ease, color 0.3s ease; /* Quitamos 'transform' para evitar conflictos */
-    position: relative; /* Asegura que el texto esté sobre el gradiente */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    position: relative;
     z-index: 2;
-    display: inline-block; /* CRUCIAL: Permite que 'transform' se aplique correctamente */
+    display: inline-block;
     animation: pulse-animation 2.5s infinite ease-in-out;
-    will-change: transform; /* Optimización para el navegador */
+    will-change: transform;
 }
 
 /* Definición de la animación del carrusel */
 @keyframes hero-carousel {
     0%, 45% {
-        background-image: url('/static/img/bg3.jpg'); /* Muestra la imagen 1 */
+        background-image: url('/static/img/bg3.jpg');
     }
     50%, 95% {
-        background-image: url('/static/img/bg2.jpg'); /* Muestra la imagen 2 */
+        background-image: url('/static/img/bg2.jpg');
     }
     100% {
-        background-image: url('/static/img/bg3.jpg'); /* Vuelve a la imagen 1 */
+        background-image: url('/static/img/bg3.jpg');
     }
 }
 
@@ -379,8 +379,8 @@ header {
 }
 
 .category-disease {
-    background-color: #FED7D7; /* red-200 */
-    color: #9B2C2C; /* red-700 */
+    background-color: #FED7D7;
+    color: #9B2C2C;
 }
 
 .category-healthy {
@@ -411,19 +411,19 @@ header {
 }
 
 .info-button:hover {
-    color: #2B6CB0; /* blue-700 */
+    color: #2B6CB0;
 }
 
 .library-card-details {
     position: absolute;
-    top: 100%; /* Comienza justo debajo de la tarjeta */
+    top: 100%;
     left: 0;
     right: 0;
     background-color: var(--white);
     padding: 1.5rem;
     border-radius: 0 0 12px 12px;
     box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-    z-index: -1; /* Detrás de la tarjeta por defecto */
+    z-index: -1; 
     opacity: 0;
     visibility: hidden;
     transform: translateY(-20px);
@@ -440,7 +440,7 @@ header {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background-color: #E53E3E; /* red-500 */
+    background-color: #E53E3E;
     color: white;
     border: none;
     border-radius: 50%;
@@ -451,7 +451,7 @@ header {
     justify-content: center;
     cursor: pointer;
     z-index: 11;
-    display: none; /* Oculto por defecto */
+    display: none;
 }
 
 .library-card.is-expanded .card-close-button {
@@ -656,7 +656,7 @@ header {
 
 /* === Footer === */
 footer {
-    background-color: #1A202C; /* Gris oscuro */
+    background-color: #1A202C;
     color: var(--white);
     padding: 3rem 2rem;
     text-align: center;
@@ -745,7 +745,7 @@ footer {
     padding: 1.5rem;
     border-radius: 12px;
     box-shadow: var(--shadow);
-    align-self: flex-start; /* Alinea la tarjeta arriba */
+    align-self: flex-start;
 }
 
 .results-subtitle {
@@ -819,12 +819,12 @@ footer {
     color: var(--green-light);
 }
 .prob-medium {
-    background-color: #FEFBCB; /* yellow-100 */
-    color: #B7791F; /* yellow-700 */
+    background-color: #FEFBCB;
+    color: #B7791F;
 }
 .prob-low {
-    background-color: #FED7D7; /* red-200 */
-    color: #9B2C2C; /* red-700 */
+    background-color: #FED7D7;
+    color: #9B2C2C;
 }
 .prediction-prob .fa-chevron-down {
     margin-left: 1rem;
@@ -959,7 +959,7 @@ footer {
 .contact-form textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #CBD5E0; /* gray-300 */
+    border: 1px solid #CBD5E0;
     border-radius: 8px;
     font-family: var(--font-family);
     font-size: 1rem;
@@ -975,7 +975,7 @@ footer {
 
 .contact-info {
     padding-left: 2rem;
-    border-left: 1px solid #E2E8F0; /* gray-200 */
+    border-left: 1px solid #E2E8F0;
 }
 
 .contact-info h3 {
@@ -1044,8 +1044,8 @@ footer {
     color: var(--green-dark);
 }
 .flash-message.danger {
-    background-color: #FED7D7; /* Un rojo muy suave */
-    color: #9B2C2C; /* Un rojo oscuro para el texto */
+    background-color: #FED7D7;
+    color: #9B2C2C;
 }
 
 /* === Animaciones de Scroll === */
