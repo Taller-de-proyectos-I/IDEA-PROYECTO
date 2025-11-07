@@ -18,6 +18,9 @@
 <br>
 
 [Sprint 5](https://app.asana.com/1/1110263497108613/project/1211644724450729/list/1211644604853759)
+<br>
+
+[Paper](https://drive.google.com/drive/folders/19r0NLbhYGRLrOVhUdpl79FP8IHCLgemc?usp=sharing)
 
 
 # PlantAndes - Documentación Técnica
