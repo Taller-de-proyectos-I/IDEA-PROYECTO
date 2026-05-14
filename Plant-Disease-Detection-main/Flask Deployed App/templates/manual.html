@@ -6,12 +6,14 @@
     <div class="container">
         <h1 class="section-title">{{ _('Manual de Usuario de PlantAndes') }}</h1>
         <p class="section-description">
-            {{ _('Bienvenido a la guía completa para usar PlantAndes. Aquí encontrarás todo lo que necesitas para diagnosticar tus cultivos y proteger tu cosecha.') }}
+            {{ _('Bienvenido a la guía completa para usar PlantAndes. Aquí encontrarás todo lo que necesitas para
+            diagnosticar tus cultivos y proteger tu cosecha.') }}
         </p>
 
         <!-- Botón de Descarga PDF -->
         <div class="download-pdf-container">
-            <a href="{{ url_for('static', filename='documents/manual_usuario_plantandes.pdf') }}" download class="analyze-button">
+            <a href="{{ url_for('static', filename='documents/manual_usuario_plantandes.pdf') }}" download
+                class="analyze-button">
                 <i class="fas fa-file-pdf"></i> {{ _('Descargar Manual en PDF') }}
             </a>
         </div>
@@ -21,13 +23,16 @@
             <h2>1. {{ _('Cómo Registrarse y Crear una Cuenta') }}</h2>
             <p>{{ _('Para guardar tu historial y recibir alertas, necesitas una cuenta. Es gratis y rápido.') }}</p>
             <ol>
-                <li>{{ _('Haz clic en el icono de usuario en la esquina superior derecha y luego en "Regístrate aquí".') }}</li>
-                <li>{{ _('Completa el formulario con tu nombre, correo, y elige tu zona (departamento, provincia y distrito). Esto es importante para recibir alertas locales.') }}</li>
+                <li>{{ _('Haz clic en el icono de usuario en la esquina superior derecha y luego en "Regístrate aquí".')
+                    }}</li>
+                <li>{{ _('Completa el formulario con tu nombre, correo, y elige tu zona (departamento, provincia y
+                    distrito). Esto es importante para recibir alertas locales.') }}</li>
                 <li>{{ _('Crea una contraseña segura.') }}</li>
                 <li>{{ _('Una vez registrado, podrás iniciar sesión con tu correo y contraseña.') }}</li>
             </ol>
             <div class="screenshot-placeholder">
-                <img src="{{ url_for('static', filename='img_manual/register.png') }}" alt="{{ _('Captura de pantalla del formulario de registro') }}">
+                <img src="{{ url_for('static', filename='img_manual/register.png') }}"
+                    alt="{{ _('Captura de pantalla del formulario de registro') }}">
             </div>
         </div>
 
@@ -37,13 +42,17 @@
             <p>{{ _('El corazón de PlantAndes es su capacidad para analizar fotos de tus plantas.') }}</p>
             <ol>
                 <li>{{ _('Ve a la sección "Motor IA" desde el menú principal.') }}</li>
-                <li>{{ _('Haz clic en "Seleccionar Imagen" y elige una o varias fotos claras de la hoja o parte afectada de tu cultivo.') }}</li>
+                <li>{{ _('Haz clic en "Seleccionar Imagen" y elige una o varias fotos claras de la hoja o parte afectada
+                    de tu cultivo.') }}</li>
                 <li>{{ _('Presiona el botón "Analizar Imagen".') }}</li>
-                <li>{{ _('En segundos, verás los resultados: el nombre de la enfermedad más probable, una descripción y recomendaciones de tratamiento.') }}</li>
+                <li>{{ _('En segundos, verás los resultados: el nombre de la enfermedad más probable, una descripción y
+                    recomendaciones de tratamiento.') }}</li>
             </ol>
             <div class="screenshot-placeholder">
-                <img src="{{ url_for('static', filename='img_manual/result1.png') }}" alt="{{ _('Captura de la sección para subir imágenes') }}">
-                <img src="{{ url_for('static', filename='img_manual/result2.png') }}" alt="{{ _('Captura de los resultados de un diagnóstico') }}">
+                <img src="{{ url_for('static', filename='img_manual/result1.png') }}"
+                    alt="{{ _('Captura de la sección para subir imágenes') }}">
+                <img src="{{ url_for('static', filename='img_manual/result2.png') }}"
+                    alt="{{ _('Captura de los resultados de un diagnóstico') }}">
             </div>
         </div>
 
@@ -53,11 +62,14 @@
             <p>{{ _('Si tienes más preguntas sobre un diagnóstico, nuestro asistente de chat puede ayudarte.') }}</p>
             <ol>
                 <li>{{ _('Después de un diagnóstico, haz clic en el botón "Activar Asistente IA".') }}</li>
-                <li>{{ _('Escribe tus preguntas en el chat. Por ejemplo: "¿Hay tratamientos orgánicos para esto?" o "¿Qué tan rápido se propaga?".') }}</li>
-                <li>{{ _('Puedes chatear en Español o Quechua, seleccionando el idioma sobre el campo de texto.') }}</li>
+                <li>{{ _('Escribe tus preguntas en el chat. Por ejemplo: "¿Hay tratamientos orgánicos para esto?" o
+                    "¿Qué tan rápido se propaga?".') }}</li>
+                <li>{{ _('Puedes chatear en Español o Quechua, seleccionando el idioma sobre el campo de texto.') }}
+                </li>
             </ol>
             <div class="screenshot-placeholder">
-                <img src="{{ url_for('static', filename='img_manual/ia_assist.png') }}" alt="{{ _('Captura del chat con el Asistente IA') }}">
+                <img src="{{ url_for('static', filename='img_manual/ia_assist.png') }}"
+                    alt="{{ _('Captura del chat con el Asistente IA') }}">
             </div>
         </div>
 
@@ -66,8 +78,10 @@
             <h2>4. {{ _('Consultar tu Historial y ver Alertas') }}</h2>
             <p>{{ _('PlantAndes guarda tus diagnósticos y te mantiene informado sobre brotes en tu zona.') }}</p>
             <ul>
-                <li><strong>{{ _('Mi Historial:') }}</strong> {{ _('Accede desde el menú de usuario para ver todos tus diagnósticos pasados, con tus notas personales.') }}</li>
-                <li><strong>{{ _('Alertas:') }}</strong> {{ _('Visita esta sección para ver un mapa de calor de las enfermedades más comunes detectadas recientemente en diferentes zonas.') }}</li>
+                <li><strong>{{ _('Mi Historial:') }}</strong> {{ _('Accede desde el menú de usuario para ver todos tus
+                    diagnósticos pasados, con tus notas personales.') }}</li>
+                <li><strong>{{ _('Alertas:') }}</strong> {{ _('Visita esta sección para ver un mapa de calor de las
+                    enfermedades más comunes detectadas recientemente en diferentes zonas.') }}</li>
             </ul>
         </div>
 
@@ -75,11 +89,15 @@
 </section>
 
 <style>
-    .manual-section { padding-top: 5rem; }
+    .manual-section {
+        padding-top: 5rem;
+    }
+
     .download-pdf-container {
         text-align: center;
         margin: 2rem 0 4rem 0;
     }
+
     .manual-step {
         background-color: var(--white);
         padding: 2rem;
@@ -87,6 +105,7 @@
         box-shadow: var(--shadow);
         margin-bottom: 3rem;
     }
+
     .manual-step h2 {
         font-size: 1.8rem;
         color: var(--green-dark);
@@ -94,19 +113,24 @@
         padding-bottom: 0.5rem;
         margin: 0 0 1.5rem 0;
     }
+
     .manual-step p {
         font-size: 1.1rem;
         line-height: 1.7;
         margin-bottom: 1.5rem;
     }
-    .manual-step ol, .manual-step ul {
+
+    .manual-step ol,
+    .manual-step ul {
         padding-left: 2rem;
         font-size: 1.1rem;
         line-height: 1.8;
     }
+
     .manual-step li {
         margin-bottom: 1rem;
     }
+
     .screenshot-placeholder {
         border: 2px dashed #CBD5E0;
         border-radius: 8px;
@@ -119,10 +143,11 @@
         gap: 1rem;
         align-items: center;
     }
+
     .screenshot-placeholder img {
         max-width: 100%;
         border-radius: 6px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     @media (max-width: 768px) {
@@ -135,7 +160,7 @@
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const navLinks = document.querySelectorAll('.nav-links a');
         navLinks.forEach(link => {
         });
