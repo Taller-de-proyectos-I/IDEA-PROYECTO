@@ -1,0 +1,326 @@
+function crearFormularioPlantAndes() {
+
+  // ── Crear el formulario ──────────────────────────────────────────────────
+  var form = FormApp.create('Evaluación de Usabilidad — Sistema PlantAndes');
+  form.setDescription(
+    'Estimado/a participante:\n\n' +
+    'Este formulario tiene como finalidad evaluar la usabilidad del sistema PlantAndes, ' +
+    'una aplicación web de diagnóstico automatizado de enfermedades en cultivos andinos ' +
+    'mediante Inteligencia Artificial, desarrollada por AgroTech Cusco S.A.C.\n\n' +
+    'Por favor, realice las tareas indicadas por el evaluador utilizando el sistema y ' +
+    'responda las preguntas según su experiencia.\n\n' +
+    '⏱ Tiempo estimado: 10–15 minutos.\n\n' +
+    'Gracias por su participación.'
+  );
+  form.setCollectEmail(false);
+  form.setAllowResponseEdits(true);
+  form.setProgressBar(true);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  SECCIÓN 1 — DATOS GENERALES
+  // ══════════════════════════════════════════════════════════════════════════
+  form.addSectionHeaderItem()
+    .setTitle('SECCIÓN 1 — DATOS GENERALES')
+    .setHelpText('Complete los datos del evaluador y del participante.');
+
+  form.addTextItem()
+    .setTitle('1. Nombre del evaluador o grupo')
+    .setRequired(true);
+
+  form.addTextItem()
+    .setTitle('2. Nombre del participante')
+    .setRequired(true);
+
+  form.addTextItem()
+    .setTitle('3. Carrera / Ciclo')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('4. ¿Había utilizado anteriormente el sistema PlantAndes?')
+    .setChoiceValues(['Sí', 'No'])
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('5. ¿Tiene experiencia previa con aplicaciones similares de diagnóstico agrícola?')
+    .setChoiceValues(['Sí, con varias', 'Sí, con alguna', 'No, ninguna'])
+    .setRequired(true);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  SECCIÓN 2 — EJECUCIÓN DE TAREAS
+  // ══════════════════════════════════════════════════════════════════════════
+  form.addSectionHeaderItem()
+    .setTitle('SECCIÓN 2 — EJECUCIÓN DE TAREAS')
+    .setHelpText(
+      'Realice cada tarea indicada por el evaluador utilizando el sistema PlantAndes ' +
+      'y luego responda las preguntas correspondientes.'
+    );
+
+  // ── TAREA 1: Registro e inicio de sesión ─────────────────────────────────
+  form.addSectionHeaderItem()
+    .setTitle('TAREA 1: Registro e Inicio de Sesión')
+    .setHelpText('Cree una cuenta nueva en PlantAndes e inicie sesión con sus credenciales.');
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Logró completar la tarea 1?')
+    .setChoiceValues(['Sí', 'No'])
+    .setRequired(true);
+
+  form.addTextItem()
+    .setTitle('¿Cuánto tiempo tardó? (Ejemplo: 2 minutos, 1:30 min)')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Cuántos errores tuvo durante el registro/inicio de sesión?')
+    .setChoiceValues(['0', '1', '2', '3 o más'])
+    .setRequired(true);
+
+  form.addScaleItem()
+    .setTitle('Nivel de dificultad de la Tarea 1')
+    .setBounds(1, 5)
+    .setLabels('Muy difícil', 'Muy fácil')
+    .setRequired(true);
+
+  form.addParagraphTextItem()
+    .setTitle('Comentarios sobre la Tarea 1 (registro/login)')
+    .setRequired(false);
+
+  // ── TAREA 2: Diagnóstico de enfermedad ───────────────────────────────────
+  form.addSectionHeaderItem()
+    .setTitle('TAREA 2: Diagnóstico de Enfermedad en Cultivo')
+    .setHelpText(
+      'Suba una fotografía de un cultivo (papa, maíz, tomate u otro cultivo andino) ' +
+      'al sistema y obtenga el diagnóstico de enfermedad generado por la IA.'
+    );
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Logró completar la tarea 2?')
+    .setChoiceValues(['Sí', 'No'])
+    .setRequired(true);
+
+  form.addTextItem()
+    .setTitle('¿Cuánto tiempo tardó? (Ejemplo: 3 minutos)')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Cuántos errores tuvo al subir la imagen o procesar el diagnóstico?')
+    .setChoiceValues(['0', '1', '2', '3 o más'])
+    .setRequired(true);
+
+  form.addScaleItem()
+    .setTitle('Nivel de dificultad de la Tarea 2')
+    .setBounds(1, 5)
+    .setLabels('Muy difícil', 'Muy fácil')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿El sistema detectó correctamente la enfermedad o estado del cultivo?')
+    .setChoiceValues(['Sí, correctamente', 'Parcialmente', 'No, fue incorrecto', 'No puedo determinarlo'])
+    .setRequired(true);
+
+  form.addParagraphTextItem()
+    .setTitle('Comentarios sobre el diagnóstico de la Tarea 2')
+    .setRequired(false);
+
+  // ── TAREA 3: Interpretar resultados y recomendaciones ────────────────────
+  form.addSectionHeaderItem()
+    .setTitle('TAREA 3: Interpretar el Resultado y Recomendaciones')
+    .setHelpText(
+      'Después de obtener el diagnóstico, revise las recomendaciones de tratamiento, ' +
+      'suplementos y el nivel de confianza mostrado por el sistema.'
+    );
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Logró completar la tarea 3?')
+    .setChoiceValues(['Sí', 'No'])
+    .setRequired(true);
+
+  form.addTextItem()
+    .setTitle('¿Cuánto tiempo tardó en entender los resultados? (Ejemplo: 1 minuto)')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Cuántos errores o confusiones tuvo al interpretar los resultados?')
+    .setChoiceValues(['0', '1', '2', '3 o más'])
+    .setRequired(true);
+
+  form.addScaleItem()
+    .setTitle('Nivel de dificultad de la Tarea 3')
+    .setBounds(1, 5)
+    .setLabels('Muy difícil', 'Muy fácil')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Las recomendaciones de tratamiento fueron comprensibles?')
+    .setChoiceValues(['Sí, muy claras', 'Más o menos claras', 'Poco claras', 'No las entendí'])
+    .setRequired(true);
+
+  form.addParagraphTextItem()
+    .setTitle('Comentarios sobre los resultados y recomendaciones')
+    .setRequired(false);
+
+  // ── TAREA 4: Usar el Asistente AndesGPT ──────────────────────────────────
+  form.addSectionHeaderItem()
+    .setTitle('TAREA 4: Usar el Asistente AndesGPT')
+    .setHelpText(
+      'Interactúe con el asistente AndesGPT del sistema. ' +
+      'Realice al menos una consulta relacionada con el diagnóstico obtenido.'
+    );
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Logró completar la tarea 4?')
+    .setChoiceValues(['Sí', 'No'])
+    .setRequired(true);
+
+  form.addTextItem()
+    .setTitle('¿Cuánto tiempo tardó? (Ejemplo: 2 minutos)')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Cuántos errores o dificultades tuvo al usar el asistente?')
+    .setChoiceValues(['0', '1', '2', '3 o más'])
+    .setRequired(true);
+
+  form.addScaleItem()
+    .setTitle('Nivel de dificultad de la Tarea 4')
+    .setBounds(1, 5)
+    .setLabels('Muy difícil', 'Muy fácil')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Las respuestas del asistente AndesGPT fueron útiles?')
+    .setChoiceValues(['Sí, muy útiles', 'Parcialmente útiles', 'Poco útiles', 'No fueron útiles'])
+    .setRequired(true);
+
+  form.addParagraphTextItem()
+    .setTitle('Comentarios sobre el asistente AndesGPT')
+    .setRequired(false);
+
+  // ── TAREA 5: Navegar el historial de diagnósticos ────────────────────────
+  form.addSectionHeaderItem()
+    .setTitle('TAREA 5: Revisar el Historial de Diagnósticos')
+    .setHelpText(
+      'Acceda a su historial de diagnósticos anteriores en el sistema ' +
+      'y encuentre el diagnóstico que realizó en la Tarea 2.'
+    );
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Logró completar la tarea 5?')
+    .setChoiceValues(['Sí', 'No'])
+    .setRequired(true);
+
+  form.addTextItem()
+    .setTitle('¿Cuánto tiempo tardó? (Ejemplo: 1:30 min)')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('¿Cuántos errores tuvo al navegar el historial?')
+    .setChoiceValues(['0', '1', '2', '3 o más'])
+    .setRequired(true);
+
+  form.addScaleItem()
+    .setTitle('Nivel de dificultad de la Tarea 5')
+    .setBounds(1, 5)
+    .setLabels('Muy difícil', 'Muy fácil')
+    .setRequired(true);
+
+  form.addParagraphTextItem()
+    .setTitle('Comentarios sobre el historial y navegación general')
+    .setRequired(false);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  SECCIÓN 3 — EVALUACIÓN GENERAL DEL SISTEMA (Escala Likert)
+  // ══════════════════════════════════════════════════════════════════════════
+  form.addSectionHeaderItem()
+    .setTitle('SECCIÓN 3 — EVALUACIÓN GENERAL DEL SISTEMA')
+    .setHelpText(
+      'Evalúe los siguientes aspectos del sistema PlantAndes en una escala del 1 al 5, ' +
+      'donde 1 = Totalmente en desacuerdo y 5 = Totalmente de acuerdo.'
+    );
+
+  var likertItems = [
+    'El sistema PlantAndes fue fácil de usar',
+    'La navegación del sistema fue clara e intuitiva',
+    'Los botones y opciones fueron comprensibles',
+    'Los mensajes y resultados del sistema fueron claros',
+    'Me sentí cómodo/a usando el sistema',
+    'El sistema responde de forma rápida',
+    'El diagnóstico generado por la IA me parece confiable',
+    'El sistema cumple correctamente su función de diagnosticar enfermedades',
+    'Recomendaría PlantAndes a agricultores de la región',
+    'El diseño visual del sistema es atractivo y profesional'
+  ];
+
+  for (var i = 0; i < likertItems.length; i++) {
+    form.addScaleItem()
+      .setTitle(likertItems[i])
+      .setBounds(1, 5)
+      .setLabels('Totalmente en desacuerdo', 'Totalmente de acuerdo')
+      .setRequired(true);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  SECCIÓN 4 — PREGUNTAS SUS (System Usability Scale)
+  // ══════════════════════════════════════════════════════════════════════════
+  form.addSectionHeaderItem()
+    .setTitle('SECCIÓN 4 — ESCALA SUS (System Usability Scale)')
+    .setHelpText(
+      'Estas preguntas forman parte de la Escala de Usabilidad del Sistema (SUS). ' +
+      'Responda en una escala del 1 al 5, donde 1 = Totalmente en desacuerdo y 5 = Totalmente de acuerdo.'
+    );
+
+  var susItems = [
+    'Considero que usaría este sistema frecuentemente',
+    'Encontré el sistema innecesariamente complejo',
+    'Considero que el sistema fue fácil de usar',
+    'Creo que necesitaría el apoyo de un técnico para usar este sistema',
+    'Las funciones del sistema están bien integradas',
+    'Encontré demasiadas inconsistencias en el sistema',
+    'Imagino que la mayoría de personas aprendería a usar este sistema rápidamente',
+    'El sistema fue muy engorroso de usar',
+    'Me sentí muy seguro/a usando el sistema',
+    'Necesité aprender muchas cosas antes de poder usar el sistema'
+  ];
+
+  for (var j = 0; j < susItems.length; j++) {
+    form.addScaleItem()
+      .setTitle('SUS ' + (j + 1) + '. ' + susItems[j])
+      .setBounds(1, 5)
+      .setLabels('Totalmente en desacuerdo', 'Totalmente de acuerdo')
+      .setRequired(true);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  SECCIÓN 5 — OBSERVACIONES FINALES
+  // ══════════════════════════════════════════════════════════════════════════
+  form.addSectionHeaderItem()
+    .setTitle('SECCIÓN 5 — OBSERVACIONES FINALES')
+    .setHelpText('Sus comentarios finales son muy importantes para mejorar el sistema.');
+
+  form.addParagraphTextItem()
+    .setTitle('¿Qué fue lo que más le gustó del sistema PlantAndes?')
+    .setRequired(false);
+
+  form.addParagraphTextItem()
+    .setTitle('¿Qué aspectos del sistema deberían mejorarse?')
+    .setRequired(false);
+
+  form.addParagraphTextItem()
+    .setTitle('¿Hubo algún momento en que el sistema no funcionó como esperaba? Descríbalo.')
+    .setRequired(false);
+
+  form.addParagraphTextItem()
+    .setTitle('Comentarios adicionales')
+    .setRequired(false);
+
+  // ── Confirmación de envío ─────────────────────────────────────────────────
+  form.setConfirmationMessage(
+    '✅ ¡Gracias por evaluar PlantAndes!\n\n' +
+    'Su opinión es fundamental para mejorar el sistema de diagnóstico de enfermedades ' +
+    'en cultivos andinos. AgroTech Cusco S.A.C. agradece su tiempo y participación.'
+  );
+
+  // ── Log con el URL del formulario ─────────────────────────────────────────
+  var url = form.getPublishedUrl();
+  var editUrl = form.getEditUrl();
+
+  }
