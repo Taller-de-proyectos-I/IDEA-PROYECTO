@@ -1,166 +1,151 @@
-<!--
-/********************************************************************************
- * PlantAndes - Página de Historial de Diagnósticos
- *
- * Copyright (c) 2025 JherzonDev. Todos los derechos reservados.
- * Autor: JherzonDev
- ********************************************************************************/
--->
 {% extends 'base.html' %}
 {% block title %}Mi Historial - PlantAndes{% endblock %}
 
 {% block content %} 
-<section class="history-section" style="padding-bottom: 0;">
-    <div class="container">
-        <h1 class="section-title">Mi Historial de Diagnósticos</h1>
-        <p class="section-description">
-            Aquí puedes ver todos los análisis que has realizado. Usa los filtros para encontrar diagnósticos específicos.
-        </p>
-
-        <!-- Formulario de Filtros -->
-        <div class="filter-card">
-            <form method="GET" action="{{ url_for('history') }}">
-                <div class="filter-controls">
-                    <div class="form-group">
-                        <label for="disease">Buscar por Enfermedad</label>
-                        <input type="text" id="disease" name="disease" placeholder="Escribe para filtrar..." value="{{ disease_filter }}" class="input-with-icon" style="background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22 fill=%22%23A0AEC0%22><path d=%22M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0s208 93.1 208 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z%22/></svg>'); background-repeat: no-repeat; background-position: 0.75rem center; background-size: 1em;">
-                    </div>
-                    <div class="form-group">
-                        <label for="start_date">Desde</label>
-                        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="end_date">Hasta</label>
-                        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
-                    </div>
-                </div>
-                <div class="filter-actions">
-                    <button type="submit" class="analyze-button"><i class="fas fa-filter"></i> Filtrar</button>
-                    <a href="{{ url_for('history') }}" class="clear-filter-button">Limpiar Filtros</a>
-                </div>
-            </form>
-        </div>
-
-        <!-- Contenedor de Resultados -->
-        <div class="history-grid">
-            {% include '_history_results.html' %}
-        </div>
-    </div>
-</section>
-
-<style>
-    /* Estilos para los campos de filtro */
-    .filter-card input[type="date"],
-    .filter-card input[type="text"] {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #CBD5E0;
-        border-radius: 8px;
-        font-family: var(--font-family);
-        font-size: 1rem;
-        box-sizing: border-box;
-    }
-    .filter-card { background-color: #fff; padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 3rem; }
-    .filter-controls { 
-        display: flex; 
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 2.5rem;
-    }
-    .filter-controls .form-group { flex-basis: 300px;}
-    .filter-actions { display: flex; gap: 1rem; margin-top: 1.5rem; align-items: center; }
-    .clear-filter-button { color: var(--text-light); text-decoration: none; }
-    .clear-filter-button:hover { text-decoration: underline; }
+<div class="max-w-6xl mx-auto flex flex-col gap-6 md:gap-8">
     
-    /* Unificamos el estilo de los campos con icono */
-    .input-with-icon { padding-left: 2.5rem !important; }
+    <!-- Encabezado -->
+    <div class="text-center max-w-2xl mx-auto">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{{ _('Mi Historial de Diagnósticos') }}</h1>
+        <p class="text-sm text-slate-400 mt-2">
+            {{ _('Consulta todos los análisis foliares guardados en tu cuenta. Filtra los resultados por tipo de enfermedad o rango de fechas.') }}
+        </p>
+    </div>
 
+    <!-- Formulario de Filtros -->
+    <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium">
+        <form method="GET" action="{{ url_for('history') }}" class="flex flex-col gap-4">
+            <div class="grid sm:grid-cols-3 gap-4">
+                
+                <!-- Búsqueda -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="disease" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Buscar por Enfermedad') }}</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                            <i class="fas fa-search text-xs"></i>
+                        </span>
+                        <input type="text" id="disease" name="disease" placeholder="{{ _('Ej: Tizón, Mancha...') }}" value="{{ disease_filter }}" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20">
+                    </div>
+                </div>
 
-    /* Ajuste para que las tarjetas no se estiren */
-    .history-grid { 
-        display: grid; 
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        align-items: start; 
-        gap: 2rem; 
+                <!-- Fecha Desde -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="start_date" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Desde') }}</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20">
+                </div>
+
+                <!-- Fecha Hasta -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="end_date" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Hasta') }}</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20">
+                </div>
+
+            </div>
+            
+            <!-- Acciones Filtro -->
+            <div class="flex items-center justify-end gap-3 border-t border-slate-50 pt-4">
+                <a href="{{ url_for('history') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold rounded-xl transition-all">
+                    {{ _('Limpiar Filtros') }}
+                </a>
+                <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-brand-500/10">
+                    <i class="fas fa-filter mr-1.5"></i> {{ _('Aplicar Filtro') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Rejilla de Historial -->
+    <div class="history-grid">
+        {% include '_history_results.html' %}
+    </div>
+
+</div>
+
+<!-- Estilo CSS específico para el comportamiento expandible de las tarjetas -->
+<style>
+    /* Sobrescribir estilos absolutos de enhanced-plantix-style.css */
+    .library-card {
+        align-self: start !important;
     }
-
-    /* Estilos específicos para la información dentro de la tarjeta de historial */
-    .library-card-body {
+    .library-card.is-expanded {
+        overflow: visible !important;
+        z-index: 30 !important;
+    }
+    .library-card-details {
+        position: absolute !important;
+        top: 100% !important;
+        left: -1px !important;
+        right: -1px !important;
+        z-index: 40 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s !important;
+        background-color: #f8fafc !important; /* bg-slate-50 */
+        border: 1px solid #e2e8f0 !important;
+        border-top: none !important;
+        border-radius: 0 0 24px 24px !important;
+        box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    }
+    .library-card.is-expanded .library-card-details {
+        opacity: 1 !important;
+        visibility: visible !important;
+        max-height: 1000px !important;
+    }
+    .library-card.is-expanded .card-close-button {
         display: flex;
-        flex-direction: column;
-        min-height: 150px;
     }
-    .history-card-info { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 0.5rem; 
-        color: var(--text-light); 
-        font-size: 0.9rem; 
-        margin-top: auto;
-    }
-    .history-card-info span { display: flex; align-items: center; gap: 0.5rem; }
-
-    /* Ajuste para el botón de info en el historial */
-    .history-footer .info-button {
-        background: none;
-        border: none;
-        color: var(--blue-sky);
-        cursor: pointer;
-        display: flex; 
-        align-items: center; 
-        gap: 0.5rem; 
-        font-size: 0.9rem;
-    }
-    .history-footer { justify-content: flex-end; border-top: 1px solid #E2E8F0; padding-top: 1rem; margin-top: 1rem; display: flex; }
-
-    .no-results-card {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: 4rem 2rem;
-        background-color: #f7fafc;
-        border-radius: 12px;
-    }
-    .no-results-card .fa-folder-open { font-size: 4rem; color: #cbd5e0; margin-bottom: 1.5rem; }
-    .no-results-card h3 { font-size: 1.5rem; margin-bottom: 1rem; }
-    .no-results-card p { margin-bottom: 2rem; color: var(--text-light); }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const filterForm = document.querySelector('.filter-card form');
+    const filterForm = document.querySelector('.bg-white form');
     const historyGrid = document.querySelector('.history-grid');
     let searchTimeout;
 
-    // Función para inicializar los listeners de las tarjetas.
-    // Se debe llamar cada vez que se actualiza el contenido del historial.
+    // Inicializar los listeners de apertura/cierre de tarjetas
     function initializeCardListeners(container) {
-        const infoButtons = container.querySelectorAll('.library-card .info-button');
-        const closeButtons = container.querySelectorAll('.library-card .card-close-button');
+        const infoButtons = container.querySelectorAll('.info-button');
+        const closeButtons = container.querySelectorAll('.card-close-button');
 
         infoButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const currentCard = this.closest('.library-card');
-                // Cerrar otras tarjetas antes de abrir la nueva
+                
+                // Cerrar otras tarjetas abiertas
                 document.querySelectorAll('.history-grid .library-card.is-expanded').forEach(card => {
-                    if (card !== currentCard) card.classList.remove('is-expanded');
+                    if (card !== currentCard) {
+                        card.classList.remove('is-expanded');
+                    }
                 });
-                if (currentCard) currentCard.classList.toggle('is-expanded');
+                
+                if (currentCard) {
+                    currentCard.classList.toggle('is-expanded');
+                    // Desplazamiento suave al expandirse
+                    if (currentCard.classList.contains('is-expanded')) {
+                        setTimeout(() => {
+                            currentCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }, 250);
+                    }
+                }
             });
         });
 
         closeButtons.forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
                 this.closest('.library-card').classList.remove('is-expanded');
             });
         });
     }
 
-    // Llamada inicial para que las tarjetas funcionen al cargar la página
+    // Inicializar cargando la página
     initializeCardListeners(historyGrid);
 
-    // Función que se ejecuta cuando el usuario modifica un filtro.
+    // Búsqueda en tiempo real AJAX
     function handleFilterChange() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
@@ -168,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const params = new URLSearchParams(formData);
             const url = `${filterForm.action}?${params.toString()}`;
 
-            // Actualiza la URL del navegador para que se pueda copiar y compartir.
+            // Guardar en historial de navegador sin recargar
             window.history.pushState({}, '', url);
 
             fetch(url, {
@@ -179,12 +164,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 historyGrid.innerHTML = html;
                 initializeCardListeners(historyGrid);
             });
-        }, 400);
+        }, 350);
     }
 
-    // Escuchar cambios en todos los inputs del formulario para un filtrado en tiempo real.
+    // Escuchar entradas en inputs para filtrado automático
     filterForm.addEventListener('input', handleFilterChange);
-
     filterForm.addEventListener('submit', function(e) {
         e.preventDefault();
         handleFilterChange();
@@ -192,8 +176,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-<!--
-/********************************************************************************
- * Fin de la Página de Historial - PlantAndes
- ********************************************************************************/
--->

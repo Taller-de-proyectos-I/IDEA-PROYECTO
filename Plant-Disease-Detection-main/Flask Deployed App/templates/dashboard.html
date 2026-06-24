@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Panel de Control') }} - PlantAndes{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6 md:gap-8">
+    
+    <!-- Encabezado Bienvenida -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ _('Hola') }}, {{ current_user.first_name }}!</h1>
+            <p class="text-sm text-slate-400 mt-1"><i class="fas fa-map-marker-alt text-brand-500"></i> {{ current_user.zone.district_name }}, {{ current_user.zone.province_name }} ({{ current_user.zone.department_name }})</p>
+        </div>
+        <a href="{{ url_for('ai_engine_page') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-md shadow-brand-500/10">
+            <i class="fas fa-camera text-base"></i> {{ _('Nuevo Análisis') }}
+        </a>
+    </div>
+
+    <!-- Secciones del Dashboard -->
+    <div class="grid lg:grid-cols-3 gap-6 md:gap-8">
+        
+        <!-- Columna Izquierda: Clima y Avisos Agrónomos -->
+        <div class="lg:col-span-2 flex flex-col gap-6 md:gap-8">
+            <!-- Contenedor del Clima con Skeleton Loader asíncrono -->
+            <div class="flex flex-col gap-6 md:gap-8">
+                <!-- Tarjeta Clima -->
+                <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col sm:flex-row items-stretch sm:items-center gap-6">
+                    <!-- Temperatura y condición -->
+                    <div id="weather-temp-container" class="flex items-center gap-4 bg-gradient-to-tr from-brand-50 to-brand-100/50 p-6 rounded-2xl sm:w-56 justify-center flex-shrink-0 text-center sm:text-left transition-all duration-300">
+                        <div id="weather-icon-div" class="flex items-center justify-center">
+                            <div class="w-16 h-16 bg-slate-200 rounded-full animate-pulse"></div>
+                        </div>
+                        <div class="flex flex-col items-center sm:items-start">
+                            <span id="weather-temp-span" class="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-none">--°C</span>
+                            <div id="weather-condition-span" class="h-4 w-24 bg-slate-200 rounded animate-pulse mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Detalle y Humedad -->
+                    <div class="flex-grow flex flex-col gap-3">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-50 p-3.5 rounded-xl text-center flex flex-col items-center justify-center gap-1">
+                                <span class="block text-xs font-semibold text-slate-400 uppercase">{{ _('Humedad') }}</span>
+                                <span id="weather-humidity-span" class="text-base font-extrabold text-slate-800 mt-0.5"><div class="h-4 w-12 bg-slate-200 rounded animate-pulse"></div></span>
+                            </div>
+                            <div class="bg-slate-50 p-3.5 rounded-xl text-center flex flex-col items-center justify-center gap-1">
+                                <span class="block text-xs font-semibold text-slate-400 uppercase">{{ _('Rango Temp') }}</span>
+                                <span id="weather-range-span" class="text-base font-extrabold text-slate-800 mt-0.5"><div class="h-4 w-16 bg-slate-200 rounded animate-pulse"></div></span>
+                            </div>
+                        </div>
+                        <!-- Ubicación texto descriptivo -->
+                        <div id="weather-source-div" class="h-4 w-48 bg-slate-200 rounded animate-pulse"></div>
+                    </div>
+                </div>
+
+                <!-- Avisos Agrónomos -->
+                <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium">
+                    <h3 class="text-base font-extrabold text-slate-900 mb-4 flex items-center gap-2"><i class="fas fa-info-circle text-brand-500"></i> Recomendaciones Agronómicas</h3>
+                    <div id="weather-advisories-container" class="flex flex-col gap-3">
+                        <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100/50 animate-pulse">
+                            <div class="w-5 h-5 bg-slate-200 rounded-full flex-shrink-0"></div>
+                            <div class="flex-grow flex flex-col gap-2">
+                                <div class="h-3 w-full bg-slate-200 rounded"></div>
+                                <div class="h-3 w-5/6 bg-slate-200 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diagnósticos Recientes -->
+            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fas fa-history text-brand-500"></i> Últimos Análisis</h3>
+                    <a href="{{ url_for('history') }}" class="text-xs font-bold text-brand-600 hover:underline">Ver historial completo</a>
+                </div>
+                <div class="grid sm:grid-cols-3 gap-4">
+                    {% for diag in diagnoses %}
+                        <div class="bg-slate-50/50 rounded-2xl border border-slate-100 p-4 flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-200">
+                            <div class="w-full h-28 rounded-xl overflow-hidden shadow-sm bg-slate-200">
+                                <img src="{{ url_for('static', filename=diag.image_path) }}" alt="{{ diag.disease_name }}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-slate-800 truncate" title="{{ diag.disease_name }}">{{ diag.disease_name }}</p>
+                                <span class="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold {% if diag.probability > 70 %}bg-red-50 text-red-600{% else %}bg-amber-50 text-amber-600{% endif %}">
+                                    {{ diag.probability }}% Confianza
+                                </span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-medium block mt-auto border-t border-slate-100 pt-2"><i class="fa-regular fa-clock"></i> {{ diag.created_at | localtime }}</span>
+                        </div>
+                    {% else %}
+                        <div class="sm:col-span-3 py-8 text-center flex flex-col items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 text-xl"><i class="fas fa-folder-open"></i></div>
+                            <p class="text-xs text-slate-400">Aún no has realizado ningún diagnóstico.</p>
+                            <a href="{{ url_for('ai_engine_page') }}" class="px-4 py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold rounded-lg transition-colors">Escanear mi primera planta</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Tareas de Hoy y Alertas Regionales -->
+        <div class="flex flex-col gap-6 md:gap-8">
+            
+            <!-- Agenda / Lista de Tareas -->
+            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2"><i class="fas fa-calendar-alt text-brand-500"></i> Mis Tareas</h3>
+                    <a href="{{ url_for('tasks_page') }}" class="text-xs font-bold text-brand-600 hover:underline">Ver agenda</a>
+                </div>
+                
+                <!-- Lista de Checkbox Tareas -->
+                <div class="flex flex-col gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+                    {% for task in tasks %}
+                        <div class="flex items-start gap-3 p-3 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl transition-all duration-150" id="task-card-{{ task.id }}">
+                            <input type="checkbox" 
+                                   class="task-toggle-cb mt-1 w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 focus:ring-2 accent-brand-600" 
+                                   data-id="{{ task.id }}"
+                                   {% if task.status == 'completed' %}checked{% endif %}>
+                            <div class="flex-grow min-w-0">
+                                <p class="text-xs sm:text-sm font-bold text-slate-800 leading-snug truncate {% if task.status == 'completed' %}line-through text-slate-400{% endif %}" id="task-title-{{ task.id }}">{{ task.title }}</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="px-1.5 py-0.5 text-[9px] font-bold bg-slate-200 text-slate-600 rounded-md uppercase tracking-wider">{{ task.crop_type }}</span>
+                                    <span class="text-[9px] text-slate-400 font-medium"><i class="fa-regular fa-calendar"></i> {{ task.task_date.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="py-8 text-center flex flex-col items-center gap-2">
+                            <i class="fa-regular fa-calendar-check text-2xl text-slate-300"></i>
+                            <p class="text-xs text-slate-400 font-medium">No tienes tareas pendientes para hoy.</p>
+                            <a href="{{ url_for('tasks_page') }}" class="text-xs text-brand-600 font-bold hover:underline">Agregar una tarea</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Alertas en tu Distrito -->
+            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium">
+                <h3 class="text-base font-extrabold text-slate-900 mb-4 flex items-center gap-2"><i class="fas fa-triangle-exclamation text-brand-500"></i> Brotes en tu Distrito</h3>
+                <div class="flex flex-col gap-2.5">
+                    {% for alert in alerts %}
+                        {% set is_healthy = 'sano' in alert.disease.lower() or 'sana' in alert.disease.lower() or 'healthy' in alert.disease.lower() or 'saludable' in alert.disease.lower() %}
+                        {% if is_healthy %}
+                        {# --- Planta Sana: verde --- #}
+                        <div class="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl flex items-center justify-between">
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-xs font-bold text-slate-950 truncate">{{ alert.disease }}</span>
+                                <p class="text-[10px] text-emerald-600 font-semibold mt-0.5">
+                                    <i class="fas fa-leaf mr-1"></i>{{ alert.count }} muestras saludables registradas
+                                </p>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-emerald-100/60 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                                <i class="fas fa-circle-check text-sm"></i>
+                            </div>
+                        </div>
+                        {% else %}
+                        {# --- Enfermedad: rojo --- #}
+                        <div class="p-3 bg-red-50/70 border border-red-100 rounded-xl flex items-center justify-between">
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-xs font-bold text-slate-950 truncate">{{ alert.disease }}</span>
+                                <p class="text-[10px] text-red-500 font-semibold mt-0.5">
+                                    <i class="fas fa-shield-virus mr-1"></i>{{ alert.count }} casos detectados recientemente
+                                </p>
+                            </div>
+                            <a href="{{ url_for('alerts_page') }}" class="w-8 h-8 rounded-full bg-red-100/50 flex items-center justify-center text-red-600 hover:bg-red-100 transition-colors flex-shrink-0">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl text-center flex flex-col items-center gap-2">
+                            <i class="fas fa-circle-check text-emerald-600 text-lg"></i>
+                            <p class="text-xs text-emerald-800 font-semibold">Sin alertas críticas en tu distrito.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Carga asíncrona del clima real
+        fetch('/api/weather')
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showWeatherError();
+                    return;
+                }
+                
+                // 1. Temperatura
+                document.getElementById('weather-temp-span').textContent = `${data.temp}°C`;
+                
+                // 2. Condición
+                const condSpan = document.getElementById('weather-condition-span');
+                condSpan.className = "text-xs font-bold text-slate-500 mt-1 uppercase tracking-wide";
+                condSpan.textContent = data.condition;
+                
+                // 3. Icono del Clima — SVGs personalizados estilo clima.com
+                const iconDiv = document.getElementById('weather-icon-div');
+
+                // SVG base: nube blanca con borde gris
+                const cloudPath = `<path d="M52 46 H22 a14 14 0 0 1-1-28 a14 14 0 0 1 27 5 a9 9 0 0 1 6 23z"
+                    fill="white" stroke="#94A3B8" stroke-width="2" stroke-linejoin="round"/>`;
+
+                // SVG sol (se pone DETRÁS de la nube)
+                const sunCircle = (cx, cy, r) => `
+                    <circle cx="${cx}" cy="${cy}" r="${r}" fill="#FCD34D"/>
+                    <g stroke="#FCD34D" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="${cx}" y1="${cy-r-8}" x2="${cx}" y2="${cy-r-4}"/>
+                        <line x1="${cx}" y1="${cy+r+4}" x2="${cx}" y2="${cy+r+8}"/>
+                        <line x1="${cx-r-8}" y1="${cy}" x2="${cx-r-4}" y2="${cy}"/>
+                        <line x1="${cx+r+4}" y1="${cy}" x2="${cx+r+8}" y2="${cy}"/>
+                        <line x1="${cx-r-5}" y1="${cy-r-5}" x2="${cx-r-2}" y2="${cy-r-2}"/>
+                        <line x1="${cx+r+2}" y1="${cy+r+2}" x2="${cx+r+5}" y2="${cy+r+5}"/>
+                        <line x1="${cx-r-5}" y1="${cy+r+5}" x2="${cx-r-2}" y2="${cy+r+2}"/>
+                        <line x1="${cx+r+2}" y1="${cy-r-2}" x2="${cx+r+5}" y2="${cy-r-5}"/>
+                    </g>`;
+
+                const svgWrap = (inner) =>
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16">${inner}</svg>`;
+
+                const svgIcons = {
+                    // Despejado día — sol brillante con rayos
+                    '01d': svgWrap(`
+                        <circle cx="32" cy="32" r="13" fill="#FCD34D"/>
+                        <g stroke="#FCD34D" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="32" y1="6" x2="32" y2="13"/><line x1="32" y1="51" x2="32" y2="58"/>
+                            <line x1="6" y1="32" x2="13" y2="32"/><line x1="51" y1="32" x2="58" y2="32"/>
+                            <line x1="13.8" y1="13.8" x2="18.9" y2="18.9"/><line x1="45.1" y1="45.1" x2="50.2" y2="50.2"/>
+                            <line x1="13.8" y1="50.2" x2="18.9" y2="45.1"/><line x1="45.1" y1="18.9" x2="50.2" y2="13.8"/>
+                        </g>`),
+                    // Despejado noche — luna
+                    '01n': svgWrap(`<path d="M40 16a18 18 0 1 0 0 32 14 14 0 0 1 0-32z" fill="#818CF8"/>`),
+                    // Pocas nubes día — sol + nube (02d)
+                    '02d': svgWrap(`
+                        ${sunCircle(24, 26, 10)}
+                        ${cloudPath}`),
+                    // Pocas nubes noche
+                    '02n': svgWrap(`
+                        <path d="M32 18a12 12 0 1 0 0 22 10 10 0 0 1 0-22z" fill="#818CF8"/>
+                        ${cloudPath}`),
+                    // Nubes dispersas día (03d) — sol medio oculto + nube
+                    '03d': svgWrap(`
+                        ${sunCircle(20, 28, 9)}
+                        ${cloudPath}`),
+                    // Nubes dispersas noche
+                    '03n': svgWrap(`
+                        <path d="M28 20a10 10 0 1 0 0 18 8 8 0 0 1 0-18z" fill="#818CF8"/>
+                        ${cloudPath}`),
+                    // Cubierto — doble nube gris
+                    '04d': svgWrap(`
+                        <path d="M48 38 H20 a11 11 0 0 1 0-22 a11 11 0 0 1 21 4 a8 8 0 0 1 7 18z"
+                            fill="#E2E8F0" stroke="#94A3B8" stroke-width="1.5" stroke-linejoin="round"/>
+                        <path d="M54 52 H20 a13 13 0 0 1 0-26 a13 13 0 0 1 25 5 a9 9 0 0 1 9 21z"
+                            fill="white" stroke="#94A3B8" stroke-width="2" stroke-linejoin="round"/>`),
+                    // Lluvia / llovizna
+                    '09d': svgWrap(`
+                        ${cloudPath}
+                        <g stroke="#60A5FA" stroke-width="2.2" stroke-linecap="round">
+                            <line x1="24" y1="50" x2="20" y2="60"/><line x1="32" y1="50" x2="28" y2="60"/><line x1="40" y1="50" x2="36" y2="60"/>
+                        </g>`),
+                    '10d': svgWrap(`
+                        ${sunCircle(18, 22, 8)}
+                        ${cloudPath}
+                        <g stroke="#60A5FA" stroke-width="2.2" stroke-linecap="round">
+                            <line x1="26" y1="50" x2="22" y2="60"/><line x1="34" y1="50" x2="30" y2="60"/><line x1="42" y1="50" x2="38" y2="60"/>
+                        </g>`),
+                    // Tormenta
+                    '11d': svgWrap(`
+                        <path d="M52 40 H22 a13 13 0 0 1 0-26 a13 13 0 0 1 25 5 a9 9 0 0 1 5 21z"
+                            fill="#CBD5E1" stroke="#94A3B8" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M36 42 l-8 12 h6 l-8 10 18-14 h-8 z" fill="#FCD34D" stroke="#F59E0B" stroke-width="1" stroke-linejoin="round"/>`),
+                    // Nieve
+                    '13d': svgWrap(`
+                        ${cloudPath}
+                        <g stroke="#BAE6FD" stroke-width="2.2" stroke-linecap="round">
+                            <line x1="26" y1="50" x2="26" y2="60"/><line x1="21" y1="53" x2="31" y2="57"/><line x1="21" y1="57" x2="31" y2="53"/>
+                            <line x1="38" y1="50" x2="38" y2="60"/><line x1="33" y1="53" x2="43" y2="57"/><line x1="33" y1="57" x2="43" y2="53"/>
+                        </g>`),
+                    // Niebla
+                    '50d': svgWrap(`
+                        <g stroke="#CBD5E1" stroke-width="3" stroke-linecap="round">
+                            <line x1="10" y1="22" x2="54" y2="22"/><line x1="14" y1="30" x2="50" y2="30"/>
+                            <line x1="10" y1="38" x2="54" y2="38"/><line x1="14" y1="46" x2="50" y2="46"/>
+                        </g>`),
+                };
+                // Copiar variantes de noche que son iguales al día
+                ['04','09','10','11','13','50'].forEach(c => { svgIcons[c+'n'] = svgIcons[c+'d']; });
+
+                const svgHtml = svgIcons[data.icon] || svgIcons[data.icon?.substring(0,2)+'d'] || svgIcons['04d'];
+                iconDiv.innerHTML = svgHtml;
+                
+                // 4. Detalles
+                document.getElementById('weather-humidity-span').innerHTML = `<i class="fas fa-droplet text-sky-500 mr-1 animate-bounce"></i>${data.humidity}%`;
+                document.getElementById('weather-range-span').innerHTML = `<i class="fas fa-temperature-half text-brand-500 mr-1"></i>${data.temp_min}° - ${data.temp_max}°`;
+                
+                // 5. Ubicación fuente
+                const sourceDiv = document.getElementById('weather-source-div');
+                sourceDiv.className = data.is_real ? "text-xs text-emerald-600 font-semibold" : "text-xs text-slate-400 font-medium";
+                sourceDiv.innerHTML = data.is_real 
+                    ? `<i class="fas fa-satellite-dish mr-1 text-emerald-500 animate-pulse"></i>Clima real de ${data.queried}.`
+                    : `<i class="fas fa-calculator mr-1"></i>Clima estimado por histórico local.`;
+                
+                // 6. Recomendaciones Agronómicas
+                const advContainer = document.getElementById('weather-advisories-container');
+                advContainer.innerHTML = '';
+                
+                if (data.advisories && data.advisories.length > 0) {
+                    data.advisories.forEach(adv => {
+                        const isRisk = adv.includes('Riesgo') || adv.includes('elevado') || adv.includes('heladas') || adv.includes('bajas');
+                        const bgClass = isRisk ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-brand-50 text-brand-700 border border-brand-100';
+                        const iconClass = isRisk ? 'fa-triangle-exclamation text-red-500' : 'fa-circle-check text-brand-500';
+                        
+                        const itemHtml = `
+                            <div class="flex items-start gap-3 p-4 rounded-xl ${bgClass} transition-all duration-300 hover:scale-[1.01]">
+                                <i class="fas ${iconClass} text-base mt-0.5 flex-shrink-0"></i>
+                                <p class="text-xs sm:text-sm font-semibold leading-relaxed">${adv}</p>
+                            </div>
+                        `;
+                        advContainer.insertAdjacentHTML('beforeend', itemHtml);
+                    });
+                } else {
+                    advContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No hay avisos específicos para hoy.</p>`;
+                }
+            })
+            .catch(err => {
+                console.error("Error cargando clima:", err);
+                showWeatherError();
+            });
+
+        function showWeatherError() {
+            document.getElementById('weather-temp-span').textContent = "--°C";
+            const condSpan = document.getElementById('weather-condition-span');
+            condSpan.className = "text-xs font-bold text-red-500 mt-1 uppercase";
+            condSpan.textContent = "Error de red";
+            document.getElementById('weather-icon-div').innerHTML = '<i class="fas fa-exclamation-triangle text-4xl text-red-500"></i>';
+            document.getElementById('weather-humidity-span').innerHTML = `<i class="fas fa-droplet text-slate-300 mr-1"></i>--%`;
+            document.getElementById('weather-range-span').innerHTML = `<i class="fas fa-temperature-half text-slate-300 mr-1"></i>--° - --°`;
+            
+            const sourceDiv = document.getElementById('weather-source-div');
+            sourceDiv.className = "text-xs text-slate-400 font-medium";
+            sourceDiv.innerHTML = `<i class="fas fa-circle-xmark mr-1 text-red-400"></i>No se pudo conectar con el servicio de clima.`;
+            
+            document.getElementById('weather-advisories-container').innerHTML = `
+                <div class="flex items-center justify-center p-6 bg-slate-50 rounded-xl border border-slate-100 text-slate-400 text-xs">
+                    <i class="fas fa-cloud-meatball mr-2 text-lg"></i> Revisa tu conexión a internet para ver recomendaciones climáticas.
+                </div>
+            `;
+        }
+
+        // Toggle de Tareas
+        const checkboxes = document.querySelectorAll('.task-toggle-cb');
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const taskId = this.dataset.id;
+                const card = document.getElementById(`task-card-${taskId}`);
+                const title = document.getElementById(`task-title-${taskId}`);
+                
+                this.disabled = true;
+                
+                fetch(`/tasks/toggle/${taskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.disabled = false;
+                    if(data.success) {
+                        if(data.status === 'completed') {
+                            title.classList.add('line-through', 'text-slate-400');
+                        } else {
+                            title.classList.remove('line-through', 'text-slate-400');
+                        }
+                    } else {
+                        this.checked = !this.checked;
+                        alert('Error al actualizar tarea.');
+                    }
+                })
+                .catch(err => {
+                    this.disabled = false;
+                    this.checked = !this.checked;
+                    alert('Error al conectar con el servidor.');
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

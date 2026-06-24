@@ -1,39 +1,90 @@
 {% if diagnoses %}
-    {% for diagnosis in diagnoses %}
-    <div class="library-card animate-on-scroll zoom-in-effect is-visible {% if 'sano' in diagnosis.disease_name|lower or 'sana' in diagnosis.disease_name|lower or 'saludable' in diagnosis.disease_name|lower %}is-healthy{% endif %}">
-        <button class="card-close-button"><i class="fas fa-times"></i></button>
-        <img src="{{ url_for('static', filename=diagnosis.image_path) }}" alt="Imagen del diagnóstico" class="library-card-img" style="height: 200px;">
-        <div class="library-card-body">
-            <h3 class="library-card-title">{{ diagnosis.disease_name }}</h3>
-            <div class="history-card-info">
-                <span><i class="fas fa-percent"></i> {{ diagnosis.probability }}% de certeza</span>
-                <span><i class="fas fa-calendar-alt"></i> {{ diagnosis.created_at|localtime }}</span>
-            </div>
-            <div class="library-card-footer history-footer">
-                <button class="info-button"><i class="fas fa-info-circle"></i> Ver Detalles</button>
-            </div>
-        </div>
-        <div class="library-card-details">
-            <div class="details-section">
-                <h4><i class="fas fa-info-circle"></i> Descripción</h4>
-                <p>{{ diagnosis.description }}</p>
-                <h4><i class="fas fa-shield-alt"></i> Recomendaciones</h4>
-                <p>{{ diagnosis.recommendations }}</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-start">
+        {% for diagnosis in diagnoses %}
+        <div class="library-card bg-white border border-slate-100 rounded-3xl shadow-premium overflow-hidden flex flex-col relative transition-all duration-300 {% if 'sano' in diagnosis.disease_name|lower or 'sana' in diagnosis.disease_name|lower or 'saludable' in diagnosis.disease_name|lower %}border-emerald-100{% endif %}" id="diag-card-{{ loop.index }}">
+            
+            <!-- Botón de Cerrar Detalles flotante (oculto por defecto) -->
+            <button class="card-close-button absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-sm hover:bg-slate-900 text-white flex items-center justify-center text-xs z-10 transition-colors hidden">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- Imagen del diagnóstico -->
+            <div class="w-full h-44 overflow-hidden relative bg-slate-200">
+                <img src="{{ url_for('static', filename=diagnosis.image_path) }}" alt="Diagnóstico" class="w-full h-full object-cover">
                 
-                <!-- Mostrar notas si existen -->
-                {% if diagnosis.notes %}
-                <h4><i class="fas fa-sticky-note"></i> Mis Notas</h4>
-                <p style="white-space: pre-wrap;">{{ diagnosis.notes }}</p>
-                {% endif %}
+                <!-- Insignia de Estado -->
+                <span class="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm 
+                    {% if 'sano' in diagnosis.disease_name|lower or 'sana' in diagnosis.disease_name|lower or 'saludable' in diagnosis.disease_name|lower %}
+                        bg-emerald-100 text-emerald-700
+                    {% else %}
+                        bg-red-100 text-red-700
+                    {% endif %}">
+                    {% if 'sano' in diagnosis.disease_name|lower or 'sana' in diagnosis.disease_name|lower or 'saludable' in diagnosis.disease_name|lower %}
+                        {{ _('Sano') }}
+                    {% else %}
+                        {{ _('Enfermo') }}
+                    {% endif %}
+                </span>
             </div>
+
+            <!-- Cuerpo de la Tarjeta -->
+            <div class="p-5 flex flex-col flex-grow gap-3">
+                <h3 class="font-extrabold text-slate-800 text-base leading-snug truncate" title="{{ diagnosis.disease_name }}">{{ diagnosis.disease_name }}</h3>
+                
+                <!-- Datos Rápidos -->
+                <div class="flex flex-col gap-1.5 mt-1 border-b border-slate-50 pb-3 mb-1">
+                    <span class="text-xs text-slate-500 font-semibold flex items-center gap-2">
+                        <i class="fas fa-percent text-slate-400 w-4"></i> {{ diagnosis.probability }}% {{ _('de certeza') }}
+                    </span>
+                    <span class="text-xs text-slate-500 font-semibold flex items-center gap-2">
+                        <i class="fa-regular fa-calendar-alt text-slate-400 w-4"></i> {{ diagnosis.created_at|localtime }}
+                    </span>
+                </div>
+
+                <!-- Botón Expandir -->
+                <div class="flex items-center justify-end mt-auto">
+                    <button class="info-button px-3.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 hover:text-brand-800 text-xs font-bold rounded-lg transition-colors flex items-center gap-1">
+                        <i class="fas fa-info-circle"></i> {{ _('Ver Detalles') }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor Desplegable Detalles -->
+            <div class="library-card-details bg-slate-50/50">
+                <div class="p-5 flex flex-col gap-4 text-xs leading-relaxed text-slate-500">
+                    <div class="flex flex-col gap-1">
+                        <h4 class="font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5"><i class="fas fa-info-circle text-brand-500"></i> {{ _('Descripción') }}</h4>
+                        <p class="font-medium">{{ diagnosis.description }}</p>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <h4 class="font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5"><i class="fas fa-shield-alt text-brand-500"></i> {{ _('Recomendaciones') }}</h4>
+                        <p class="font-medium">{{ diagnosis.recommendations }}</p>
+                    </div>
+                    
+                    {% if diagnosis.notes %}
+                    <div class="flex flex-col gap-1 bg-white p-3 rounded-xl border border-slate-100">
+                        <h4 class="font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5"><i class="fas fa-sticky-note text-amber-500"></i> {{ _('Mis Notas') }}</h4>
+                        <p class="font-medium whitespace-pre-wrap text-slate-600 italic mt-0.5">"{{ diagnosis.notes }}"</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 {% else %}
-    <div class="no-results-card">
-        <i class="fas fa-folder-open"></i>
-        <h3>No se encontraron diagnósticos</h3>
-        <p>Parece que no tienes diagnósticos guardados o los filtros no arrojaron resultados.</p>
-        <a href="{{ url_for('ai_engine_page') }}" class="analyze-button">Realizar mi primer análisis</a>
+    <div class="col-span-full py-16 bg-white border border-dashed border-slate-200 rounded-3xl text-center text-slate-400 flex flex-col items-center justify-center gap-3 max-w-md mx-auto mt-6">
+        <div class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 text-2xl">
+            <i class="fas fa-folder-open"></i>
+        </div>
+        <div class="px-6">
+            <h3 class="font-bold text-slate-800 text-base">{{ _('No se encontraron diagnósticos') }}</h3>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ _('Parece que no tienes diagnósticos guardados que coincidan con los filtros aplicados.') }}</p>
+        </div>
+        <a href="{{ url_for('ai_engine_page') }}" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-brand-500/10 mt-2">
+            {{ _('Realizar mi primer análisis') }}
+        </a>
     </div>
 {% endif %}

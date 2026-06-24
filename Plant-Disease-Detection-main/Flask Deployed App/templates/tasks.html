@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Agenda Agrícola') }} - PlantAndes{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto flex flex-col gap-6 md:gap-8">
+    
+    <!-- Encabezado -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ _('Agenda Agrícola') }}</h1>
+            <p class="text-sm text-slate-400 mt-1">{{ _('Registra recordatorios de riego, fertilización, fumigación y cosecha de tus cultivos.') }}</p>
+        </div>
+        <button id="add-task-btn" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-md shadow-brand-500/10 text-sm">
+            <i class="fas fa-plus"></i> <span class="hidden sm:inline">{{ _('Nueva Tarea') }}</span>
+        </button>
+    </div>
+
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="p-4 rounded-xl text-sm font-semibold border {% if category == 'success' %}bg-emerald-50 text-emerald-800 border-emerald-100{% else %}bg-red-50 text-red-800 border-red-100{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Modal Formulario Nueva Tarea -->
+    <div id="task-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden items-center justify-center px-4">
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-floating flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-50 pb-3">
+                <span class="text-lg font-bold text-slate-900">{{ _('Crear Nueva Tarea') }}</span>
+                <button id="close-task-modal" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form action="{{ url_for('tasks_page') }}" method="POST" class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1.5">
+                    <label for="title" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Nombre de la Tarea') }}</label>
+                    <input type="text" id="title" name="title" required placeholder="Ej: Riego de cobertura, Abonado" class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label for="crop_type" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Cultivo') }}</label>
+                        <select id="crop_type" name="crop_type" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20">
+                            <option value="Papa">Papa</option>
+                            <option value="Maíz">Maíz</option>
+                            <option value="Tomate">Tomate</option>
+                            <option value="Quinua">Quinua</option>
+                            <option value="Manzana">Manzana</option>
+                            <option value="Arándanos">Arándanos</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label for="task_date" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Fecha') }}</label>
+                        <input type="date" id="task_date" name="task_date" required class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20">
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label for="description" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Descripción (Opcional)') }}</label>
+                    <textarea id="description" name="description" rows="3" placeholder="Detalles de dosis, materiales o notas sobre el clima..." class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand-500/10 text-sm mt-2">
+                    {{ _('Guardar Recordatorio') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Tareas -->
+    <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+        
+        <!-- Tareas Pendientes -->
+        <div class="flex flex-col gap-4">
+            <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                {{ _('Tareas Pendientes') }}
+            </h2>
+            <div class="flex flex-col gap-3" id="pending-tasks-list">
+                {% set pending_count = namespace(value=0) %}
+                {% for task in tasks if task.status == 'pending' %}
+                    {% set pending_count.value = pending_count.value + 1 %}
+                    <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-premium flex gap-3.5 items-start justify-between group" id="task-container-{{ task.id }}">
+                        <input type="checkbox" 
+                               class="task-status-toggle mt-1 w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 focus:ring-2 accent-brand-600" 
+                               data-id="{{ task.id }}">
+                        <div class="flex-grow min-w-0 flex flex-col gap-1">
+                            <span class="font-bold text-slate-800 text-sm sm:text-base leading-snug break-words" id="task-title-text-{{ task.id }}">{{ task.title }}</span>
+                            {% if task.description %}
+                                <p class="text-xs text-slate-400 font-medium leading-relaxed mt-0.5">{{ task.description }}</p>
+                            {% endif %}
+                            <div class="flex items-center gap-2.5 mt-2">
+                                <span class="px-2 py-0.5 text-[10px] font-bold bg-brand-50 text-brand-700 rounded-md uppercase tracking-wider">{{ task.crop_type }}</span>
+                                <span class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-calendar mr-1"></i>{{ task.task_date.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                        </div>
+                        <button class="task-delete-btn text-slate-300 hover:text-red-500 p-1 flex-shrink-0 transition-colors duration-200" data-id="{{ task.id }}">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+                {% if pending_count.value == 0 %}
+                    <div class="py-12 bg-white border border-dashed border-slate-200 rounded-2xl text-center text-slate-400 flex flex-col items-center gap-2.5">
+                        <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 text-xl"><i class="fa-regular fa-calendar-check"></i></div>
+                        <p class="text-xs font-semibold">¡Todo al día! No tienes tareas pendientes.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tareas Completadas -->
+        <div class="flex flex-col gap-4">
+            <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                {{ _('Tareas Completadas') }}
+            </h2>
+            <div class="flex flex-col gap-3" id="completed-tasks-list">
+                {% set completed_count = namespace(value=0) %}
+                {% for task in tasks if task.status == 'completed' %}
+                    {% set completed_count.value = completed_count.value + 1 %}
+                    <div class="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl flex gap-3.5 items-start justify-between group" id="task-container-{{ task.id }}">
+                        <input type="checkbox" 
+                               class="task-status-toggle mt-1 w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 focus:ring-2 accent-brand-600" 
+                               data-id="{{ task.id }}" checked>
+                        <div class="flex-grow min-w-0 flex flex-col gap-1 opacity-60">
+                            <span class="font-semibold text-slate-600 text-sm sm:text-base leading-snug line-through break-words" id="task-title-text-{{ task.id }}">{{ task.title }}</span>
+                            {% if task.description %}
+                                <p class="text-xs text-slate-400 leading-relaxed line-through mt-0.5">{{ task.description }}</p>
+                            {% endif %}
+                            <div class="flex items-center gap-2.5 mt-2">
+                                <span class="px-2 py-0.5 text-[10px] font-bold bg-slate-200 text-slate-600 rounded-md uppercase tracking-wider">{{ task.crop_type }}</span>
+                                <span class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-calendar mr-1"></i>{{ task.task_date.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                        </div>
+                        <button class="task-delete-btn text-slate-300 hover:text-red-500 p-1 flex-shrink-0 transition-colors duration-200" data-id="{{ task.id }}">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+                {% if completed_count.value == 0 %}
+                    <div class="py-12 bg-slate-50/20 border border-slate-200 border-dashed rounded-2xl text-center text-slate-400 flex flex-col items-center gap-2.5">
+                        <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 text-xl"><i class="fa-regular fa-circle-xmark"></i></div>
+                        <p class="text-xs">No tienes tareas completadas registradas.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const taskModal = document.getElementById('task-modal');
+        const closeTaskModal = document.getElementById('close-task-modal');
+        
+        // Asignar fecha de hoy por defecto al input de fecha
+        const dateInput = document.getElementById('task_date');
+        if(dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+
+        if(addTaskBtn) {
+            addTaskBtn.addEventListener('click', () => {
+                taskModal.classList.remove('hidden');
+                taskModal.classList.add('flex');
+            });
+        }
+
+        if(closeTaskModal) {
+            closeTaskModal.addEventListener('click', () => {
+                taskModal.classList.add('hidden');
+                taskModal.classList.remove('flex');
+            });
+        }
+
+        if(taskModal) {
+            taskModal.addEventListener('click', (e) => {
+                if(e.target === taskModal) {
+                    taskModal.classList.add('hidden');
+                    taskModal.classList.remove('flex');
+                }
+            });
+        }
+
+        // Lógica de Toggle AJAX (Completar/Descompletar)
+        document.body.addEventListener('change', function(e) {
+            if(e.target.classList.contains('task-status-toggle')) {
+                const cb = e.target;
+                const taskId = cb.dataset.id;
+                const container = document.getElementById(`task-container-${taskId}`);
+                const titleText = document.getElementById(`task-title-text-${taskId}`);
+                
+                cb.disabled = true;
+
+                fetch(`/tasks/toggle/${taskId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    cb.disabled = false;
+                    if(data.success) {
+                        // Relocalizar el elemento en el DOM con animación
+                        if(data.status === 'completed') {
+                            // Mover a completados
+                            titleText.classList.add('line-through', 'text-slate-600', 'font-semibold');
+                            titleText.classList.remove('text-slate-800', 'font-bold');
+                            titleText.parentElement.classList.add('opacity-60');
+                            container.classList.add('bg-slate-50/50');
+                            container.classList.remove('bg-white', 'shadow-premium');
+                            
+                            const completedList = document.getElementById('completed-tasks-list');
+                            // Si tiene la cajita vacía de no tareas, borrarla
+                            if(completedList.querySelector('.border-dashed')) {
+                                completedList.innerHTML = '';
+                            }
+                            completedList.appendChild(container);
+                        } else {
+                            // Mover a pendientes
+                            titleText.classList.remove('line-through', 'text-slate-600', 'font-semibold');
+                            titleText.classList.add('text-slate-800', 'font-bold');
+                            titleText.parentElement.classList.remove('opacity-60');
+                            container.classList.remove('bg-slate-50/50');
+                            container.classList.add('bg-white', 'shadow-premium');
+                            
+                            const pendingList = document.getElementById('pending-tasks-list');
+                            if(pendingList.querySelector('.border-dashed')) {
+                                pendingList.innerHTML = '';
+                            }
+                            pendingList.appendChild(container);
+                        }
+                        
+                        // Si se queda vacía alguna lista, recargar la página para reordenar o mostrar el placeholder
+                        // Para una UX óptima, simplemente validamos si las listas quedaron vacías
+                        const pendingList = document.getElementById('pending-tasks-list');
+                        if (pendingList.children.length === 0) {
+                            pendingList.innerHTML = `
+                                <div class="py-12 bg-white border border-dashed border-slate-200 rounded-2xl text-center text-slate-400 flex flex-col items-center gap-2.5">
+                                    <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 text-xl"><i class="fa-regular fa-calendar-check"></i></div>
+                                    <p class="text-xs font-semibold">¡Todo al día! No tienes tareas pendientes.</p>
+                                </div>
+                            `;
+                        }
+                        
+                        const completedList = document.getElementById('completed-tasks-list');
+                        if (completedList.children.length === 0) {
+                            completedList.innerHTML = `
+                                <div class="py-12 bg-slate-50/20 border border-slate-200 border-dashed rounded-2xl text-center text-slate-400 flex flex-col items-center gap-2.5">
+                                    <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 text-xl"><i class="fa-regular fa-circle-xmark"></i></div>
+                                    <p class="text-xs">No tienes tareas completadas registradas.</p>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        cb.checked = !cb.checked;
+                        alert('Error al actualizar tarea.');
+                    }
+                })
+                .catch(err => {
+                    cb.disabled = false;
+                    cb.checked = !cb.checked;
+                    alert('Error de conexión.');
+                });
+            }
+        });
+
+        // Lógica de Eliminación AJAX
+        document.body.addEventListener('click', function(e) {
+            const btn = e.target.closest('.task-delete-btn');
+            if(btn) {
+                const taskId = btn.dataset.id;
+                const container = document.getElementById(`task-container-${taskId}`);
+                
+                if(confirm('¿Seguro que deseas eliminar este recordatorio?')) {
+                    fetch(`/tasks/delete/${taskId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.success) {
+                            // Remover del DOM con desvanecimiento
+                            container.classList.add('opacity-0', 'scale-95');
+                            setTimeout(() => {
+                                const parent = container.parentElement;
+                                container.remove();
+                                
+                                // Si queda vacía la lista
+                                if (parent.children.length === 0) {
+                                    if(parent.id === 'pending-tasks-list') {
+                                        parent.innerHTML = `
+                                            <div class="py-12 bg-white border border-dashed border-slate-200 rounded-2xl text-center text-slate-400 flex flex-col items-center gap-2.5">
+                                                <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 text-xl"><i class="fa-regular fa-calendar-check"></i></div>
+                                                <p class="text-xs font-semibold">¡Todo al día! No tienes tareas pendientes.</p>
+                                            </div>
+                                        `;
+                                    } else {
+                                        parent.innerHTML = `
+                                            <div class="py-12 bg-slate-50/20 border border-slate-200 border-dashed rounded-2xl text-center text-slate-400 flex flex-col items-center gap-2.5">
+                                                <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 text-xl"><i class="fa-regular fa-circle-xmark"></i></div>
+                                                <p class="text-xs">No tienes tareas completadas registradas.</p>
+                                            </div>
+                                        `;
+                                    }
+                                }
+                            }, 200);
+                        } else {
+                            alert('No se pudo eliminar la tarea.');
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error de red al eliminar.');
+                    });
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

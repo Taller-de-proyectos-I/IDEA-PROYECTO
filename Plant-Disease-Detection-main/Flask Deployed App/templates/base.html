@@ -1,809 +1,682 @@
-<!--
-/********************************************************************************
- * PlantAndes - Plantilla Base
- *
- * Copyright (c) 2025 JherzonDev. Todos los derechos reservados.
- * Autor: JherzonDev
- ********************************************************************************/
--->
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Detección de Enfermedades en Plantas Andinas{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced-plantix-style.css') }}">
+    <title>{% block title %}Detección de Enfermedades en Plantas Andinas - PlantAndes{% endblock %}</title>
+    <!-- Icono -->
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.txt') }}" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Librería para renderizar Markdown en el chat -->
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f2f9f1',
+                            100: '#e1f0e0',
+                            200: '#c5e2c3',
+                            300: '#9bce98',
+                            400: '#6bb167',
+                            500: '#4c9648',
+                            600: '#3a7a37',
+                            700: '#2f622d',
+                            800: '#274e25',
+                            900: '#214220',
+                        },
+                        accent: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'premium': '0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02)',
+                        'floating': '0 20px 40px -15px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Marked para renderizado Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Estilos para renderizado de Markdown en chatbot */
+        .msg-content p {
+            margin-bottom: 0.5rem;
+        }
+        .msg-content p:last-child {
+            margin-bottom: 0;
+        }
+        .msg-content h1, .msg-content h2, .msg-content h3, .msg-content h4 {
+            font-weight: 800;
+            margin-top: 0.75rem;
+            margin-bottom: 0.35rem;
+            color: inherit;
+        }
+        .msg-content h1 { font-size: 1.15rem; }
+        .msg-content h2 { font-size: 1.05rem; }
+        .msg-content h3 { font-size: 0.95rem; }
+        .msg-content h4 { font-size: 0.9rem; }
+        .msg-content ul, .msg-content ol {
+            margin-bottom: 0.5rem;
+            padding-left: 1.1rem;
+        }
+        .msg-content ul {
+            list-style-type: disc;
+        }
+        .msg-content ol {
+            list-style-type: decimal;
+        }
+        .msg-content li {
+            margin-bottom: 0.2rem;
+        }
+        .msg-content strong {
+            font-weight: 800;
+        }
+        
+        /* Estilos para el sistema de calificación de estrellas */
+        .star {
+            transition: color 0.15s ease-in-out;
+        }
+        /* Colorear las estrellas seleccionadas y anteriores */
+        input[type="radio"]:checked ~ label.star {
+            color: #fbbf24 !important; /* text-amber-400 */
+        }
+        /* Efecto hover interactivo: colorear la estrella apuntada y anteriores */
+        label.star:hover,
+        label.star:hover ~ label.star {
+            color: #f59e0b !important; /* text-amber-500 */
+        }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar">
-            <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-leaf"></i>
-                </div>
-                <div class="logo-text">Plant<span>Andes</span></div>
-            </div>
-            <button class="nav-toggle" id="nav-toggle" aria-label="toggle navigation">
-                <span class="hamburger"></span>
-            </button>
-            
-            <ul class="nav-links" id="nav-links">
-                <li><a href="{{ url_for('home_page') }}">{{ _('Principal') }}</a></li>
-                <li><a href="{{ url_for('market') }}">{{ _('Biblioteca') }}</a></li>
-                <li><a href="{{ url_for('alerts_page') }}">{{ _('Alertas') }}</a></li>
-                <li><a href="{{ url_for('ai_engine_page') }}">{{ _('Motor IA') }}</a></li>
-                <li><a href="{{ url_for('about_page') }}">{{ _('Acerca de') }}</a></li>
-                <li><a href="{{ url_for('contact') }}">{{ _('Contacto') }}</a></li>
-                <li><a href="{{ url_for('user_manual') }}">{{ _('Manual') }}</a></li>
-            </ul>
+<body class="bg-slate-50/50 text-slate-800 min-h-screen flex flex-col pb-16 md:pb-0">
 
-            
-            <div class="nav-auth-links" id="user-menu-container">
-                <!-- Selector de Idioma -->
-                <div class="language-selector-nav">
-                    <i class="fas fa-globe"></i>
-                    <ul class="language-dropdown">
-                        {% for lang_code, lang_name in config.LANGUAGES.items() %}
-                        <li>
-                            <a href="{{ url_for('set_language', lang=lang_code) }}" class="{{ 'active' if session.get('language', 'es') == lang_code else '' }}">{{ lang_name }}</a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% if current_user.is_authenticated %}
-                <!-- Icono de Notificaciones -->
-                <div id="notification-container" class="notification-container">
-                    <button id="notification-button" class="user-menu-button">
-                        <i class="fa-regular fa-bell"></i>
-                        {% if unread_notifications %}
-                        <span class="notification-badge">{{ unread_notifications|length }}</span>
-                        {% endif %}
-                    </button>
-                    <div id="notification-dropdown" class="user-menu-dropdown">
-                        <div class="dropdown-header"><h4>{{ _('Notificaciones') }}</h4></div>
-                        <ul class="notification-list">
-                            {% for notif in unread_notifications %}
-                                <li><a href="{{ url_for('mark_notification_as_read', notification_id=notif.id) }}">{{ notif.message }}</a></li>
-                            {% else %}
-                                <li class="no-notifications">{{ _('No tienes notificaciones nuevas.') }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                {% endif %}
-                <!-- Icono de Usuario Único -->
-                <button id="user-menu-button" class="user-menu-button">
-                    <i class="fa-regular fa-user"></i>
-                </button>
-
-                <!-- Menú Desplegable (Modal) -->
-                <div id="user-menu-dropdown" class="user-menu-dropdown">
-                    {% if current_user.is_authenticated %}
-                        <!-- Vista para usuario logueado -->
-                        <div class="dropdown-header">
-                            <div class="user-info">
-                                <strong>{{ current_user.username }}</strong>
-                                <span>{{ current_user.email }}</span>
-                            </div>
-                            <button id="close-user-menu" class="close-button">&times;</button>
+    <!-- Navbar superior (Escritorio / Tablet) -->
+    <header class="sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 z-40 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logotipo -->
+                <div class="flex items-center gap-3">
+                    <a href="{{ url_for('home_page') }}" class="flex items-center gap-2 group">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200">
+                            <i class="fas fa-leaf text-lg"></i>
                         </div>
-                        <ul class="dropdown-links">
-                            <li><a href="{{ url_for('history') }}"><i class="fas fa-history"></i> {{ _('Mi Historial') }}</a></li>
-                            {% if current_user.role == 'admin' %}
-                            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> {{ _('Dashboard') }}</a></li>
-                            {% endif %}
-                            <li><a href="{{ url_for('edit_profile') }}"><i class="fas fa-user-edit"></i> {{ _('Editar Perfil') }}</a></li>
-                        </ul>
-                        <div class="dropdown-footer">
-                            <button id="logout-button" class="logout-button"><i class="fas fa-sign-out-alt"></i> {{ _('Cerrar Sesión') }}</button>
-                            
-                            <div id="logout-confirm-container" class="logout-confirm-container">
-                                <p>{{ _('¿Seguro que quieres salir?') }}</p>
-                                <div class="confirm-buttons">
-                                    <a href="{{ url_for('logout') }}" class="confirm-yes">{{ _('Sí, salir') }}</a>
-                                    <button id="logout-no" class="confirm-no">{{ _('No') }}</button>
+                        <span class="text-xl font-extrabold tracking-tight text-slate-900 group-hover:text-brand-600 transition-colors duration-200">Plant<span class="text-brand-500">Andes</span></span>
+                    </a>
+                </div>
+
+                <!-- Enlaces de navegación (Desktop) -->
+                <nav class="hidden md:flex items-center gap-1">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard') }}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/50 transition-all duration-200">{{ _('Inicio') }}</a>
+                    {% else %}
+                        <a href="{{ url_for('home_page') }}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/50 transition-all duration-200">{{ _('Inicio') }}</a>
+                    {% endif %}
+                    <a href="{{ url_for('market') }}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/50 transition-all duration-200">{{ _('Biblioteca') }}</a>
+                    <a href="{{ url_for('alerts_page') }}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/50 transition-all duration-200">{{ _('Alertas') }}</a>
+                    <a href="{{ url_for('ai_engine_page') }}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/50 transition-all duration-200">{{ _('Motor IA') }}</a>
+                    <a href="{{ url_for('about_page') }}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/50 transition-all duration-200">{{ _('Acerca de') }}</a>
+                    <a href="{{ url_for('contact') }}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/50 transition-all duration-200">{{ _('Contacto') }}</a>
+                    <a href="{{ url_for('user_manual') }}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/50 transition-all duration-200">{{ _('Manual') }}</a>
+                </nav>
+
+                <!-- Acciones derecha (Idioma, Notificaciones, Usuario) -->
+                <div class="flex items-center gap-3">
+                    
+                    <!-- Selector de Idioma -->
+                    <div class="relative group">
+                        <button class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                            <i class="fas fa-globe text-base"></i>
+                        </button>
+                        <div class="absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-premium border border-slate-100 py-1.5 hidden group-hover:block transition-all duration-200 z-50">
+                            {% for lang_code, lang_name in config.LANGUAGES.items() %}
+                                <a href="{{ url_for('set_language', lang=lang_code) }}" class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-brand-50/50 hover:text-brand-700 transition-colors duration-150 {% if session.get('language', 'es') == lang_code %}font-bold text-brand-600 bg-brand-50/30{% endif %}">
+                                    {{ lang_name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if current_user.is_authenticated %}
+                        <!-- Notificaciones Dropdown -->
+                        <div class="relative" id="notif-dropdown-container">
+                            <button id="notif-btn" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 relative">
+                                <i class="fa-regular fa-bell text-base"></i>
+                                {% if unread_notifications %}
+                                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                {% endif %}
+                            </button>
+                            <!-- Listado Notificaciones -->
+                            <div id="notif-menu" class="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-floating border border-slate-100 py-2 hidden transition-all duration-200 z-50">
+                                <div class="px-4 py-2 border-b border-slate-50 flex items-center justify-between">
+                                    <span class="font-bold text-slate-900 text-sm">Notificaciones</span>
+                                    {% if unread_notifications %}
+                                        <span class="px-1.5 py-0.5 text-xs font-semibold text-red-600 bg-red-50 rounded-full">{{ unread_notifications|length }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="max-h-64 overflow-y-auto">
+                                    {% for notif in unread_notifications %}
+                                        <a href="{{ url_for('mark_notification_as_read', notification_id=notif.id) }}" class="flex items-start px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-50/50">
+                                            <div class="w-2 h-2 mt-1.5 rounded-full bg-red-500 mr-2 flex-shrink-0"></div>
+                                            <div class="text-xs text-slate-700 leading-relaxed">{{ notif.message }}</div>
+                                        </a>
+                                    {% else %}
+                                        <div class="px-4 py-6 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
+                                            <i class="fa-regular fa-bell-slash text-xl text-slate-300"></i>
+                                            <span>No tienes notificaciones nuevas.</span>
+                                        </div>
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
-                    {% else %}
-                        <!-- Vista para usuario no logueado -->
-                        <div class="dropdown-header">
-                            <h4>{{ _('Mi Cuenta') }}</h4>
-                            <button id="close-user-menu" class="close-button">&times;</button>
-                        </div>
-                        <ul class="dropdown-links is-disabled">
-                            <li><a href="#"><i class="fas fa-history"></i> Mi Historial</a></li>
-                            <li><a href="#"><i class="fas fa-user-edit"></i> Mi Perfil</a></li>
-                        </ul>
-                        <div class="dropdown-footer">
-                            <a href="{{ url_for('login') }}" class="login-prompt-button">{{ _('Iniciar Sesión') }}</a>
-                            <p class="register-prompt">
-                                {{ _('¿No tienes cuenta?') }} <a href="{{ url_for('register') }}">{{ _('Regístrate aquí') }}</a>
-                            </p>
-                        </div>
                     {% endif %}
+
+                    <!-- Menú de Usuario (Desktop) -->
+                    <div class="relative hidden md:block" id="user-dropdown-container">
+                        <button id="user-btn" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                            <i class="fa-regular fa-user text-base"></i>
+                        </button>
+                        <!-- Menú Desplegable -->
+                        <div id="user-menu" class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-floating border border-slate-100 py-2 hidden transition-all duration-200 z-50">
+                            {% if current_user.is_authenticated %}
+                                <div class="px-4 py-3 border-b border-slate-50">
+                                    <p class="text-sm font-bold text-slate-900 truncate">{{ current_user.first_name }} {{ current_user.last_name }}</p>
+                                    <p class="text-xs text-slate-400 truncate mt-0.5">{{ current_user.email }}</p>
+                                </div>
+                                <div class="py-1">
+                                    <a href="{{ url_for('history') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-brand-50/50 hover:text-brand-700 transition-colors"><i class="fas fa-history text-slate-400"></i> {{ _('Mi Historial') }}</a>
+                                    {% if current_user.role == 'admin' %}
+                                        <a href="{{ url_for('admin_dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-brand-50/50 hover:text-brand-700 transition-colors"><i class="fas fa-chart-line text-slate-400"></i> {{ _('Dashboard Admin') }}</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('edit_profile') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-brand-50/50 hover:text-brand-700 transition-colors"><i class="fas fa-user-edit text-slate-400"></i> {{ _('Editar Perfil') }}</a>
+                                    <a href="{{ url_for('tasks_page') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-brand-50/50 hover:text-brand-700 transition-colors"><i class="fas fa-calendar-alt text-slate-400"></i> {{ _('Agenda Agrícola') }}</a>
+                                </div>
+                                <div class="border-t border-slate-50 pt-2 px-2">
+                                    <button id="logout-btn-trigger" class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+                                        <i class="fas fa-sign-out-alt"></i> {{ _('Cerrar Sesión') }}
+                                    </button>
+                                    <div id="logout-confirm" class="hidden mt-2 p-2 bg-slate-50 rounded-lg text-center">
+                                        <p class="text-xs text-slate-500 mb-2 font-medium">¿Seguro que quieres salir?</p>
+                                        <div class="flex gap-2">
+                                            <a href="{{ url_for('logout') }}" class="flex-1 px-2 py-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">{{ _('Sí') }}</a>
+                                            <button id="logout-cancel" class="flex-1 px-2 py-1 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-200 border border-slate-200 rounded-md transition-colors">{{ _('No') }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="px-4 py-3 text-center">
+                                    <p class="text-sm text-slate-500 mb-3">{{ _('Para ver tu perfil e historial, inicia sesión.') }}</p>
+                                    <a href="{{ url_for('login') }}" class="block w-full text-center px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg transition-colors">{{ _('Iniciar Sesión') }}</a>
+                                    <p class="text-xs text-slate-400 mt-3">{{ _('¿No tienes cuenta?') }} <a href="{{ url_for('register') }}" class="text-brand-600 font-bold hover:underline">{{ _('Regístrate') }}</a></p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Botón Hamburguesa Móvil (Para mostrar menú móvil rápido en vez de bottom bar si se requiere, pero usaremos bottom bar y un drawer de perfil) -->
                 </div>
             </div>
-        </nav>
-        <style>
-            /* Ajuste para centrar los links principales */
-            .navbar {
-                display: grid;
-                grid-template-columns: auto 1fr auto;
-                align-items: center;
-            }
-            .nav-auth-links {
-                display: flex;
-                justify-content: flex-end;
-                align-items: center;
-                position: relative;
-            }
-            .language-selector-nav {
-                position: relative;
-                margin-right: 1.5rem;
-            }
-            .language-selector-nav > .fa-globe {
-                color: var(--text-light);
-                font-size: 1.4rem;
-                cursor: pointer;
-            }
-            .language-dropdown {
-                display: none;
-                position: absolute;
-                right: -10px;
-                top: 120%;
-                background-color: var(--white);
-                box-shadow: var(--shadow);
-                border-radius: 8px;
-                list-style: none;
-                padding: 0.5rem 0;
-                margin: 0;
-                z-index: 1200;
-            }
-            .language-dropdown.is-active {
-                display: block; 
-                opacity: 1;
-            }
-            .language-dropdown a { display: block; padding: 0.5rem 1.5rem; text-decoration: none; color: var(--text-dark); white-space: nowrap; }
-            .language-dropdown a:hover { background-color: #f7fafc; }
-            .language-dropdown a.active { font-weight: bold; color: var(--green-dark); }
-
-            /* Estilos para notificaciones */
-            .notification-container { position: relative; }
-            .notification-badge {
-                position: absolute;
-                top: -5px;
-                right: -5px;
-                background-color: #C53030;
-                color: white;
-                border-radius: 50%;
-                width: 20px;
-                height: 20px;
-                font-size: 0.75rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-            }
-            .notification-list { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; }
-            .notification-list li a { display: block; padding: 0.75rem 1rem; text-decoration: none; color: var(--text-dark); border-bottom: 1px solid #e2e8f0; }
-            .notification-list li a:hover { background-color: #f7fafc; }
-            .no-notifications {
-                padding: 1.5rem;
-                text-align: center;
-                color: var(--text-light);
-            }
-
-            /* Estilo para el nuevo botón de icono de usuario */
-            .user-menu-button { 
-                background: none;
-                border: none;
-                cursor: pointer;
-                font-size: 1.5em;
-                color: var(--text-light);
-                transition: color 0.3s ease;
-            }
-            .user-menu-button:hover {
-                color: var(--green-dark);
-            }
-
-            /* Estilos para el menú desplegable */
-            .user-menu-dropdown {
-                position: absolute;
-                top: 120%;
-                right: 0;
-                background-color: var(--white);
-                border-radius: 12px;
-                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-                width: 300px;
-                z-index: 1100;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(-10px);
-                transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-            }
-            .user-menu-dropdown.is-active {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
-
-            .dropdown-header {
-                display: flex;
-                align-items: flex-start;
-                padding: 1rem;
-                border-bottom: 1px solid #e2e8f0;
-            }
-            .dropdown-header .user-info {
-                display: flex;
-                flex-direction: column;
-            }
-            .dropdown-header .user-info strong {
-                font-size: 1.1rem;
-            }
-            .dropdown-header .user-info span {
-                font-size: 0.9rem;
-                color: var(--text-light);
-            }
-            .dropdown-header h4 {
-                margin: 0;
-                font-size: 1.2rem;
-            }
-            .close-button {
-                margin-left: auto;
-                background: none;
-                border: none;
-                font-size: 1.5rem;
-                cursor: pointer;
-                color: var(--text-light);
-            }
-
-            .dropdown-links {
-                list-style: none;
-                padding: 0.5rem 0;
-                margin: 0;
-            }
-            .dropdown-links li a {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                padding: 0.75rem 1rem;
-                text-decoration: none;
-                color: var(--text-dark);
-                transition: background-color 0.2s ease;
-            }
-            .dropdown-links li a:hover {
-                background-color: #f7fafc;
-            }
-            .dropdown-links.is-disabled li a {
-                color: #a0aec0; /* Gris para enlaces desactivados */
-                cursor: not-allowed;
-            }
-
-            .dropdown-footer {
-                padding: 1rem;
-                background-color: #f7fafc;
-                border-top: 1px solid #e2e8f0;
-                text-align: center;
-            }
-            .logout-button, .login-prompt-button {
-                display: inline-block;
-                width: 100%;
-                padding: 0.75rem;
-                border-radius: 8px;
-                text-decoration: none;
-                font-weight: 500;
-                text-align: center;
-                box-sizing: border-box;
-                border: none;
-                cursor: pointer;
-                font-size: 1rem;
-            }
-            .logout-confirm-container {
-                display: none;
-                margin-top: 1rem;
-                text-align: center;
-            }
-            .logout-confirm-container p {
-                margin: 0 0 0.75rem 0;
-                font-size: 0.9rem;
-            }
-            .confirm-buttons {
-                display: flex;
-                gap: 0.5rem;
-            }
-            .confirm-yes, .confirm-no {
-                flex: 1;
-                padding: 0.5rem;
-                border-radius: 6px;
-                text-decoration: none;
-                font-weight: 500;
-                border: none;
-                cursor: pointer;
-            }
-            .confirm-yes {
-                background-color: #C53030; color: white;
-            }
-            .confirm-no {
-                background-color: #EDF2F7; color: var(--text-dark);
-            }
-            .logout-button { background-color: #FED7D7; color: #9B2C2C; }
-            .login-prompt-button { background-color: var(--green-medium); color: var(--white); }
-            .register-prompt {
-                font-size: 0.9rem;
-                margin-top: 1rem;
-            }
-        </style>
+        </div>
     </header>
 
-    <main class="main-container">
+    <!-- Contenido Principal -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <div class="footer-content">
-            <div class="footer-logo">Plant<span>Andes</span></div>
-            <p>Detección avanzada de enfermedades en cultivos andinos</p>
-            <ul class="footer-links">
-                <li><a href="{{ url_for('home_page') }}">Principal</a></li>
-                <li><a href="{{ url_for('market') }}">Biblioteca</a></li>                
-                <li><a href="{{ url_for('user_manual') }}">Manual de Usuario</a></li>
-                <li><a href="{{ url_for('about_page') }}">Acerca de</a></li>
-                <li><a href="{{ url_for('contact') }}">Contacto</a></li>
-            </ul>
-            <div class="copyright">
-                &copy; 2025 PlantAndes - Todos los derechos reservados
+    <!-- Footer (Oculto en móvil para no interferir con la barra de navegación inferior) -->
+    <footer class="bg-white border-t border-slate-100 py-8 text-center text-slate-400 text-xs hidden md:block mt-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <span class="font-extrabold tracking-tight text-slate-800">Plant<span class="text-brand-500">Andes</span></span>
+            <div class="flex items-center gap-6">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('dashboard') }}" class="hover:text-brand-600 transition-colors">{{ _('Inicio') }}</a>
+                {% else %}
+                    <a href="{{ url_for('home_page') }}" class="hover:text-brand-600 transition-colors">{{ _('Inicio') }}</a>
+                {% endif %}
+                <a href="{{ url_for('market') }}" class="hover:text-brand-600 transition-colors">{{ _('Biblioteca') }}</a>
+                <a href="{{ url_for('user_manual') }}" class="hover:text-brand-600 transition-colors">{{ _('Manual') }}</a>
+                <a href="{{ url_for('about_page') }}" class="hover:text-brand-600 transition-colors">{{ _('Nosotros') }}</a>
+                <a href="{{ url_for('contact') }}" class="hover:text-brand-600 transition-colors">{{ _('Contacto') }}</a>
             </div>
+            <span>&copy; 2026 PlantAndes. Todos los derechos reservados.</span>
         </div>
     </footer>
 
-    <!-- Modal para solicitar Login -->
-    <div id="login-required-modal" class="chat-modal">
-        <div class="chat-modal-content" style="max-width: 500px; text-align: center;">
-            <div class="dropdown-header" style="justify-content: space-between;">
-                <h4><i class="fas fa-lock"></i> Función Avanzada</h4>
-                <button id="close-login-modal" class="chat-close-button">&times;</button>
+    <!-- Barra de Navegación Inferior Estilo App Móvil (Solo visible en pantallas móviles) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-100 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-40 flex items-center justify-around py-1.5 px-2">
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" class="flex flex-col items-center gap-0.5 py-1 px-3 text-slate-400 hover:text-brand-600 transition-colors {% if request.path == url_for('dashboard') %}text-brand-600 font-bold{% endif %}">
+                <i class="fas fa-th-large text-lg"></i>
+                <span class="text-[10px] tracking-wide">{{ _('Inicio') }}</span>
+            </a>
+        {% else %}
+            <a href="{{ url_for('home_page') }}" class="flex flex-col items-center gap-0.5 py-1 px-3 text-slate-400 hover:text-brand-600 transition-colors {% if request.path == url_for('home_page') %}text-brand-600 font-bold{% endif %}">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-[10px] tracking-wide">{{ _('Inicio') }}</span>
+            </a>
+        {% endif %}
+
+        <a href="{{ url_for('market') }}" class="flex flex-col items-center gap-0.5 py-1 px-3 text-slate-400 hover:text-brand-600 transition-colors {% if request.path == url_for('market') %}text-brand-600 font-bold{% endif %}">
+            <i class="fas fa-book text-lg"></i>
+            <span class="text-[10px] tracking-wide">{{ _('Biblioteca') }}</span>
+        </a>
+
+        <!-- Botón Central de Escáner -->
+        <a href="{{ url_for('ai_engine_page') }}" class="flex flex-col items-center justify-center -mt-6 w-14 h-14 rounded-full bg-gradient-to-tr from-brand-600 to-brand-500 text-white shadow-lg shadow-brand-500/35 border-4 border-white hover:scale-105 active:scale-95 transition-all duration-200">
+            <i class="fas fa-camera text-xl"></i>
+        </a>
+
+        <a href="{{ url_for('alerts_page') }}" class="flex flex-col items-center gap-0.5 py-1 px-3 text-slate-400 hover:text-brand-600 transition-colors relative {% if request.path == url_for('alerts_page') %}text-brand-600 font-bold{% endif %}">
+            <i class="fas fa-triangle-exclamation text-lg"></i>
+            <span class="text-[10px] tracking-wide">{{ _('Alertas') }}</span>
+            {% if unread_notifications %}
+                <span class="absolute top-1 right-4 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+            {% endif %}
+        </a>
+
+        <button id="mobile-profile-btn" class="flex flex-col items-center gap-0.5 py-1 px-3 text-slate-400 hover:text-brand-600 transition-colors">
+            <i class="fas fa-user text-lg"></i>
+            <span class="text-[10px] tracking-wide">{{ _('Perfil') }}</span>
+        </button>
+    </nav>
+
+    <!-- Drawer Lateral / Modal Móvil de Perfil (Bottom Sheet) -->
+    <div id="mobile-profile-drawer" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden transition-opacity duration-300 items-end justify-center">
+        <div class="bg-white w-full rounded-t-3xl max-w-md p-6 shadow-floating transform translate-y-full transition-transform duration-300 flex flex-col gap-5">
+            <!-- Barra superior del drawer -->
+            <div class="flex items-center justify-between border-b border-slate-50 pb-3">
+                <span class="text-lg font-bold text-slate-900">{{ _('Mi Perfil') }}</span>
+                <button id="close-mobile-drawer" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div style="padding: 2rem;">
-                <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">Para usar el Asistente IA y otras funciones avanzadas, por favor, inicia sesión o crea una cuenta.</p>
-                <a href="{{ url_for('login') }}" class="login-prompt-button" style="margin-bottom: 1rem;">Iniciar Sesión</a>
-                <p class="register-prompt">
-                    ¿No tienes cuenta? <a href="{{ url_for('register') }}">Regístrate aquí</a>
-                </p>
+            
+            <!-- Contenido Drawer -->
+            {% if current_user.is_authenticated %}
+                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl">
+                    <div class="w-12 h-12 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xl font-bold">
+                        {{ current_user.first_name[0] | upper }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-base font-bold text-slate-900 truncate">{{ current_user.first_name }} {{ current_user.last_name }}</p>
+                        <p class="text-xs text-slate-500 truncate mt-0.5">{{ current_user.email }}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="{{ url_for('history') }}" class="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-slate-100 rounded-2xl hover:bg-brand-50/50 hover:border-brand-100 transition-all text-center">
+                        <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center"><i class="fas fa-history text-lg"></i></div>
+                        <span class="text-xs font-bold text-slate-800">{{ _('Historial') }}</span>
+                    </a>
+                    <a href="{{ url_for('tasks_page') }}" class="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-slate-100 rounded-2xl hover:bg-brand-50/50 hover:border-brand-100 transition-all text-center">
+                        <div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fas fa-calendar-alt text-lg"></i></div>
+                        <span class="text-xs font-bold text-slate-800">{{ _('Agenda') }}</span>
+                    </a>
+                    <a href="{{ url_for('edit_profile') }}" class="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-slate-100 rounded-2xl hover:bg-brand-50/50 hover:border-brand-100 transition-all text-center">
+                        <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="fas fa-user-edit text-lg"></i></div>
+                        <span class="text-xs font-bold text-slate-800">{{ _('Editar Perfil') }}</span>
+                    </a>
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-slate-100 rounded-2xl hover:bg-brand-50/50 hover:border-brand-100 transition-all text-center col-span-1">
+                            <div class="w-10 h-10 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center"><i class="fas fa-chart-line text-lg"></i></div>
+                            <span class="text-xs font-bold text-slate-800">{{ _('Panel Admin') }}</span>
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <div class="border-t border-slate-50 pt-4 flex flex-col gap-2">
+                    <a href="{{ url_for('logout') }}" class="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-lg shadow-red-500/10">
+                        <i class="fas fa-sign-out-alt"></i> {{ _('Cerrar Sesión') }}
+                    </a>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <p class="text-sm text-slate-500 mb-4">{{ _('Inicia sesión para gestionar tus cultivos, tareas y ver tus diagnósticos guardados.') }}</p>
+                    <a href="{{ url_for('login') }}" class="block w-full py-3 text-center text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-colors shadow-lg shadow-brand-500/10">{{ _('Iniciar Sesión') }}</a>
+                    <p class="text-xs text-slate-400 mt-4">{{ _('¿No tienes cuenta?') }} <a href="{{ url_for('register') }}" class="text-brand-600 font-bold hover:underline">{{ _('Regístrate aquí') }}</a></p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal para solicitar Login -->
+    <div id="login-required-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden items-center justify-center px-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-floating flex flex-col gap-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-xl mx-auto"><i class="fas fa-lock"></i></div>
+            <h4 class="text-lg font-bold text-slate-900">{{ _('Función Avanzada') }}</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">{{ _('Para interactuar con el Asistente Inteligente AndesGPT, llevar una agenda de tus cultivos y reportar brotes, inicia sesión.') }}</p>
+            <div class="flex flex-col gap-2 mt-2">
+                <a href="{{ url_for('login') }}" class="w-full py-2.5 text-center text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-colors shadow-lg shadow-brand-500/10">{{ _('Iniciar Sesión') }}</a>
+                <button id="close-login-modal" class="w-full py-2.5 text-center text-sm font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors">{{ _('Cancelar') }}</button>
             </div>
         </div>
     </div>
 
-    <!-- Botón Flotante de Asistente IA General -->
-    <button id="general-chat-fab" class="general-chat-fab">
-        <i class="fas fa-robot"></i> Asistente IA
+    <!-- Botón Flotante de Asistente IA General (Desktop) -->
+    <button id="general-chat-fab" class="fixed bottom-6 right-6 bg-gradient-to-tr from-accent-600 to-accent-500 text-white rounded-full px-5 py-3.5 shadow-floating flex items-center gap-2 hover:scale-105 active:scale-95 hover:shadow-lg transition-all duration-200 z-30 font-bold text-sm tracking-wide">
+        <i class="fas fa-robot text-lg animate-bounce"></i> Asistente IA
     </button>
 
     <!-- Modal para el Chat General -->
-    <div id="general-chat-modal" class="chat-modal">
-        <div class="chat-modal-content">
-            <div class="chat-header">
-                <h3><i class="fas fa-robot"></i> Asistente IA General</h3>
-                <div class="chat-header-buttons">
-                    <button id="clear-general-chat" class="chat-action-btn" title="Limpiar Chat"><i class="fas fa-trash-alt"></i></button>
-                    <button id="close-general-chat-modal" class="chat-close-button">&times;</button>
+    <div id="general-chat-modal" class="fixed inset-0 md:inset-auto md:bottom-24 md:right-6 bg-slate-900/40 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none z-50 hidden flex-col justify-end md:justify-start">
+        <div class="bg-white w-full h-[85vh] md:h-[500px] md:w-[380px] rounded-t-3xl md:rounded-2xl shadow-floating flex flex-col border border-slate-100 overflow-hidden">
+            <!-- Cabecera chat -->
+            <div class="bg-gradient-to-r from-brand-600 to-brand-500 p-4 text-white flex items-center justify-between shadow-md">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-sm tracking-wide">AndesGPT</h3>
+                        <span class="text-[10px] text-brand-100">En línea</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="clear-general-chat" class="text-white/80 hover:text-white transition-colors" title="Limpiar conversación"><i class="fas fa-trash-alt text-xs"></i></button>
+                    <button id="close-general-chat-modal" class="text-white/80 hover:text-white text-lg font-bold">&times;</button>
                 </div>
             </div>
-            <div id="general-chat-body" class="chat-body">
-                <div class="chat-message ai">
-                    <p>¡Hola! Soy AndesGPT. Puedo ayudarte con preguntas generales sobre agricultura. Para un diagnóstico preciso de una enfermedad, te recomiendo usar el <strong>Motor IA</strong> y subir una foto de tu planta.</p>
+            
+            <!-- Cuerpo chat -->
+            <div id="general-chat-body" class="flex-grow p-4 overflow-y-auto bg-slate-50/50 flex flex-col gap-3">
+                <div class="flex items-start gap-2.5 max-w-[85%]">
+                    <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs flex-shrink-0"><i class="fas fa-robot"></i></div>
+                    <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm">
+                        <p class="text-xs text-slate-700 leading-relaxed">¡Hola! Soy AndesGPT. Puedo ayudarte con preguntas sobre agricultura. Para un diagnóstico preciso de una enfermedad, te recomiendo usar el <strong>Motor IA</strong> y subir una foto de tu planta.</p>
+                    </div>
                 </div>
             </div>
-            <div class="chat-footer">
-                <div id="general-language-selector" class="language-selector">
-                    <button class="lang-btn active" data-lang="Español">Español</button>
-                    <button class="lang-btn" data-lang="Quechua">Quechua</button>
+            
+            <!-- Pie chat -->
+            <div class="p-3 border-t border-slate-100 bg-white">
+                <div id="general-language-selector" class="flex justify-end gap-1.5 mb-2">
+                    <button class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100" data-lang="Español">Español</button>
+                    <button class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200" data-lang="Quechua">Quechua</button>
                 </div>
-                <form id="general-chat-form">
-                    <input type="text" id="general-chat-input" placeholder="Haz una pregunta general..." autocomplete="off" required>
-                    <button type="submit" id="general-chat-send-button"><i class="fas fa-paper-plane"></i></button>
+                <form id="general-chat-form" class="flex gap-2 items-center">
+                    <input type="text" id="general-chat-input" placeholder="Escribe tu consulta aquí..." class="flex-grow px-4 py-2.5 bg-slate-50 border border-slate-200 text-xs rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20" autocomplete="off" required>
+                    <button type="submit" id="general-chat-send-button" class="w-9 h-9 rounded-xl bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center transition-colors"><i class="fas fa-paper-plane text-xs"></i></button>
                 </form>
             </div>
         </div>
     </div>
 
-    <style>
-        /* Estilos para el botón flotante */
-        .general-chat-fab {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background-color: var(--blue-sky);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 0.8rem 1.2rem;
-            font-size: 1rem;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            z-index: 1050;
-            transition: transform 0.3s ease;
-        }
-        .general-chat-fab:hover {
-            transform: scale(1.05);
-        }
-
-        /* Estilos compartidos para los modales de chat */
-        .chat-modal {
-            display: none; position: fixed; z-index: 2000; left: 0; top: 0;
-            width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);
-            align-items: center; justify-content: center;
-        }
-        .chat-modal-content {
-            background-color: #fefefe; margin: auto; border-radius: 12px;
-            width: 90%; max-width: 600px; display: flex; flex-direction: column;
-            max-height: 80vh; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative;
-        }
-        .chat-action-btn {
-            background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--text-light);
-        }
-        .chat-header-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .chat-header {
-            padding: 1rem;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--green-light);
-            position: relative;
-        }
-        .chat-header h3 { margin: 0; color: var(--green-dark); }
-        .chat-modal .chat-close-button { 
-            font-size: 1.8rem; 
-            border: none; 
-            background: none; 
-            cursor: pointer; 
-            line-height: 1;
-        }
-        .chat-body { flex-grow: 1; padding: 1rem; overflow-y: auto; min-height: 200px; }
-        .chat-message { max-width: 80%; margin-bottom: 1rem; padding: 0.75rem; border-radius: 10px; }
-        .chat-message.user { background-color: #DCF8C6; margin-left: auto; }
-        .chat-message.ai { background-color: #f1f1f1; }
-        .chat-footer { padding: 1rem; border-top: 1px solid #ddd; }
-        .language-selector {
-            display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 0.75rem;
-        }
-        .lang-btn {
-            background-color: #e2e8f0; border: none; padding: 0.25rem 0.75rem;
-            border-radius: 12px; cursor: pointer; font-size: 0.8rem; transition: background-color 0.3s;
-        }
-        .lang-btn.active { background-color: var(--green-medium); color: white; }
-        #general-chat-form, #chat-form { display: flex; gap: 0.5rem; }
-        #general-chat-input, #chat-input { flex-grow: 1; padding: 0.75rem; border: 1px solid #ccc; border-radius: 20px; }
-        #general-chat-send-button, #chat-send-button {
-            background-color: var(--green-medium); color: white; border: none;
-            border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 1.2rem;
-        }
-    </style>
-
+    <!-- Scripts Globales -->
     <script>
-        // --- Lógica para el nuevo menú de usuario ---
         document.addEventListener('DOMContentLoaded', function() {
-            const userMenuContainer = document.getElementById('user-menu-container');
-            const userMenuButton = document.getElementById('user-menu-button');
-            const notificationContainer = document.getElementById('notification-container');
-            const notificationButton = document.getElementById('notification-button');
-            const userMenuDropdown = document.getElementById('user-menu-dropdown');
-            const closeUserMenu = document.getElementById('close-user-menu');
-            const logoutButton = document.getElementById('logout-button');
-            const logoutConfirmContainer = document.getElementById('logout-confirm-container');
-            const langSelectorNav = document.querySelector('.language-selector-nav');
-            const langDropdown = document.querySelector('.language-dropdown');
+            // -- Lógica de menús desplegables (Desktop) --
+            const userBtn = document.getElementById('user-btn');
+            const userMenu = document.getElementById('user-menu');
+            const notifBtn = document.getElementById('notif-btn');
+            const notifMenu = document.getElementById('notif-menu');
 
-            userMenuButton.addEventListener('click', function(event) {
-                event.stopPropagation();
-                userMenuDropdown.classList.toggle('is-active');
-            });
-            
-            if (notificationButton) {
-                notificationButton.addEventListener('click', function(event) {
-                    event.stopPropagation();
-                    document.getElementById('notification-dropdown').classList.toggle('is-active');
+            if (userBtn) {
+                userBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('hidden');
+                    if(notifMenu) notifMenu.classList.add('hidden');
                 });
             }
 
-            langSelectorNav.addEventListener('click', function(event) {
-                event.stopPropagation();
-                langDropdown.classList.toggle('is-active');
-            });
-
-            closeUserMenu.addEventListener('click', function() {
-                userMenuDropdown.classList.remove('is-active');
-            });
-
-            // Cierra el menú si se hace clic fuera de él
-            document.addEventListener('click', function(event) {
-                if (userMenuDropdown && !userMenuContainer.contains(event.target)) {
-                    userMenuDropdown.classList.remove('is-active');
-                }
-                if (notificationContainer && !notificationContainer.contains(event.target)) {
-                    document.getElementById('notification-dropdown').classList.remove('is-active');
-                }
-                if (langDropdown && !langSelectorNav.contains(event.target)) {
-                    langDropdown.classList.remove('is-active');
-                }
-            });
-
-            // Lógica para la confirmación de cierre de sesión
-            if (logoutButton) {
-                logoutButton.addEventListener('click', function(event) {
-                    // Muestra el contenedor de confirmación y oculta el botón principal
-                    logoutConfirmContainer.style.display = 'block';
-                    // Limpiar el historial del chat general al confirmar el cierre de sesión
-                    sessionStorage.removeItem('generalChatHistory');
-                    logoutButton.style.display = 'none';
-                });
-
-                const logoutNoButton = document.getElementById('logout-no');
-                logoutNoButton.addEventListener('click', function() {
-                    // Oculta la confirmación y vuelve a mostrar el botón principal
-                    logoutConfirmContainer.style.display = 'none';
-                    logoutButton.style.display = 'block';
+            if (notifBtn) {
+                notifBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    notifMenu.classList.toggle('hidden');
+                    if(userMenu) userMenu.classList.add('hidden');
                 });
             }
 
-            // --- Lógica para el Chat General Flotante y Modales ---
-            const generalChatFab = document.getElementById('general-chat-fab');
-            const generalChatModal = document.getElementById('general-chat-modal');
-            const closeGeneralChatModal = document.getElementById('close-general-chat-modal');
-            const generalChatForm = document.getElementById('general-chat-form');
-            // ... (resto de selectores)
-            const generalChatInput = document.getElementById('general-chat-input');
-            const generalChatBody = document.getElementById('general-chat-body');
-            const generalLangSelector = document.getElementById('general-language-selector');
-            const clearGeneralChatButton = document.getElementById('clear-general-chat');
+            document.addEventListener('click', function() {
+                if(userMenu) userMenu.classList.add('hidden');
+                if(notifMenu) notifMenu.classList.add('hidden');
+            });
+
+            // Confirmación Cierre Sesión
+            const logoutBtnTrigger = document.getElementById('logout-btn-trigger');
+            const logoutConfirm = document.getElementById('logout-confirm');
+            const logoutCancel = document.getElementById('logout-cancel');
+
+            if(logoutBtnTrigger) {
+                logoutBtnTrigger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    logoutConfirm.classList.remove('hidden');
+                    logoutBtnTrigger.classList.add('hidden');
+                });
+            }
+            if(logoutCancel) {
+                logoutCancel.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    logoutConfirm.classList.add('hidden');
+                    logoutBtnTrigger.classList.remove('hidden');
+                });
+            }
+
+            // -- Drawer Móvil de Perfil --
+            const mobileProfileBtn = document.getElementById('mobile-profile-btn');
+            const mobileDrawer = document.getElementById('mobile-profile-drawer');
+            const closeDrawer = document.getElementById('close-mobile-drawer');
+
+            if(mobileProfileBtn && mobileDrawer) {
+                mobileProfileBtn.addEventListener('click', function() {
+                    mobileDrawer.classList.remove('hidden');
+                    mobileDrawer.classList.add('flex');
+                    setTimeout(() => {
+                        mobileDrawer.firstElementChild.classList.remove('translate-y-full');
+                    }, 50);
+                });
+            }
+
+            function hideDrawer() {
+                if(mobileDrawer) {
+                    mobileDrawer.firstElementChild.classList.add('translate-y-full');
+                    setTimeout(() => {
+                        mobileDrawer.classList.remove('flex');
+                        mobileDrawer.classList.add('hidden');
+                    }, 300);
+                }
+            }
+
+            if(closeDrawer) closeDrawer.addEventListener('click', hideDrawer);
+            if(mobileDrawer) {
+                mobileDrawer.addEventListener('click', function(e) {
+                    if(e.target === mobileDrawer) hideDrawer();
+                });
+            }
+
+            // -- Modal de Login requerido --
             const loginModal = document.getElementById('login-required-modal');
             const closeLoginModal = document.getElementById('close-login-modal');
-            const isUserAuthenticated = {{ current_user.is_authenticated|tojson }};
-            let generalSelectedLanguage = 'Español';
 
-            // --- Lógica para el botón flotante (FAB) del chat general ---
-            generalChatFab.addEventListener('click', () => {
-                if (!isUserAuthenticated) {
-                    loginModal.style.display = 'flex';
-                    return;
-                }
-                generalChatModal.style.display = 'flex';
-                // Cargar historial del chat general si existe
-                const savedChat = sessionStorage.getItem('generalChatHistory');
-                if (savedChat) {
-                    generalChatBody.innerHTML = savedChat;
-                    generalChatBody.scrollTop = generalChatBody.scrollHeight;
-                } else {
-                    // Si no hay historial, mostrar mensaje inicial
-                    generalChatBody.innerHTML = `
-                        <div class="chat-message ai"><p>¡Hola! Soy AndesGPT. Puedo ayudarte con preguntas generales sobre agricultura. Para un diagnóstico preciso de una enfermedad, te recomiendo usar el <strong>Motor IA</strong> y subir una foto de tu planta.</p></div>
-                    `;
-                }
-            });
-
-            // Cierra los modales si se hace clic fuera de su contenido.
-            window.addEventListener('click', (event) => {
-                if (event.target == generalChatModal) {
-                    generalChatModal.style.display = 'none';
-                }
-                if (event.target == loginModal) {
-                    loginModal.style.display = 'none';
-                }
-            });
-
-            // Maneja el cambio de idioma en el chat general.
-            generalLangSelector.addEventListener('click', function(e) {
-                if (e.target.classList.contains('lang-btn')) {
-                    generalLangSelector.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    generalSelectedLanguage = e.target.dataset.lang;
-                }
-            });
-
-            // Limpia el historial del chat del sessionStorage y resetea la vista.
-            if (clearGeneralChatButton) {
-                clearGeneralChatButton.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Evita que se cierre el modal
-                    sessionStorage.removeItem('generalChatHistory');
-                    generalChatBody.innerHTML = `
-                        <div class="chat-message ai"><p>¡Hola! Soy AndesGPT. Puedo ayudarte con preguntas generales sobre agricultura. Para un diagnóstico preciso de una enfermedad, te recomiendo usar el <strong>Motor IA</strong> y subir una foto de tu planta.</p></div>
-                    `;
-                });
-            }
-
-            // Botones para cerrar los modales.
-            if (closeGeneralChatModal) {
-                closeGeneralChatModal.addEventListener('click', () => {
-                    generalChatModal.style.display = 'none';
-                });
-            }
-
-            if (closeLoginModal) {
+            if(closeLoginModal) {
                 closeLoginModal.addEventListener('click', () => {
-                    loginModal.style.display = 'none';
+                    loginModal.classList.add('hidden');
+                    loginModal.classList.remove('flex');
                 });
             }
-
-            // --- Lógica para el envío de mensajes en el chat general ---
-            generalChatForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const userMessage = generalChatInput.value.trim();
-                if (!userMessage) return;
-
-                appendGeneralChatMessage(userMessage, 'user');
-                generalChatInput.value = '';
-
-                // Muestra un indicador de carga mientras se espera la respuesta.
-                const aiMessageDiv = appendGeneralChatMessage('', 'ai');
-                const aiMessageParagraph = aiMessageDiv.querySelector('p');
-                aiMessageParagraph.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-                // Petición al backend para obtener la respuesta de la IA.
-                fetch('{{ url_for("general_chat") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: userMessage, language: generalSelectedLanguage })
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        const reader = response.body.getReader();
-                        const decoder = new TextDecoder();
-                        let fullResponse = '';
-                        aiMessageParagraph.innerHTML = '';
-
-                        // Función recursiva para leer la respuesta en streaming.
-                        function processText() {
-                            reader.read().then(({ value, done }) => {
-                                if (done) {
-                                    return;
-                                }
-                                const chunk = decoder.decode(value, { stream: true });
-                                fullResponse += chunk;
-
-                                // Actualiza el contenido del párrafo en el DOM, renderizando Markdown.
-                                aiMessageParagraph.innerHTML = marked.parse(fullResponse);
-
-                                // Guarda todo el cuerpo del chat en sessionStorage para persistencia.
-                                sessionStorage.setItem('generalChatHistory', generalChatBody.innerHTML);
-
-                                // Hacemos scroll solo si el modal está visible
-                                if (generalChatModal.style.display === 'flex') {
-                                    generalChatBody.scrollTop = generalChatBody.scrollHeight;
-                                }
-
-                                processText();
-                            });
-                        }
-                        processText();
-                    })
-                    .catch(error => {
-                        aiMessageParagraph.textContent = 'Lo siento, ocurrió un error al conectar con el asistente.';
-                        console.error('Error en el chat general:', error);
-                        sessionStorage.setItem('generalChatHistory', generalChatBody.innerHTML);
-                    });
-            });
-
-            // Función auxiliar para añadir un mensaje al cuerpo del chat.
-            function appendGeneralChatMessage(message, sender) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('chat-message', sender);
-                messageDiv.innerHTML = `<p>${marked.parse(message)}</p>`;
-                generalChatBody.appendChild(messageDiv);
-                generalChatBody.scrollTop = generalChatBody.scrollHeight;
-                sessionStorage.setItem('generalChatHistory', generalChatBody.innerHTML);
-                return messageDiv;
-            }
-
-            // Limpia el historial del chat si el ID de usuario cambia (al iniciar/cerrar sesión).
-            const currentUserId = {{ current_user.id|tojson if current_user.is_authenticated else 'null' }};
-            if (sessionStorage.getItem('chatUserId') != currentUserId) {
-                sessionStorage.removeItem('generalChatHistory');
-                sessionStorage.setItem('chatUserId', currentUserId);
-            }
-
-            // Script para menú hamburguesa
-            const navToggle = document.getElementById('nav-toggle');
-            const navLinks = document.getElementById('nav-links');
-
-            navToggle.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
-            });
-
-            // Función para manejar la carga de archivos
-            function handleFileSelect(evt) {
-                const file = evt.target.files[0];
-                if (file) {
-                    const fileName = file.name;
-                    document.getElementById('file-name').textContent = fileName;
-                }
-            }
-
-            const fileInput = document.getElementById('image-input');
-            if (fileInput) {
-                fileInput.addEventListener('change', handleFileSelect);
-            }
-
-            // Para los resultados del análisis (index.html)
-            const predictionHeaders = document.querySelectorAll('.prediction-header');
-            predictionHeaders.forEach(header => {
-                header.addEventListener('click', function() {
-                    const details = this.nextElementSibling;
-                    const icon = this.querySelector('.fa-chevron-down');
-                    const isHidden = details.style.display === "none" || details.style.display === "";
-                    
-                    details.style.display = isHidden ? "block" : "none";
-                    icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
-                });
-            });
-
-            // Lógica de tarjetas solo para la página de la biblioteca (market.html)
-            if (document.querySelector('.library-section')) {
-                const infoButtons = document.querySelectorAll('.library-card .info-button');
-                const closeButtons = document.querySelectorAll('.library-card .card-close-button');
-
-                infoButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const currentCard = this.closest('.library-card');
-                        
-                        // Cerrar todas las demás tarjetas abiertas
-                        document.querySelectorAll('.library-card.is-expanded').forEach(card => {
-                            if (card !== currentCard) {
-                                card.classList.remove('is-expanded');
-                            }
-                        });
-
-                        // Abrir/Cerrar la tarjeta actual
-                        if (currentCard) {
-                            currentCard.classList.toggle('is-expanded');
-                        }
-                    });
-                });
-
-                closeButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        this.closest('.library-card').classList.remove('is-expanded');
-                    });
-                });
-            }
-
-            // --- Lógica para animaciones al hacer scroll ---
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
+            if(loginModal) {
+                loginModal.addEventListener('click', (e) => {
+                    if (e.target === loginModal) {
+                        loginModal.classList.add('hidden');
+                        loginModal.classList.remove('flex');
                     }
                 });
-            }, {
-                threshold: 0.1
-            });
+            }
 
-            // Observar todos los elementos que queremos animar
-            const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
-            elementsToAnimate.forEach(el => {
-                observer.observe(el);
-            });
+            // -- Lógica del Chat AndesGPT --
+            const chatFab = document.getElementById('general-chat-fab');
+            const chatModal = document.getElementById('general-chat-modal');
+            const closeChatModal = document.getElementById('close-general-chat-modal');
+            const chatForm = document.getElementById('general-chat-form');
+            const chatInput = document.getElementById('general-chat-input');
+            const chatBody = document.getElementById('general-chat-body');
+            const langSelector = document.getElementById('general-language-selector');
+            const clearChatBtn = document.getElementById('clear-general-chat');
+            const isUserAuthenticated = {{ current_user.is_authenticated|tojson }};
+            
+            let chatLanguage = 'Español';
+
+            if(chatFab) {
+                chatFab.addEventListener('click', () => {
+                    if (!isUserAuthenticated) {
+                        loginModal.classList.remove('hidden');
+                        loginModal.classList.add('flex');
+                        return;
+                    }
+                    chatModal.classList.remove('hidden');
+                    chatModal.classList.add('flex');
+                    
+                    // Cargar historial de chat
+                    const saved = sessionStorage.getItem('generalChatHistory');
+                    if (saved) {
+                        chatBody.innerHTML = saved;
+                        chatBody.scrollTop = chatBody.scrollHeight;
+                    }
+                });
+            }
+
+            if(closeChatModal) {
+                closeChatModal.addEventListener('click', () => {
+                    chatModal.classList.add('hidden');
+                    chatModal.classList.remove('flex');
+                });
+            }
+
+            if(chatModal) {
+                chatModal.addEventListener('click', (e) => {
+                    if(e.target === chatModal) {
+                        chatModal.classList.add('hidden');
+                        chatModal.classList.remove('flex');
+                    }
+                });
+            }
+
+            if(langSelector) {
+                langSelector.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('lang-btn') || e.target.tagName === 'BUTTON') {
+                        langSelector.querySelectorAll('button').forEach(btn => {
+                            btn.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200';
+                        });
+                        e.target.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100';
+                        chatLanguage = e.target.dataset.lang || e.target.textContent.trim();
+                    }
+                });
+            }
+
+            if(clearChatBtn) {
+                clearChatBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sessionStorage.removeItem('generalChatHistory');
+                    chatBody.innerHTML = `
+                        <div class="flex items-start gap-2.5 max-w-[85%]">
+                            <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs flex-shrink-0"><i class="fas fa-robot"></i></div>
+                            <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm">
+                                <p class="text-xs text-slate-700 leading-relaxed">¡Hola! Soy AndesGPT. Puedo ayudarte con preguntas sobre agricultura. Para un diagnóstico preciso de una enfermedad, te recomiendo usar el <strong>Motor IA</strong> y subir una foto de tu planta.</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if(chatForm) {
+                chatForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const text = chatInput.value.trim();
+                    if(!text) return;
+
+                    appendMessage(text, 'user');
+                    chatInput.value = '';
+
+                    // Burbuja de carga
+                    const loadDiv = appendMessage('', 'ai');
+                    const textP = loadDiv.querySelector('.msg-content');
+                    textP.innerHTML = '<i class="fas fa-spinner fa-spin text-brand-500"></i>';
+
+                    fetch('{{ url_for("general_chat") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: text, language: chatLanguage })
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error('Error de red');
+                        const reader = res.body.getReader();
+                        const decoder = new TextDecoder();
+                        let responseText = '';
+                        textP.innerHTML = '';
+
+                        function read() {
+                            reader.read().then(({ value, done }) => {
+                                if (done) return;
+                                const chunk = decoder.decode(value, { stream: true });
+                                responseText += chunk;
+                                textP.innerHTML = marked.parse(responseText);
+                                chatBody.scrollTop = chatBody.scrollHeight;
+                                sessionStorage.setItem('generalChatHistory', chatBody.innerHTML);
+                                read();
+                            });
+                        }
+                        read();
+                    })
+                    .catch(err => {
+                        textP.textContent = 'Ocurrió un error al conectar con el servidor.';
+                        sessionStorage.setItem('generalChatHistory', chatBody.innerHTML);
+                    });
+                });
+            }
+
+            function appendMessage(msg, sender) {
+                const row = document.createElement('div');
+                row.className = sender === 'user' ? 'flex justify-end' : 'flex items-start gap-2.5 max-w-[85%]';
+                
+                if (sender === 'user') {
+                    row.innerHTML = `
+                        <div class="bg-brand-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%] text-xs leading-relaxed msg-content">
+                            ${marked.parse(msg)}
+                        </div>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs flex-shrink-0"><i class="fas fa-robot"></i></div>
+                        <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm msg-content text-xs text-slate-700 leading-relaxed">
+                            ${marked.parse(msg)}
+                        </div>
+                    `;
+                }
+                
+                chatBody.appendChild(row);
+                chatBody.scrollTop = chatBody.scrollHeight;
+                sessionStorage.setItem('generalChatHistory', chatBody.innerHTML);
+                return row;
+            }
         });
     </script>
     {% block scripts %}{% endblock %}
-<!--
-/********************************************************************************
- * Fin de la Plantilla Base - PlantAndes
- ********************************************************************************/
--->
 </body>
 </html>

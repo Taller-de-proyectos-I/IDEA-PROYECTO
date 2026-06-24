@@ -1,61 +1,175 @@
 {% extends 'base.html' %}
-{% block title %}
-Biblioteca de Cultivos - PlantAndes
-{% endblock title %}
+{% block title %}Biblioteca de Cultivos - PlantAndes{% endblock %}
 
 {% block content %}
-<section class="library-section">
-    <div class="container">
-        <h1 class="section-title">Biblioteca de Cultivos y Enfermedades</h1>
-        <p class="section-description" style="text-align: center; max-width: 800px; margin: -2rem auto 3rem;">
-            Explore nuestra base de datos para aprender a identificar enfermedades comunes en los cultivos andinos y descubra posibles tratamientos y suplementos.
+<div class="max-w-6xl mx-auto flex flex-col gap-6 md:gap-8 library-section">
+    
+    <!-- Encabezado -->
+    <div class="text-center max-w-2xl mx-auto">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{{ _('Biblioteca de Cultivos y Enfermedades') }}</h1>
+        <p class="text-sm text-slate-400 mt-2">
+            {{ _('Explora nuestra base de datos para aprender a identificar enfermedades foliares en cultivos andinos y descubre alternativas de tratamientos orgánicos y químicos.') }}
         </p>
+    </div>
 
-        <div class="library-grid">
-            {% for index in range(diseases|length) %}
-            <div class="library-card" id="card-{{ loop.index }}">
-                <button class="card-close-button">
+    <!-- Rejilla de la Biblioteca -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+        {% for index in range(diseases|length) %}
+            {% set is_healthy = 'healthy' in diseases[index].disease_name|lower or 'sano' in diseases[index].disease_name_es|lower or 'saludable' in diseases[index].disease_name_es|lower %}
+            <div class="library-card bg-white border border-slate-100 rounded-3xl shadow-premium overflow-hidden flex flex-col relative transition-all duration-300 {% if is_healthy %}border-emerald-100{% endif %}" id="card-{{ loop.index }}">
+                
+                <!-- Botón Cerrar flotante (se muestra al expandir) -->
+                <button class="card-close-button absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-sm hover:bg-slate-900 text-white flex items-center justify-center text-xs z-10 transition-colors hidden">
                     <i class="fas fa-times"></i>
                 </button>
-                {% if diseases[index].image_url %}
-                    <img src="{{ diseases[index].image_url }}" alt="{{ diseases[index].disease_name_es }}" class="library-card-img">
-                {% else %}
-                    <img src="https://via.placeholder.com/400x300.png?text=Imagen+no+disponible" alt="Imagen no disponible" class="library-card-img">
-                {% endif %}
-                <div class="library-card-body">
-                    <h3 class="library-card-title">{{ diseases[index].disease_name_es }}</h3>
-                    {% if 'healthy' in diseases[index].disease_name|lower %}
-                        <span class="library-card-category category-healthy">Saludable</span>
+
+                <!-- Imagen de la Enfermedad -->
+                <div class="w-full h-44 overflow-hidden relative bg-slate-200">
+                    {% if diseases[index].image_url %}
+                        <img src="{{ diseases[index].image_url }}" alt="{{ diseases[index].disease_name_es }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src=&quot;data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'><rect width='100%' height='100%' fill='%23f1f5f9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%2394a3b8'>Imagen no disponible</text></svg>&quot;;">
                     {% else %}
-                        <span class="library-card-category category-disease">Enfermedad</span>
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'><rect width='100%' height='100%' fill='%23f1f5f9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%2394a3b8'>Imagen no disponible</text></svg>" alt="No disponible" class="w-full h-full object-cover">
                     {% endif %}
                     
-                    <div class="library-card-footer">
-                        <div class="plant-icon">
-                            {% if 'papa' in diseases[index].disease_name_es|lower %} <i class="fas fa-seedling" title="Papa"></i>
-                            {% elif 'tomate' in diseases[index].disease_name_es|lower %} <i class="fas fa-lemon" title="Tomate"></i>
-                            {% elif 'maíz' in diseases[index].disease_name_es|lower %} <i class="fas fa-fan" title="Maíz"></i>
-                            {% else %} <i class="fas fa-leaf" title="Planta"></i>
+                    <!-- Insignia de Categoría -->
+                    <span class="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm 
+                        {% if is_healthy %}
+                            bg-emerald-100 text-emerald-700
+                        {% else %}
+                            bg-red-100 text-red-700
+                        {% endif %}">
+                        {% if is_healthy %}
+                            {{ _('Saludable') }}
+                        {% else %}
+                            {{ _('Enfermedad') }}
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- Cuerpo de la Tarjeta -->
+                <div class="p-5 flex flex-col flex-grow gap-3">
+                    <h3 class="font-extrabold text-slate-800 text-base leading-snug truncate" title="{{ diseases[index].disease_name_es }}">{{ diseases[index].disease_name_es }}</h3>
+                    
+                    <!-- Pie de Tarjeta -->
+                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-50">
+                        <div class="text-slate-400 text-sm">
+                            {% if 'papa' in diseases[index].disease_name_es|lower %} 
+                                <i class="fas fa-seedling text-brand-500" title="Papa"></i> <span class="text-xs font-semibold ml-1 text-slate-500">Papa</span>
+                            {% elif 'tomate' in diseases[index].disease_name_es|lower %} 
+                                <i class="fas fa-carrot text-red-500" title="Tomate"></i> <span class="text-xs font-semibold ml-1 text-slate-500">Tomate</span>
+                            {% elif 'maíz' in diseases[index].disease_name_es|lower %} 
+                                <i class="fas fa-fan text-yellow-500" title="Maíz"></i> <span class="text-xs font-semibold ml-1 text-slate-500">Maíz</span>
+                            {% else %} 
+                                <i class="fas fa-leaf text-brand-500" title="Planta"></i> <span class="text-xs font-semibold ml-1 text-slate-500">Otro</span>
                             {% endif %}
                         </div>
-                        <button class="info-button" aria-expanded="false">
-                            <i class="fas fa-info-circle"></i>
+                        
+                        <button class="info-button px-3.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 hover:text-brand-800 text-xs font-bold rounded-lg transition-colors flex items-center gap-1">
+                            <i class="fas fa-info-circle"></i> {{ _('Ver Detalles') }}
                         </button>
                     </div>
                 </div>
-                <div class="library-card-details">
-                    <h4><i class="fas fa-info-circle"></i> Descripción</h4>
-                    <p>{{ diseases[index].description_es }}</p>
-                    <h4><i class="fas fa-prescription-bottle-alt"></i> Posible Tratamiento</h4>
-                    <p>Recomendación: <strong>{{ supplements[index].supplement_name_es }}</strong>. {{ diseases[index].steps_es }}</p>
-                    <div class="card-action-button">
-                        <a href="{{ supplements[index].buy_link }}" target="_blank" class="analyze-button">Comprar Producto</a>
+
+                <!-- Detalles Expandibles -->
+                <div class="library-card-details bg-slate-50/50">
+                    <div class="p-5 flex flex-col gap-4 text-xs leading-relaxed text-slate-500">
+                        <div class="flex flex-col gap-1">
+                            <h4 class="font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5"><i class="fas fa-info-circle text-brand-500"></i> {{ _('Descripción') }}</h4>
+                            <p class="font-medium text-slate-600">{{ diseases[index].description_es }}</p>
+                        </div>
+
+                        <div class="flex flex-col gap-1">
+                            <h4 class="font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5"><i class="fas fa-prescription-bottle-alt text-brand-500"></i> {{ _('Tratamiento Recomendado') }}</h4>
+                            <p class="font-medium text-slate-600">Recomendación: <strong class="text-slate-800 font-bold">{{ supplements[index].supplement_name_es }}</strong>. {{ diseases[index].steps_es }}</p>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <a href="{{ supplements[index].buy_link }}" target="_blank" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-md shadow-brand-500/10 text-xs flex items-center justify-center gap-1.5">
+                                <i class="fas fa-shopping-cart"></i> {{ _('Comprar Tratamiento') }}
+                            </a>
+                        </div>
                     </div>
                 </div>
+
             </div>
-            {% endfor %}
-        </div>
+        {% endfor %}
     </div>
-</section>
-{% endblock content %}
-{% block scripts %}{% endblock %}
+
+</div>
+
+<!-- Estilo CSS específico para el comportamiento expandible de las tarjetas -->
+<style>
+    /* Sobrescribir estilos absolutos de enhanced-plantix-style.css */
+    .library-card {
+        align-self: start !important;
+    }
+    .library-card.is-expanded {
+        overflow: visible !important;
+        z-index: 30 !important;
+    }
+    .library-card-details {
+        position: absolute !important;
+        top: 100% !important;
+        left: -1px !important;
+        right: -1px !important;
+        z-index: 40 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s !important;
+        background-color: #f8fafc !important; /* bg-slate-50 */
+        border: 1px solid #e2e8f0 !important;
+        border-top: none !important;
+        border-radius: 0 0 24px 24px !important;
+        box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    }
+    .library-card.is-expanded .library-card-details {
+        opacity: 1 !important;
+        visibility: visible !important;
+        max-height: 1000px !important;
+    }
+    .library-card.is-expanded .card-close-button {
+        display: flex;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const infoButtons = document.querySelectorAll('.info-button');
+        const closeButtons = document.querySelectorAll('.card-close-button');
+
+        infoButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const currentCard = this.closest('.library-card');
+                
+                // Cerrar otras tarjetas abiertas
+                document.querySelectorAll('.library-card.is-expanded').forEach(card => {
+                    if (card !== currentCard) {
+                        card.classList.remove('is-expanded');
+                    }
+                });
+                
+                if (currentCard) {
+                    currentCard.classList.toggle('is-expanded');
+                    // Desplazamiento suave al expandirse
+                    if (currentCard.classList.contains('is-expanded')) {
+                        setTimeout(() => {
+                            currentCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }, 250);
+                    }
+                }
+            });
+        });
+
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.closest('.library-card').classList.remove('is-expanded');
+            });
+        });
+    });
+</script>
+{% endblock %}

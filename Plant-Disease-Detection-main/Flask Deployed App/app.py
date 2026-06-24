@@ -21,7 +21,6 @@ import pandas as pd
 import pickle
 from flask_mail import Mail, Message
 import io, csv
-from email.header import Header
 from deep_translator import GoogleTranslator
 from datetime import datetime, time, timedelta
 from openai import OpenAI
@@ -29,7 +28,7 @@ import requests
 from collections import Counter
 import pytz
 # --- IMPORTACIONES DE MODELOS Y AUTENTICACIÓN ---
-from models import db, User, Zone, Diagnosis, Notification
+from models import db, User, Zone, Diagnosis, Notification, FarmTask, ChatMessage
 from flask_migrate import Migrate
 from image_validator import check_blur_from_stream
 from sqlalchemy import func, event
@@ -141,6 +140,8 @@ app.config['BABEL_DEFAULT_LOCALE'] = 'es'
 # --- INICIALIZAR EXTENSIONES ---
 db.init_app(app)
 migrate = Migrate(app, db)
+with app.app_context():
+    db.create_all()
 from flask_babel import Babel, gettext
 
 babel = Babel()
@@ -244,15 +245,30 @@ def chat():
     user_message = data.get('message')
     context = data.get('context') 
     language = data.get('language', 'Español')
+    diagnosis_id = data.get('diagnosis_id')
 
     if not user_message or not context:
         return jsonify({'error': 'Falta mensaje o contexto'}), 400
+
+    # Guardar mensaje del usuario si hay diagnosis_id
+    if diagnosis_id:
+        try:
+            user_msg = ChatMessage(diagnosis_id=diagnosis_id, sender='user', message=user_message)
+            db.session.add(user_msg)
+            db.session.commit()
+        except Exception as e:
+            print(f"Error guardando mensaje de usuario: {e}")
 
     # Prompt de sistema: Define la "personalidad" y el rol del asistente de IA.
     system_prompt = (
         "Eres 'AndesGPT', un asistente experto en agronomía y fitopatología, especializado en cultivos andinos. "
         "Tu propósito es ayudar a los agricultores a entender y manejar las enfermedades de sus plantas. "
-        "Actúa de forma amigable, profesional y da respuestas claras y accionables. "
+        "Actúa de forma amigable, profesional y da respuestas claras, estructuradas y accionables. "
+        "REGLAS DE FORMATO:\n"
+        "- Divide la respuesta en párrafos claros separados por una línea en blanco (doble salto de línea).\n"
+        "- Utiliza títulos descriptivos en negrita (ej: **• Síntomas Principales:**, **• Tratamiento Recomendado:**).\n"
+        "- Usa listas numeradas o con viñetas claras para pasos o alternativas.\n"
+        "- Agrega emojis oportunos y contextuales (ej: 🌿, 🐛, 🧪, 💧, ⚠️) para hacer la lectura más amigable y estructurada, sin saturar.\n"
         f"Utiliza el siguiente contexto para responder la pregunta del usuario. No inventes información. Responde siempre en el idioma: {language}."
     )
 
@@ -267,7 +283,8 @@ def chat():
     )
 
     def generate():
-        """Función generadora para la respuesta en streaming."""
+        """Función generadora para la respuesta en streaming y almacenamiento posterior."""
+        full_reply = ""
         try:
             stream = ai_client.chat.completions.create(
                 model="deepseek-chat",
@@ -280,7 +297,19 @@ def chat():
             for chunk in stream:
                 content = chunk.choices[0].delta.content
                 if content:
+                    full_reply += content
                     yield content
+            
+            # Guardar la respuesta completa de la IA una vez finalizado el stream
+            if diagnosis_id and full_reply:
+                with app.app_context():
+                    try:
+                        ai_msg = ChatMessage(diagnosis_id=diagnosis_id, sender='ai', message=full_reply)
+                        db.session.add(ai_msg)
+                        db.session.commit()
+                    except Exception as db_err:
+                        db.session.rollback()
+                        print(f"Error guardando respuesta de IA en base de datos: {db_err}")
         except Exception as e:
             print(f"Error durante el streaming: {e}")
             yield "Lo siento, ocurrió un error al generar la respuesta."
@@ -301,7 +330,13 @@ def general_chat():
         "Eres 'AndesGPT', un asistente experto en agronomía y fitopatología, especializado en cultivos andinos. "
         "Tu propósito es ayudar a los agricultores. Si te preguntan sobre una enfermedad específica, anímales a usar el 'Motor IA' "
         "y subir una foto para un diagnóstico preciso. Puedes responder preguntas generales sobre agricultura, "
-        f"técnicas de cultivo, plagas comunes, etc. Responde siempre en el idioma: {language}."
+        "técnicas de cultivo, plagas comunes, etc. "
+        "REGLAS DE FORMATO:\n"
+        "- Divide la respuesta en párrafos claros separados por una línea en blanco (doble salto de línea).\n"
+        "- Utiliza títulos descriptivos en negrita (ej: **• Consejo Agrícola:**, **• Prevención:**).\n"
+        "- Usa listas numeradas o con viñetas claras para enumerar pasos, especies o consejos.\n"
+        "- Agrega emojis oportunos y contextuales (ej: 🌿, 🚜, 🐛, 💧, ☀️) para hacer la lectura más amigable y estructurada, sin saturar.\n"
+        f"Responde siempre en el idioma: {language}."
     )
 
     def generate():
@@ -323,6 +358,22 @@ def general_chat():
             yield "Lo siento, ocurrió un error al conectar con el asistente."
 
     return Response(generate(), mimetype='text/plain')
+
+@app.route('/api/clear_chat/<int:diagnosis_id>', methods=['POST'])
+@login_required
+def clear_chat_api(diagnosis_id):
+    """Limpia todo el historial de chat de un diagnóstico específico."""
+    diag = Diagnosis.query.filter_by(id=diagnosis_id, user_id=current_user.id).first()
+    if not diag:
+        return jsonify({'success': False, 'error': 'Diagnóstico no encontrado o no autorizado'}), 404
+    
+    try:
+        ChatMessage.query.filter_by(diagnosis_id=diagnosis_id).delete()
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error borrando chat de BD: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.cli.command("seed-zones")
 def seed_zones():
@@ -370,9 +421,236 @@ def seed_zones():
     except requests.exceptions.RequestException as e:
         print(f"Error al obtener datos de la API: {e}")
 
+def get_mock_weather(zone):
+    # Genera clima simulado de forma estable basada en el ubigeo
+    h = hash(zone.district_name or "Cusco") % 5
+    temp_min = 8 + (h % 3)
+    temp_max = 18 + (h % 4)
+    temp = (temp_min + temp_max) // 2
+    humidity = 60 + (h * 7)
+    conditions = ["Soleado", "Parcialmente Nublado", "Lluvia Ligera", "Nublado", "Llovizna"]
+    condition = conditions[h % len(conditions)]
+    
+    mock_icons = ["01d", "02d", "09d", "04d", "10d"]
+    icon = mock_icons[h % len(mock_icons)]
+    
+    advisory = []
+    if humidity > 80:
+        advisory.append("Riesgo elevado de Tizón Tardío en Papa y Mancha Foliar en Tomate debido a la alta humedad. Considere tratamientos preventivos.")
+    if temp < 10:
+        advisory.append("Temperaturas bajas registradas. Proteja los brotes jóvenes contra heladas nocturnas.")
+    if condition in ["Lluvia Ligera", "Llovizna"]:
+        advisory.append("Se registran precipitaciones. Evite aplicar fungicidas de contacto o fertilizantes líquidos expuestos.")
+    else:
+        advisory.append("Buen clima para labores de deshierbe y fertilización de cobertura.")
+        
+    return {
+        'temp': temp,
+        'temp_min': temp_min,
+        'temp_max': temp_max,
+        'humidity': humidity,
+        'condition': condition,
+        'icon': icon,
+        'advisories': advisory
+    }
+
+def get_real_weather(zone):
+    api_key = "a20c9a2eeb4ae79f8d6e46253db2c13d"
+    # Buscar por diferentes combinaciones geográficas en Perú progresivamente
+    queries = [
+        f"{zone.district_name},{zone.province_name},PE",
+        f"{zone.province_name},PE",
+        f"{zone.department_name},PE",
+        "Cusco,PE"
+    ]
+    for q in queries:
+        try:
+            url = f"https://api.openweathermap.org/data/2.5/weather?q={q}&appid={api_key}&units=metric&lang=es"
+            r = requests.get(url, timeout=3)
+            if r.status_code == 200:
+                data = r.json()
+                temp = round(data['main']['temp'])
+                temp_min = round(data['main']['temp_min'])
+                temp_max = round(data['main']['temp_max'])
+                humidity = data['main']['humidity']
+                
+                # Mapeo de descripción para español más natural y profesional
+                raw_condition = data['weather'][0]['description'].lower()
+                condition_map = {
+                    'cielo claro': 'Cielo Despejado',
+                    'algo de nubes': 'Pocas Nubes',
+                    'nubes dispersas': 'Parcialmente Nublado',
+                    'nubes': 'Nublado',
+                    'muy nuboso': 'Nublado',
+                    'cubierto': 'Totalmente Nublado',
+                    'lluvia ligera': 'Lluvia Ligera',
+                    'lluvia moderada': 'Lluvia Moderada',
+                    'lluvia fuerte': 'Lluvia Fuerte',
+                    'llovizna': 'Llovizna',
+                    'llovizna ligera': 'Llovizna Ligera',
+                    'tormenta': 'Tormenta',
+                    'nieve': 'Nieve',
+                    'niebla': 'Niebla',
+                    'neblina': 'Neblina',
+                }
+                condition = condition_map.get(raw_condition, raw_condition.capitalize())
+                icon = data['weather'][0]['icon']
+                
+                advisory = []
+                if humidity > 80:
+                    advisory.append("Humedad muy alta detectada en tu zona. Hay un riesgo elevado de Tizón Tardío en Papa y Mancha Foliar en Tomate. Evite regar por aspersión y aplique preventivos si es necesario.")
+                if temp < 10:
+                    advisory.append("Temperaturas bajas. Existe riesgo de heladas foliares que pueden dañar los brotes tiernos. Proteja cultivos vulnerables.")
+                if 'lluvia' in condition.lower() or 'llovizna' in condition.lower():
+                    advisory.append("Precipitaciones en curso. Evite aplicar fungicidas de contacto o fertilizantes líquidos ya que se lavarán con el agua de lluvia.")
+                else:
+                    advisory.append("Buen clima para labores generales, deshierbe y fertilización dirigida.")
+                    
+                return {
+                    'temp': temp,
+                    'temp_min': temp_min,
+                    'temp_max': temp_max,
+                    'humidity': humidity,
+                    'condition': condition,
+                    'icon': icon,
+                    'advisories': advisory,
+                    'is_real': True,
+                    'queried': q
+                }
+        except Exception as e:
+            print(f"Error cargando clima para {q}: {e}")
+            
+    # Si falla la API, retornar clima simulado como fallback
+    return get_mock_weather(zone)
+
 @app.route('/')
 def home_page():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     return render_template('home.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Panel central del agricultor registrado."""
+    # 1. Tareas pendientes del día o próximas
+    tasks = current_user.tasks.filter_by(status='pending').order_by(FarmTask.task_date.asc()).limit(5).all()
+    
+    # 2. Diagnósticos recientes
+    recent_diagnoses = current_user.diagnoses.order_by(Diagnosis.created_at.desc()).limit(3).all()
+    
+    # 3. Alertas de brote en la misma zona
+    ALERT_THRESHOLD = 3
+    TIME_WINDOW_DAYS = 14
+    peru_tz = pytz.timezone('America/Lima')
+    start_date = datetime.now(peru_tz) - timedelta(days=TIME_WINDOW_DAYS)
+    
+    outbreaks = db.session.query(
+        Diagnosis.disease_name,
+        func.count(Diagnosis.id).label('case_count')
+    ).join(User, User.id == Diagnosis.user_id)\
+     .filter(User.zone_id == current_user.zone_id)\
+     .filter(Diagnosis.created_at >= start_date)\
+     .group_by(Diagnosis.disease_name)\
+     .having(func.count(Diagnosis.id) >= ALERT_THRESHOLD)\
+     .all()
+     
+    alerts = [{'disease': o.disease_name, 'count': o.case_count} for o in outbreaks]
+    
+    return render_template('dashboard.html', 
+                           tasks=tasks, 
+                           diagnoses=recent_diagnoses, 
+                           alerts=alerts)
+
+@app.route('/api/weather')
+@login_required
+def api_weather():
+    """Obtiene el clima en tiempo real de forma asíncrona para evitar bloquear la carga de la página."""
+    zone = current_user.zone
+    if not zone:
+        return jsonify({'error': 'Ubicación no configurada.'}), 400
+    weather = get_real_weather(zone)
+    return jsonify(weather)
+
+@app.route('/tasks', methods=['GET', 'POST'])
+@login_required
+def tasks_page():
+    """Gestión de tareas de cultivo del agricultor."""
+    if request.method == 'POST':
+        title = request.form.get('title')
+        crop_type = request.form.get('crop_type')
+        description = request.form.get('description')
+        task_date_str = request.form.get('task_date')
+        
+        if not title or not crop_type or not task_date_str:
+            flash(gettext('Faltan datos requeridos.'), 'danger')
+            return redirect(url_for('tasks_page'))
+            
+        try:
+            task_date = datetime.strptime(task_date_str, '%Y-%m-%d').date()
+            new_task = FarmTask(
+                user_id=current_user.id,
+                title=title,
+                crop_type=crop_type,
+                description=description,
+                task_date=task_date
+            )
+            db.session.add(new_task)
+            db.session.commit()
+            
+            # Notificación en la app
+            notif = Notification(
+                user_id=current_user.id,
+                message=f"Nueva tarea '{title}' agendada para el {task_date.strftime('%d/%m/%Y')}.",
+                link=url_for('tasks_page')
+            )
+            db.session.add(notif)
+            db.session.commit()
+            
+            flash(gettext('Tarea agregada exitosamente.'), 'success')
+        except ValueError:
+            flash(gettext('Formato de fecha inválido.'), 'danger')
+            
+        return redirect(url_for('tasks_page'))
+        
+    # GET: Listar todas las tareas del usuario agrupadas/ordenadas
+    tasks = current_user.tasks.order_by(FarmTask.task_date.asc(), FarmTask.status.desc()).all()
+    return render_template('tasks.html', tasks=tasks)
+
+@app.route('/tasks/toggle/<int:task_id>', methods=['POST'])
+@login_required
+def toggle_task(task_id):
+    """Marca una tarea como completada o pendiente."""
+    task = FarmTask.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Acceso no autorizado'}), 403
+        
+    task.status = 'completed' if task.status == 'pending' else 'pending'
+    db.session.commit()
+    
+    # Crear notificación dinámica
+    state_msg = 'completada' if task.status == 'completed' else 'marcada como pendiente'
+    notif = Notification(
+        user_id=current_user.id,
+        message=f"Tarea '{task.title}' {state_msg}.",
+        link=url_for('tasks_page')
+    )
+    db.session.add(notif)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'status': task.status})
+
+@app.route('/tasks/delete/<int:task_id>', methods=['POST'])
+@login_required
+def delete_task(task_id):
+    """Elimina una tarea del diario."""
+    task = FarmTask.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Acceso no autorizado'}), 403
+        
+    db.session.delete(task)
+    db.session.commit()
+    return jsonify({'success': True})
 
 # --- RUTAS DE AUTENTICACIÓN ---
 @app.route('/register', methods=['GET', 'POST'])
@@ -449,14 +727,18 @@ def contact():
         message_body = request.form['message']
 
         subject = f"Nuevo Mensaje de Contacto de: {name}"
-        msg = Message(subject=Header(subject, 'utf-8'),
-                      recipients=['71827961@continental.edu.pe'],
-                      reply_to=email)
-
-        msg.html = render_template('email_template.html', name=name, email=email, message_body=message_body)
-        mail.send(msg)
-        
-        flash(gettext('¡Gracias por tu mensaje! Nos pondremos en contacto contigo pronto.'), 'success')
+        try:
+            msg = Message(
+                subject=subject,
+                recipients=['71827961@continental.edu.pe'],
+                reply_to=email
+            )
+            msg.html = render_template('email_template.html', name=name, email=email, message_body=message_body)
+            mail.send(msg)
+            flash(gettext('¡Gracias por tu mensaje! Nos pondremos en contacto contigo pronto.'), 'success')
+        except Exception as e:
+            print(f"Error al enviar correo de contacto: {e}")
+            flash(gettext('Tu mensaje fue recibido, pero no se pudo enviar el correo de confirmación en este momento.'), 'warning')
         return redirect(url_for('contact'))
     return render_template('contact-us.html')
 
@@ -554,8 +836,12 @@ def ai_engine_page():
 
             # Después de guardar, se verifica si este nuevo caso genera una alerta de brote.
             check_and_generate_alerts(new_diagnosis)
+            
+            # Redirigir al mismo endpoint usando GET para cargar los resultados y la vista estilo chat
+            show_feedback_arg = 1 if show_feedback_form else 0
+            return redirect(url_for('ai_engine_page', diagnosis_id=new_diagnosis_id, show_feedback=show_feedback_arg))
 
-        # 4. Preparar los resultados detallados para mostrar en la plantilla.
+        # 4. Preparar los resultados detallados para mostrar en la plantilla (si no está autenticado).
         # Se usan las predicciones de la *primera* imagen para mostrar el top 3.
         first_image_prediction = prediction(os.path.join('static', first_image_path))
         display_results = []
@@ -577,13 +863,49 @@ def ai_engine_page():
         return render_template('index.html',
                                results=display_results,
                                user_image=first_image_path,
-                               new_diagnosis_id=new_diagnosis_id,
+                               new_diagnosis_id=None,
                                consolidated_result=consolidated_result,
                                image_count=len(images),
-                               show_feedback_form=show_feedback_form)
+                               show_feedback_form=False)
 
     # Para peticiones GET
-    return render_template('index.html', show_feedback_form=False)
+    previous_diagnoses = []
+    selected_diagnosis = None
+    display_results = None
+    user_image = None
+    chat_messages = []
+    show_feedback = request.args.get('show_feedback') == '1'
+    diag_id = request.args.get('diagnosis_id')
+
+    if current_user.is_authenticated:
+        previous_diagnoses = Diagnosis.query.filter_by(user_id=current_user.id).order_by(Diagnosis.created_at.desc()).all()
+        if diag_id:
+            selected_diagnosis = Diagnosis.query.filter_by(id=diag_id, user_id=current_user.id).first()
+            if selected_diagnosis:
+                user_image = selected_diagnosis.image_path
+                matched_rows = disease_info[disease_info['disease_name_es'] == selected_diagnosis.disease_name]
+                if not matched_rows.empty:
+                    idx = matched_rows.index[0]
+                    disease_record = disease_info.loc[idx]
+                    supplement_record = supplement_info.loc[idx]
+                    display_results = [{
+                        'disease_name': disease_record['disease_name_es'],
+                        'probability': selected_diagnosis.probability,
+                        'description': disease_record['description_es'],
+                        'prevent': disease_record['steps_es'],
+                        'supplement_name': supplement_record['supplement_name_es'],
+                        'supplement_image': supplement_record['supplement_image'],
+                        'buy_link': supplement_record['buy_link']
+                    }]
+                chat_messages = ChatMessage.query.filter_by(diagnosis_id=selected_diagnosis.id).order_by(ChatMessage.created_at.asc()).all()
+
+    return render_template('index.html',
+                           results=display_results,
+                           user_image=user_image,
+                           new_diagnosis_id=selected_diagnosis.id if selected_diagnosis else None,
+                           previous_diagnoses=previous_diagnoses,
+                           chat_messages=chat_messages,
+                           show_feedback_form=show_feedback)
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required

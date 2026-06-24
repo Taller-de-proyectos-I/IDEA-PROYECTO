@@ -75,6 +75,29 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic'))
+
+class FarmTask(db.Model):
+    """Modelo para las tareas agrícolas y de cultivo del usuario."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    crop_type = db.Column(db.String(100), nullable=False) # e.g. Papa, Maíz, etc.
+    description = db.Column(db.Text, nullable=True)
+    task_date = db.Column(db.Date, nullable=False)
+    status = db.Column(db.String(20), default='pending') # pending, completed
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('tasks', lazy='dynamic'))
+
+class ChatMessage(db.Model):
+    """Modelo para guardar los mensajes de chat asociados a un diagnóstico."""
+    id = db.Column(db.Integer, primary_key=True)
+    diagnosis_id = db.Column(db.Integer, db.ForeignKey('diagnosis.id', ondelete='CASCADE'), nullable=False)
+    sender = db.Column(db.String(10), nullable=False) # 'user' o 'ai'
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    diagnosis = db.relationship('Diagnosis', backref=db.backref('chat_messages', lazy=True, cascade="all, delete-orphan"))
 # ==============================================================================
 # Fin de los modelos de base de datos.
 # ==============================================================================

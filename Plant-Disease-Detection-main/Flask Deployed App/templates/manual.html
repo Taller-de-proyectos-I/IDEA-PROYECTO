@@ -2,168 +2,112 @@
 {% block title %}{{ _('Manual de Usuario') }} - PlantAndes{% endblock %}
 
 {% block content %}
-<section class="manual-section">
-    <div class="container">
-        <h1 class="section-title">{{ _('Manual de Usuario de PlantAndes') }}</h1>
-        <p class="section-description">
-            {{ _('Bienvenido a la guía completa para usar PlantAndes. Aquí encontrarás todo lo que necesitas para
-            diagnosticar tus cultivos y proteger tu cosecha.') }}
+<div class="max-w-4xl mx-auto flex flex-col gap-8">
+    
+    <!-- Encabezado -->
+    <div class="text-center max-w-2xl mx-auto">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{{ _('Manual de Usuario de PlantAndes') }}</h1>
+        <p class="text-sm text-slate-400 mt-2">
+            {{ _('Bienvenido a la guía completa de uso. Aquí encontrarás instrucciones detalladas paso a paso para diagnosticar tus cultivos, registrar tareas y monitorear alertas sanitarias.') }}
         </p>
+    </div>
 
-        <!-- Botón de Descarga PDF -->
-        <div class="download-pdf-container">
-            <a href="{{ url_for('static', filename='documents/manual_usuario_plantandes.pdf') }}" download
-                class="analyze-button">
-                <i class="fas fa-file-pdf"></i> {{ _('Descargar Manual en PDF') }}
-            </a>
-        </div>
+    <!-- Botón Descargar PDF -->
+    <div class="flex items-center justify-center pt-2 pb-6 border-b border-slate-100">
+        <a href="{{ url_for('static', filename='documents/manual_usuario_plantandes.pdf') }}" download class="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-md shadow-brand-500/10 text-sm">
+            <i class="fas fa-file-pdf text-base"></i> {{ _('Descargar Manual Completo en PDF') }}
+        </a>
+    </div>
 
+    <!-- Secciones del Manual -->
+    <div class="flex flex-col gap-10">
+        
         <!-- 1. Registro e Inicio de Sesión -->
-        <div class="manual-step">
-            <h2>1. {{ _('Cómo Registrarse y Crear una Cuenta') }}</h2>
-            <p>{{ _('Para guardar tu historial y recibir alertas, necesitas una cuenta. Es gratis y rápido.') }}</p>
-            <ol>
-                <li>{{ _('Haz clic en el icono de usuario en la esquina superior derecha y luego en "Regístrate aquí".')
-                    }}</li>
-                <li>{{ _('Completa el formulario con tu nombre, correo, y elige tu zona (departamento, provincia y
-                    distrito). Esto es importante para recibir alertas locales.') }}</li>
-                <li>{{ _('Crea una contraseña segura.') }}</li>
-                <li>{{ _('Una vez registrado, podrás iniciar sesión con tu correo y contraseña.') }}</li>
-            </ol>
-            <div class="screenshot-placeholder">
-                <img src="{{ url_for('static', filename='img_manual/register.png') }}"
-                    alt="{{ _('Captura de pantalla del formulario de registro') }}">
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col gap-4">
+            <h2 class="text-lg font-extrabold text-slate-900 border-b border-slate-50 pb-3 flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">1</span>
+                {{ _('Creación de Cuenta y Registro de Zona') }}
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">{{ _('Para guardar tu historial de diagnósticos, activar alertas fitosanitarias automáticas de tu distrito y usar la agenda de tareas, necesitas crear una cuenta gratuita.') }}</p>
+            
+            <ul class="flex flex-col gap-2.5 pl-4 text-xs sm:text-sm text-slate-500 list-decimal leading-relaxed">
+                <li>{{ _('Haz clic en el icono de usuario de la esquina superior derecha de la barra de navegación y selecciona "Regístrate aquí".') }}</li>
+                <li>{{ _('Completa tu nombre de usuario, correo electrónico, y selecciona de manera secuencial tu Departamento, Provincia y Distrito de residencia en el menú desplegable. Esto es crucial para que recibas notificaciones climáticas y de plagas precisas.') }}</li>
+                <li>{{ _('Ingresa una contraseña segura y finaliza el registro presionando "Registrarse".') }}</li>
+            </ul>
+
+            <div class="p-4 bg-slate-55 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center mt-3 max-h-80 overflow-hidden shadow-inner">
+                <img src="{{ url_for('static', filename='img_manual/register.png') }}" alt="Formulario de Registro" class="rounded-xl shadow-md border border-slate-100 max-h-72 object-contain">
             </div>
         </div>
 
         <!-- 2. Usar el Motor IA -->
-        <div class="manual-step">
-            <h2>2. {{ _('Realizar un Diagnóstico con el Motor IA') }}</h2>
-            <p>{{ _('El corazón de PlantAndes es su capacidad para analizar fotos de tus plantas.') }}</p>
-            <ol>
-                <li>{{ _('Ve a la sección "Motor IA" desde el menú principal.') }}</li>
-                <li>{{ _('Haz clic en "Seleccionar Imagen" y elige una o varias fotos claras de la hoja o parte afectada
-                    de tu cultivo.') }}</li>
-                <li>{{ _('Presiona el botón "Analizar Imagen".') }}</li>
-                <li>{{ _('En segundos, verás los resultados: el nombre de la enfermedad más probable, una descripción y
-                    recomendaciones de tratamiento.') }}</li>
-            </ol>
-            <div class="screenshot-placeholder">
-                <img src="{{ url_for('static', filename='img_manual/result1.png') }}"
-                    alt="{{ _('Captura de la sección para subir imágenes') }}">
-                <img src="{{ url_for('static', filename='img_manual/result2.png') }}"
-                    alt="{{ _('Captura de los resultados de un diagnóstico') }}">
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col gap-4">
+            <h2 class="text-lg font-extrabold text-slate-900 border-b border-slate-50 pb-3 flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">2</span>
+                {{ _('Cómo Realizar un Diagnóstico Foliar') }}
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">{{ _('El núcleo del sistema es el Motor IA, entrenado mediante redes neuronales convolucionales para clasificar enfermedades andinas.') }}</p>
+            
+            <ul class="flex flex-col gap-2.5 pl-4 text-xs sm:text-sm text-slate-500 list-decimal leading-relaxed">
+                <li>{{ _('Accede a la pestaña "Motor IA" desde la navegación.') }}</li>
+                <li>{{ _('Arrastra la imagen directamente al recuadro punteado o haz clic en "Seleccionar Imagen" para abrir tu cámara o galería. Sube fotos nítidas con buena luz de una hoja afectada.') }}</li>
+                <li>{{ _('Presiona "Analizar Hoja" y la IA mostrará el diagnóstico consolidado y el Top 3 de patologías probables con sus medidas de manejo biológico e insumos sugeridos.') }}</li>
+            </ul>
+
+            <div class="grid sm:grid-cols-2 gap-4 mt-3">
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center max-h-64 overflow-hidden">
+                    <img src="{{ url_for('static', filename='img_manual/result1.png') }}" alt="Recuadro de carga" class="rounded-xl shadow-sm max-h-56 object-contain">
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center max-h-64 overflow-hidden">
+                    <img src="{{ url_for('static', filename='img_manual/result2.png') }}" alt="Resultados" class="rounded-xl shadow-sm max-h-56 object-contain">
+                </div>
             </div>
         </div>
 
         <!-- 3. Asistente IA -->
-        <div class="manual-step">
-            <h2>3. {{ _('Obtener más Ayuda con el Asistente IA') }}</h2>
-            <p>{{ _('Si tienes más preguntas sobre un diagnóstico, nuestro asistente de chat puede ayudarte.') }}</p>
-            <ol>
-                <li>{{ _('Después de un diagnóstico, haz clic en el botón "Activar Asistente IA".') }}</li>
-                <li>{{ _('Escribe tus preguntas en el chat. Por ejemplo: "¿Hay tratamientos orgánicos para esto?" o
-                    "¿Qué tan rápido se propaga?".') }}</li>
-                <li>{{ _('Puedes chatear en Español o Quechua, seleccionando el idioma sobre el campo de texto.') }}
-                </li>
-            </ol>
-            <div class="screenshot-placeholder">
-                <img src="{{ url_for('static', filename='img_manual/ia_assist.png') }}"
-                    alt="{{ _('Captura del chat con el Asistente IA') }}">
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col gap-4">
+            <h2 class="text-lg font-extrabold text-slate-900 border-b border-slate-50 pb-3 flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">3</span>
+                {{ _('Consultas con el Asistente AndesGPT') }}
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">{{ _('¿Tienes dudas adicionales sobre el diagnóstico, la dosis del producto o deseas alternativas orgánicas? Activa AndesGPT.') }}</p>
+            
+            <ul class="flex flex-col gap-2.5 pl-4 text-xs sm:text-sm text-slate-500 list-decimal leading-relaxed">
+                <li>{{ _('Al pie de la pantalla de resultados del diagnóstico foliar, presiona el botón "Activar Asistente IA".') }}</li>
+                <li>{{ _('Escribe tu duda en lenguaje natural (ej: "¿Hay alguna alternativa orgánica de cobre?" o "¿Cuándo debo aplicar el producto?").') }}</li>
+                <li>{{ _('Puedes alternar el idioma de respuesta entre Español y Quechua usando los selectores ubicados sobre la caja de entrada.') }}</li>
+            </ul>
+
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center mt-3 max-h-80 overflow-hidden shadow-inner">
+                <img src="{{ url_for('static', filename='img_manual/ia_assist.png') }}" alt="Asistente de Chat" class="rounded-xl shadow-md border border-slate-100 max-h-72 object-contain">
             </div>
         </div>
 
-        <!-- 4. Historial y Alertas -->
-        <div class="manual-step">
-            <h2>4. {{ _('Consultar tu Historial y ver Alertas') }}</h2>
-            <p>{{ _('PlantAndes guarda tus diagnósticos y te mantiene informado sobre brotes en tu zona.') }}</p>
-            <ul>
-                <li><strong>{{ _('Mi Historial:') }}</strong> {{ _('Accede desde el menú de usuario para ver todos tus
-                    diagnósticos pasados, con tus notas personales.') }}</li>
-                <li><strong>{{ _('Alertas:') }}</strong> {{ _('Visita esta sección para ver un mapa de calor de las
-                    enfermedades más comunes detectadas recientemente en diferentes zonas.') }}</li>
+        <!-- 4. Historial, Alertas y Agenda -->
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col gap-4">
+            <h2 class="text-lg font-extrabold text-slate-900 border-b border-slate-50 pb-3 flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">4</span>
+                {{ _('Herramientas Avanzadas para Usuarios') }}
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">{{ _('El aplicativo incluye utilidades complementarias de organización agrícola para tu cuenta:') }}</p>
+            
+            <ul class="flex flex-col gap-3 pl-4 text-xs sm:text-sm text-slate-500 list-disc leading-relaxed">
+                <li><strong>{{ _('Agenda Agrícola:') }}</strong> {{ _('Permite registrar labores de cultivo (riego, deshierbe, fertilizaciones), asignando fechas y cultivos. Los recordatorios se integran con tus notificaciones de cuenta.') }}</li>
+                <li><strong>{{ _('Vigilancia Epidemiológica:') }}</strong> {{ _('En la pestaña Alertas, puedes monitorizar los focos de infección reportados en tu provincia o departamento en los últimos 14 días.') }}</li>
+                <li><strong>{{ _('Historial con Filtros:') }}</strong> {{ _('Filtra tus diagnósticos pasados por enfermedad y rango de fechas de manera dinámica, y descarga reportes impresos de consultas.') }}</li>
             </ul>
         </div>
 
     </div>
-</section>
 
-<style>
-    .manual-section {
-        padding-top: 5rem;
-    }
-
-    .download-pdf-container {
-        text-align: center;
-        margin: 2rem 0 4rem 0;
-    }
-
-    .manual-step {
-        background-color: var(--white);
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow);
-        margin-bottom: 3rem;
-    }
-
-    .manual-step h2 {
-        font-size: 1.8rem;
-        color: var(--green-dark);
-        border-bottom: 2px solid var(--green-light);
-        padding-bottom: 0.5rem;
-        margin: 0 0 1.5rem 0;
-    }
-
-    .manual-step p {
-        font-size: 1.1rem;
-        line-height: 1.7;
-        margin-bottom: 1.5rem;
-    }
-
-    .manual-step ol,
-    .manual-step ul {
-        padding-left: 2rem;
-        font-size: 1.1rem;
-        line-height: 1.8;
-    }
-
-    .manual-step li {
-        margin-bottom: 1rem;
-    }
-
-    .screenshot-placeholder {
-        border: 2px dashed #CBD5E0;
-        border-radius: 8px;
-        padding: 2rem;
-        text-align: center;
-        margin-top: 2rem;
-        background-color: #F7FAFC;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .screenshot-placeholder img {
-        max-width: 100%;
-        border-radius: 6px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    @media (max-width: 768px) {
-        .screenshot-placeholder {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const navLinks = document.querySelectorAll('.nav-links a');
-        navLinks.forEach(link => {
-        });
+        // Listo para agregar lógica en el manual si es necesario
     });
 </script>
 {% endblock %}

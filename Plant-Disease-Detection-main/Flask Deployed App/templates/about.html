@@ -2,90 +2,106 @@
 {% block title %}Sobre Nosotros - PlantAndes{% endblock %}
 
 {% block content %}
-<section class="about-section" id="about-intro">
-    <div class="container">
-        <h1 class="section-title">Sobre PlantAndes</h1>
-        <div class="about-intro-content">
-            <img src="https://media.istockphoto.com/id/1469759726/es/foto/robot-y-mano-humana-con-luz-de-flash-con-iconos-de-interfaz-modernos-los-agricultores-analizan.jpg?s=612x612&w=0&k=20&c=zyF55a8nZkRXI3OdjXLlSod92cLs9zuyWMEt_kfBTgY=" alt="Equipo de PlantAndes" class="about-intro-image animate-on-scroll fade-in-from-left">
-            <div class="about-intro-text animate-on-scroll fade-in-from-right">
-                <h2>Uniendo Tecnología y Tradición Agrícola</h2>
-                <p>Somos un equipo apasionado por la tecnología y la agricultura, comprometido con el desarrollo de soluciones que generen un impacto positivo en las comunidades rurales andinas. Combinamos experiencia en inteligencia artificial y agronomía para crear PlantAndes, una herramienta diseñada para el agricultor moderno.</p>
-            </div>
+<div class="max-w-6xl mx-auto flex flex-col gap-12 md:gap-16">
+    
+    <!-- Sección Introducción -->
+    <section class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-10 shadow-premium flex flex-col lg:flex-row gap-8 items-center">
+        <div class="w-full lg:w-1/2 h-64 sm:h-80 rounded-2xl overflow-hidden shadow-sm flex-shrink-0">
+            <img src="https://media.istockphoto.com/id/1469759726/es/foto/robot-y-mano-humana-con-luz-de-flash-con-iconos-de-interfaz-modernos-los-agricultores-analizan.jpg?s=612x612&w=0&k=20&c=zyF55a8nZkRXI3OdjXLlSod92cLs9zuyWMEt_kfBTgY=" alt="Tecnología Agrícola" class="w-full h-full object-cover">
         </div>
-    </div>
-</section>
-
-<section class="value-prop-section">
-    <div class="container">
-        <h2 class="section-title">Nuestra Propuesta de Valor</h2>
-        <div class="features-grid">
-            <div class="feature-card animate-on-scroll zoom-in-effect">
-                <div class="feature-card-icon"><i class="fas fa-crosshairs"></i></div>
-                <h3 class="feature-card-title">Alta Precisión</h3>
-                <p>Nuestro modelo de IA, entrenado con miles de imágenes, alcanza una precisión superior al 90% para un diagnóstico confiable.</p>
-            </div>
-            <div class="feature-card animate-on-scroll zoom-in-effect">
-                <div class="feature-card-icon"><i class="fas fa-mobile-alt"></i></div>
-                <h3 class="feature-card-title">Accesibilidad</h3>
-                <p>Diseñado para funcionar en cualquier dispositivo con acceso a internet, sin necesidad de instalar aplicaciones complejas.</p>
-            </div>
-            <div class="feature-card animate-on-scroll zoom-in-effect">
-                <div class="feature-card-icon"><i class="fas fa-users"></i></div>
-                <h3 class="feature-card-title">Enfoque Local</h3>
-                <p>Especializados en cultivos andinos, entendemos los desafíos específicos de la región y ofrecemos soluciones adaptadas.</p>
-            </div>
+        <div class="flex-grow flex flex-col gap-4">
+            <span class="text-xs font-bold text-brand-600 uppercase tracking-widest">{{ _('¿Quiénes Somos?') }}</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">{{ _('Uniendo Tecnología y Tradición Agrícola') }}</h1>
+            <p class="text-sm text-slate-500 leading-relaxed font-medium">
+                {{ _('Somos un equipo apasionado por la tecnología y la agricultura, comprometido con el desarrollo de soluciones digitales que generen un impacto directo en las comunidades rurales andinas. Combinamos experiencia en inteligencia artificial y agronomía para crear PlantAndes, una herramienta robusta diseñada para el agricultor moderno.') }}
+            </p>
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="tech-details-section">
-    <div class="container">
-        <h2 class="section-title">El Poder de Nuestro Modelo</h2>
-
-        <!-- Bloque 1: Precisión -->
-        <div class="mission-content">
-            <div class="mission-text animate-on-scroll fade-in-from-left">
-                <h3>Precisión del 90%</h3>
-                <p>La precisión es la métrica clave que define la fiabilidad de nuestro modelo. Un 90% significa que 9 de cada 10 diagnósticos que proveemos son correctos, dándole al agricultor una alta confianza para tomar acciones y proteger su cosecha.</p>
-            </div>
-            <div class="mission-image animate-on-scroll fade-in-from-right">
-                <img src="..\static\img\recall.png" alt="Gráfica de Precisión del Modelo">
-            </div>
+    <!-- Propuesta de Valor -->
+    <section class="flex flex-col gap-8">
+        <div class="text-center max-w-2xl mx-auto">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ _('Nuestra Propuesta de Valor') }}</h2>
+            <p class="text-sm text-slate-400 mt-2">{{ _('Desarrollamos soluciones enfocadas en la precisión, la simplicidad de uso y el impacto local.') }}</p>
         </div>
 
-        <!-- Bloque 2: Grafica de Pérdida -->
-        <div class="mission-content mission-content--reversed">
-            <div class="mission-image animate-on-scroll fade-in-from-left">
-                <img src="..\static\img\plot_the_loss.png" alt="Curva de Pérdida del Entrenamiento">
+        <div class="grid sm:grid-cols-3 gap-6">
+            <!-- Alta Precisión -->
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-200">
+                <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl font-bold"><i class="fas fa-crosshairs"></i></div>
+                <h3 class="font-bold text-slate-900 text-base">{{ _('Alta Precisión') }}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">{{ _('Nuestro modelo de red neuronal convolucional (CNN), entrenado con miles de muestras reales, alcanza una tasa de acierto superior al 90%% para diagnósticos confiables.') }}</p>
             </div>
-            <div class="mission-text animate-on-scroll fade-in-from-right">
-                <h3>Gráfica de Pérdida (Plot the Loss)</h3>
-                <p>Esta gráfica demuestra que nuestro modelo ha aprendido correctamente. La línea azul (pérdida de entrenamiento) y la naranja (pérdida de validación) descienden y convergen, indicando que el modelo no solo memoriza, sino que generaliza bien para identificar enfermedades en nuevas imágenes.</p>
+            
+            <!-- Accesibilidad -->
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-200">
+                <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl font-bold"><i class="fas fa-mobile-alt"></i></div>
+                <h3 class="font-bold text-slate-900 text-base">{{ _('Accesibilidad') }}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">{{ _('Funciona directamente desde el navegador de cualquier teléfono o tablet con conexión a internet, optimizado para un consumo mínimo de datos en zonas rurales.') }}</p>
+            </div>
+
+            <!-- Enfoque Local -->
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-200">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold"><i class="fas fa-users"></i></div>
+                <h3 class="font-bold text-slate-900 text-base">{{ _('Enfoque Local') }}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">{{ _('Especializados en cultivos andinos clave (papa, quinua, maíz, tomate). Ofrecemos tratamientos viables tanto orgánicos como químicos disponibles localmente.') }}</p>
             </div>
         </div>
+    </section>
 
-        <!-- Bloque 1: ROC -->
-        <div class="mission-content">
-            <div class="mission-text animate-on-scroll fade-in-from-left">
-                <h3>Curva ROC</h3>
-                <p>Esta gráfica valida la excelente capacidad de diagnóstico de nuestro modelo. Con un AUC micro de 0.997, demuestra que el modelo distingue con alta precisión entre enfermedades específicas como el tizón del tomate y la sarna del manzano, minimizando tanto falsos positivos como falsos negativos en la clasificación.</p>
-            </div>
-            <div class="mission-image animate-on-scroll fade-in-from-right">
-                <img src="..\static\img\curva_roc.png" alt="Gráfica de Precisión del Modelo">
-            </div>
+    <!-- Detalles del Modelo Científico -->
+    <section class="flex flex-col gap-8 mb-4">
+        <div class="text-center max-w-2xl mx-auto">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ _('El Poder de Nuestro Modelo') }}</h2>
+            <p class="text-sm text-slate-400 mt-2">{{ _('Sustento técnico y métricas de desempeño de la red neuronal convolucional entrenada.') }}</p>
         </div>
 
-        <!-- Bloque 3: Matriz de Confusión -->
-        <div class="mission-content mission-content--reversed">
-            <div class="mission-image animate-on-scroll fade-in-from-left">
-                <img src="..\static\img\plot_confusion.png" alt="Matriz de Confusión del Modelo">
+        <div class="flex flex-col gap-10">
+            <!-- Bloque 1: Precisión -->
+            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col md:flex-row gap-8 items-center">
+                <div class="flex-1 flex flex-col gap-3">
+                    <h3 class="text-lg font-extrabold text-slate-950">{{ _('Sensibilidad y Precisión del 90%%') }}</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{{ _('La precisión es la métrica clave que define la fiabilidad de nuestro modelo. Un 90%% significa que 9 de cada 10 diagnósticos que proveemos son correctos, dándole al agricultor una alta confianza para tomar acciones rápidas y proteger su cosecha.') }}</p>
+                </div>
+                <div class="w-full md:w-80 h-52 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0">
+                    <img src="{{ url_for('static', filename='img/recall.png') }}" alt="Precisión" class="w-full h-full object-contain bg-slate-50">
+                </div>
             </div>
-            <div class="mission-text animate-on-scroll fade-in-from-right">
-                <h3>Matriz de Confusión</h3>
-                <p>Esta matriz es un mapa detallado del rendimiento del modelo. La diagonal principal, fuertemente marcada, muestra un alto número de aciertos para cada tipo de enfermedad. Los valores fuera de la diagonal son mínimos, lo que significa que el modelo rara vez confunde una enfermedad con otra.</p>
+
+            <!-- Bloque 2: Curva de Pérdida -->
+            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col md:flex-row-reverse gap-8 items-center">
+                <div class="flex-1 flex flex-col gap-3">
+                    <h3 class="text-lg font-extrabold text-slate-950">{{ _('Curva de Pérdida (Plot the Loss)') }}</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{{ _('Esta gráfica demuestra que nuestro modelo ha completado su entrenamiento correctamente. La línea de entrenamiento (azul) y la de validación (naranja) convergen y descienden progresivamente, indicando que el modelo no ha memorizado los datos (overfitting), sino que posee una alta capacidad de generalización en nuevas imágenes.') }}</p>
+                </div>
+                <div class="w-full md:w-80 h-52 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0">
+                    <img src="{{ url_for('static', filename='img/plot_the_loss.png') }}" alt="Curva de Pérdida" class="w-full h-full object-contain bg-slate-50">
+                </div>
+            </div>
+
+            <!-- Bloque 3: ROC -->
+            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col md:flex-row gap-8 items-center">
+                <div class="flex-1 flex flex-col gap-3">
+                    <h3 class="text-lg font-extrabold text-slate-950">{{ _('Curva ROC de Clasificación') }}</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{{ _('Esta métrica valida el diagnóstico diferencial de la IA. Con un coeficiente AUC promedio de 0.997, demuestra que la red neuronal distingue de manera precisa entre afecciones foliares similares (ej. manchas bacterianas vs fúngicas), minimizando falsos positivos en el campo.') }}</p>
+                </div>
+                <div class="w-full md:w-80 h-52 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0">
+                    <img src="{{ url_for('static', filename='img/curva_roc.png') }}" alt="Curva ROC" class="w-full h-full object-contain bg-slate-50">
+                </div>
+            </div>
+
+            <!-- Bloque 4: Matriz de Confusión -->
+            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col md:flex-row-reverse gap-8 items-center">
+                <div class="flex-1 flex flex-col gap-3">
+                    <h3 class="text-lg font-extrabold text-slate-950">{{ _('Matriz de Confusión Multiclase') }}</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{{ _('Representación visual de aciertos del modelo por clase. La diagonal principal con tonalidad intensa representa la correlación directa entre la predicción y el diagnóstico agronómico real, confirmando un error mínimo en clases andinas.') }}</p>
+                </div>
+                <div class="w-full md:w-80 h-52 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0">
+                    <img src="{{ url_for('static', filename='img/plot_confusion.png') }}" alt="Matriz de Confusión" class="w-full h-full object-contain bg-slate-50">
+                </div>
             </div>
         </div>
+    </section>
 
-    </div>
-</section>
+</div>
 {% endblock %}

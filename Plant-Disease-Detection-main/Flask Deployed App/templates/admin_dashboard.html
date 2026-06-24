@@ -2,198 +2,135 @@
 {% block title %}{{ _('Dashboard de Administrador') }} - PlantAndes{% endblock %}
 
 {% block content %}
-<section class="admin-dashboard-section">
-    <div class="container">
-        <h1 class="section-title">{{ _('Dashboard de Administrador') }}</h1>
-        <p class="section-description" style="text-align: center; max-width: 800px; margin: -2rem auto 3rem;">
-            Una vista general de la actividad y estadísticas de la plataforma.
+<div class="max-w-6xl mx-auto flex flex-col gap-8">
+    
+    <!-- Encabezado -->
+    <div class="text-center max-w-2xl mx-auto">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{{ _('Dashboard de Administrador') }}</h1>
+        <p class="text-sm text-slate-400 mt-2">
+            {{ _('Una vista consolidada de la actividad de diagnósticos, métricas de usuarios y reportes sanitarios de la plataforma.') }}
         </p>
+    </div>
 
-        <!-- Fila de Estadísticas Principales -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-info">
-                    <div class="stat-number">{{ total_users }}</div>
-                    <div class="stat-label">{{ _('Usuarios Registrados') }}</div>
-                </div>
+    <!-- Fila de Estadísticas de KPI (4 columnas) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Usuarios Registrados -->
+        <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex items-center gap-4 hover:-translate-y-0.5 transition-all duration-200">
+            <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                <i class="fas fa-users"></i>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-microscope"></i></div>
-                <div class="stat-info">
-                    <div class="stat-number">{{ total_diagnoses }}</div>
-                    <div class="stat-label">{{ _('Análisis Totales') }}</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
-                <div class="stat-info">
-                    <div class="stat-number">{{ new_users_count }}</div>
-                    <div class="stat-label">{{ _('Nuevos Usuarios (7 días)') }}</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
-                <div class="stat-info">
-                    <div class="stat-number">{{ diagnoses_today_count }}</div>
-                    <div class="stat-label">{{ _('Análisis de Hoy') }}</div>
-                </div>
+            <div>
+                <span class="block text-2xl font-black text-slate-950 leading-none">{{ total_users }}</span>
+                <span class="text-xs text-slate-400 font-semibold block mt-1.5 uppercase tracking-wide">{{ _('Usuarios Registrados') }}</span>
             </div>
         </div>
 
-        <!-- Fila de Top 5s -->
-        <div class="top-lists-grid">
-            <!-- Top Usuarios Activos -->
-            <div class="list-card">
-                <h3 class="list-title"><i class="fas fa-trophy"></i> {{ _('Usuarios Más Activos') }}</h3>
-                <ul class="top-list">
-                    {% for user in most_active_users %}
-                    <li>
-                        <span class="list-item-name">{{ user.username }}</span>
-                        <span class="list-item-count">{{ ngettext('%(num)s análisis', '%(num)s análisis', user.diag_count) }}</span>
-                    </li>
-                    {% else %}
-                    <li class="empty-list">{{ _('No hay datos de actividad.') }}</li>
-                    {% endfor %}
-                </ul>
-                <div class="chart-container" style="margin-top: 2rem;">
-                    <canvas id="activeUsersChart"></canvas>
-                </div>
+        <!-- Análisis Totales -->
+        <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex items-center gap-4 hover:-translate-y-0.5 transition-all duration-200">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                <i class="fas fa-microscope"></i>
             </div>
-
-            <!-- Top Enfermedades Comunes -->
-            <div class="list-card">
-                <h3 class="list-title"><i class="fas fa-viruses"></i> {{ _('Enfermedades Más Comunes') }}</h3>
-                <ul class="top-list">
-                    {% for disease in most_common_diseases %}
-                    <li>
-                        <span class="list-item-name">{{ disease.disease_name }}</span>
-                        <span class="list-item-count">{{ ngettext('%(num)s caso', '%(num)s casos', disease.disease_count) }}</span>
-                    </li>
-                    {% else %}
-                    <li class="empty-list">{{ _('No hay diagnósticos registrados.') }}</li>
-                    {% endfor %}
-                </ul>
-                <div class="chart-container" style="margin-top: 2rem;">
-                    <canvas id="commonDiseasesChart"></canvas>
-                </div>
+            <div>
+                <span class="block text-2xl font-black text-slate-950 leading-none">{{ total_diagnoses }}</span>
+                <span class="text-xs text-slate-400 font-semibold block mt-1.5 uppercase tracking-wide">{{ _('Análisis Totales') }}</span>
             </div>
         </div>
 
-        <!-- Fila de Reportes y Exportaciones -->
-        <div class="reports-section">
-            <div class="list-card">
-                <h3 class="list-title"><i class="fas fa-file-csv"></i> {{ _('Reportes y Exportaciones') }}</h3>
-                <div class="report-item">
-                    <div class="report-info">
-                        <h4>{{ _('Exportar Datos de Diagnósticos') }}</h4>
-                        <p>{{ _('Descarga un archivo CSV con todos los registros de diagnósticos. Los datos personales como nombres de usuario y correos han sido eliminados para proteger la privacidad.') }}</p>
-                    </div>
-                    <a href="{{ url_for('export_diagnoses') }}" class="analyze-button">
-                        <i class="fas fa-download"></i> {{ _('Descargar Reporte') }}
-                    </a>
-                </div>
+        <!-- Nuevos Usuarios 7 días -->
+        <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex items-center gap-4 hover:-translate-y-0.5 transition-all duration-200">
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div>
+                <span class="block text-2xl font-black text-slate-950 leading-none">{{ new_users_count }}</span>
+                <span class="text-xs text-slate-400 font-semibold block mt-1.5 uppercase tracking-wide">{{ _('Registro (7 días)') }}</span>
+            </div>
+        </div>
+
+        <!-- Análisis Hoy -->
+        <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex items-center gap-4 hover:-translate-y-0.5 transition-all duration-200">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div>
+                <span class="block text-2xl font-black text-slate-950 leading-none">{{ diagnoses_today_count }}</span>
+                <span class="text-xs text-slate-400 font-semibold block mt-1.5 uppercase tracking-wide">{{ _('Análisis de Hoy') }}</span>
             </div>
         </div>
     </div>
-</section>
 
-<style>
-    .admin-dashboard-section { padding-top: 5rem; }
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
-        margin-bottom: 4rem;
-    }
-    .stat-card {
-        background-color: var(--white);
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow);
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-    }
-    .stat-icon {
-        font-size: 2.5rem;
-        color: var(--green-medium);
-        background-color: var(--green-light);
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .stat-number {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: var(--text-dark);
-    }
-    .stat-label {
-        font-size: 1rem;
-        color: var(--text-light);
-    }
+    <!-- Fila de Listas y Gráficos (2 columnas) -->
+    <div class="grid lg:grid-cols-2 gap-8">
+        
+        <!-- Usuarios Más Activos -->
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col gap-6">
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2 pb-3 border-b border-slate-50">
+                <i class="fas fa-award text-brand-500"></i> {{ _('Usuarios Más Activos') }}
+            </h3>
+            
+            <ul class="flex flex-col gap-2.5">
+                {% for user in most_active_users %}
+                    <li class="flex justify-between items-center py-2 px-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold text-slate-700">
+                        <span>{{ user.username }}</span>
+                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md font-bold">{{ ngettext('%(num)s análisis', '%(num)s análisis', user.diag_count) }}</span>
+                    </li>
+                {% else %}
+                    <li class="text-xs text-slate-400 text-center py-4">{{ _('No hay datos de actividad.') }}</li>
+                {% endfor %}
+            </ul>
+            
+            <!-- Contenedor del gráfico -->
+            <div class="h-64 relative mt-4">
+                <canvas id="activeUsersChart"></canvas>
+            </div>
+        </div>
 
-    .top-lists-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 2rem;
-    }
-    .list-card {
-        background-color: var(--white);
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow);
-    }
-    .list-title {
-        font-size: 1.3rem;
-        color: var(--green-dark);
-        margin: 0 0 1.5rem 0;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    .top-list { list-style: none; padding: 0; margin: 0; }
-    .top-list li {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    .top-list li:last-child { border-bottom: none; }
-    .list-item-name { font-weight: 500; }
-    .list-item-count { font-weight: 700; color: var(--blue-sky); }
-    .empty-list { color: var(--text-light); text-align: center; padding: 1rem; }
-    .chart-container {
-        position: relative;
-        height: 350px;
-    }
+        <!-- Enfermedades Comunes -->
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col gap-6">
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2 pb-3 border-b border-slate-50">
+                <i class="fas fa-viruses text-brand-500"></i> {{ _('Enfermedades Más Comunes') }}
+            </h3>
+            
+            <ul class="flex flex-col gap-2.5">
+                {% for disease in most_common_diseases %}
+                    <li class="flex justify-between items-center py-2 px-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold text-slate-700">
+                        <span class="truncate pr-4" title="{{ disease.disease_name }}">{{ disease.disease_name }}</span>
+                        <span class="px-2 py-0.5 bg-brand-50 text-brand-700 rounded-md font-bold flex-shrink-0">{{ ngettext('%(num)s caso', '%(num)s casos', disease.disease_count) }}</span>
+                    </li>
+                {% else %}
+                    <li class="text-xs text-slate-400 text-center py-4">{{ _('No hay diagnósticos registrados.') }}</li>
+                {% endfor %}
+            </ul>
+            
+            <!-- Contenedor del gráfico -->
+            <div class="h-64 relative mt-4">
+                <canvas id="commonDiseasesChart"></canvas>
+            </div>
+        </div>
 
-    .reports-section {
-        margin-top: 4rem;
-    }
-    .report-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem 0;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-    }
-    .report-info h4 { margin: 0 0 0.5rem 0; font-size: 1.1rem; color: var(--text-dark); }
-    .report-info p { margin: 0; color: var(--text-light); max-width: 600px; }
-    .report-item .analyze-button {
-        flex-shrink: 0;
-    }
-</style>
+    </div>
+
+    <!-- Exportación de Reportes -->
+    <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="flex-1 flex flex-col gap-2">
+            <h3 class="text-base font-extrabold text-slate-950 flex items-center gap-2"><i class="fas fa-file-csv text-brand-500"></i> {{ _('Exportar Datos de Diagnósticos') }}</h3>
+            <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                {{ _('Descarga un archivo en formato CSV conteniendo la información de todos los diagnósticos realizados. Los campos personales del usuario se anonimizan automáticamente para garantizar políticas de privacidad.') }}
+            </p>
+        </div>
+        <a href="{{ url_for('export_diagnoses') }}" class="w-full sm:w-auto px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand-500/10 text-xs flex items-center justify-center gap-2 flex-shrink-0">
+            <i class="fas fa-download"></i> {{ _('Descargar CSV') }}
+        </a>
+    </div>
+
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    
     // --- Gráfico de Enfermedades Comunes (Barras Verticales) ---
     const diseasesCtx = document.getElementById('commonDiseasesChart');
     if (diseasesCtx) {
@@ -205,20 +142,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     label: 'Nº de Casos',
                     data: {{ disease_data|tojson }},
                     backgroundColor: [
-                        'rgba(229, 62, 62, 0.6)',
-                        'rgba(221, 107, 32, 0.6)',
-                        'rgba(214, 158, 46, 0.6)',
-                        'rgba(49, 130, 206, 0.6)',
-                        'rgba(47, 133, 90, 0.6)'
+                        'rgba(239, 68, 68, 0.75)',
+                        'rgba(249, 115, 22, 0.75)',
+                        'rgba(234, 179, 8, 0.75)',
+                        'rgba(14, 165, 233, 0.75)',
+                        'rgba(34, 197, 94, 0.75)'
                     ],
                     borderColor: [
-                        'rgba(229, 62, 62, 1)',
-                        'rgba(221, 107, 32, 1)',
-                        'rgba(214, 158, 46, 1)',
-                        'rgba(49, 130, 206, 1)',
-                        'rgba(47, 133, 90, 1)'
+                        '#ef4444',
+                        '#f97316',
+                        '#eab308',
+                        '#0ea5e9',
+                        '#22c55e'
                     ],
-                    borderWidth: 1
+                    borderWidth: 1.5,
+                    borderRadius: 8
                 }]
             },
             options: {
@@ -227,15 +165,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
+                        grid: { color: '#f1f5f9' },
+                        ticks: { stepSize: 1, font: { family: 'Plus Jakarta Sans', size: 10 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Plus Jakarta Sans', size: 10 } }
                     }
                 },
                 plugins: {
-                    legend: {
-                        display: false
-                    }
+                    legend: { display: false }
                 }
             }
         });
@@ -251,9 +190,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 datasets: [{
                     label: 'Nº de Análisis',
                     data: {{ user_data|tojson }},
-                    backgroundColor: 'rgba(72, 187, 120, 0.6)',
-                    borderColor: 'rgba(72, 187, 120, 1)',
-                    borderWidth: 1
+                    backgroundColor: 'rgba(76, 175, 80, 0.75)',
+                    borderColor: '#2f622d',
+                    borderWidth: 1.5,
+                    borderRadius: 8
                 }]
             },
             options: {
@@ -263,15 +203,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 scales: {
                     x: {
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
+                        grid: { color: '#f1f5f9' },
+                        ticks: { stepSize: 1, font: { family: 'Plus Jakarta Sans', size: 10 } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Plus Jakarta Sans', size: 10 } }
                     }
                 },
                 plugins: {
-                    legend: {
-                        display: false
-                    }
+                    legend: { display: false }
                 }
             }
         });
