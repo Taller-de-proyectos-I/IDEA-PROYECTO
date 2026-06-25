@@ -5,9 +5,34 @@
 <div class="max-w-6xl mx-auto flex flex-col gap-12 md:gap-16">
     
     <!-- Sección Introducción -->
-    <section class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-10 shadow-premium flex flex-col lg:flex-row gap-8 items-center">
-        <div class="w-full lg:w-1/2 h-64 sm:h-80 rounded-2xl overflow-hidden shadow-sm flex-shrink-0">
-            <img src="https://media.istockphoto.com/id/1469759726/es/foto/robot-y-mano-humana-con-luz-de-flash-con-iconos-de-interfaz-modernos-los-agricultores-analizan.jpg?s=612x612&w=0&k=20&c=zyF55a8nZkRXI3OdjXLlSod92cLs9zuyWMEt_kfBTgY=" alt="Tecnología Agrícola" class="w-full h-full object-cover">
+    <section class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-10 shadow-premium flex flex-col lg:flex-row gap-8 items-center relative overflow-hidden">
+        <!-- SVG decorativo de fondo -->
+        <div class="absolute right-0 top-0 opacity-10 pointer-events-none translate-x-20 -translate-y-20">
+            <svg width="300" height="300" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="40" stroke="#059669" stroke-width="1"/>
+                <circle cx="50" cy="50" r="30" stroke="#059669" stroke-width="0.5"/>
+            </svg>
+        </div>
+
+        <div class="w-full lg:w-1/2 h-64 sm:h-80 rounded-2xl overflow-hidden shadow-sm flex-shrink-0 relative group">
+            <img src="https://media.istockphoto.com/id/1469759726/es/foto/robot-y-mano-humana-con-luz-de-flash-con-iconos-de-interfaz-modernos-los-agricultores-analizan.jpg?s=612x612&w=0&k=20&c=zyF55a8nZkRXI3OdjXLlSod92cLs9zuyWMEt_kfBTgY=" alt="Tecnología Agrícola" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent flex items-end p-6">
+                <!-- Stats en la propia imagen -->
+                <div class="flex gap-6 text-white w-full">
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-black text-emerald-400 tracking-tight stat-number" data-target="90">0</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-300 leading-none">% {{ _('Precisión') }}</span>
+                    </div>
+                    <div class="flex flex-col border-l border-white/20 pl-6">
+                        <span class="text-2xl font-black text-emerald-400 tracking-tight stat-number" data-target="4">0</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-300 leading-none">{{ _('Cultivos') }}</span>
+                    </div>
+                    <div class="flex flex-col border-l border-white/20 pl-6">
+                        <span class="text-2xl font-black text-emerald-400 tracking-tight stat-number" data-target="10">0</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-300 leading-none">{{ _('Afecciones') }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="flex-grow flex flex-col gap-4">
             <span class="text-xs font-bold text-brand-600 uppercase tracking-widest">{{ _('¿Quiénes Somos?') }}</span>
@@ -18,7 +43,7 @@
         </div>
     </section>
 
-    <!-- Propuesta de Valor -->
+    <!-- Propuesta de Valor (Animated Cards) -->
     <section class="flex flex-col gap-8">
         <div class="text-center max-w-2xl mx-auto">
             <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ _('Nuestra Propuesta de Valor') }}</h2>
@@ -27,21 +52,21 @@
 
         <div class="grid sm:grid-cols-3 gap-6">
             <!-- Alta Precisión -->
-            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-200">
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-300 transform translate-y-6 opacity-0 reveal-card">
                 <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl font-bold"><i class="fas fa-crosshairs"></i></div>
                 <h3 class="font-bold text-slate-900 text-base">{{ _('Alta Precisión') }}</h3>
                 <p class="text-xs text-slate-500 leading-relaxed">{{ _('Nuestro modelo de red neuronal convolucional (CNN), entrenado con miles de muestras reales, alcanza una tasa de acierto superior al 90%% para diagnósticos confiables.') }}</p>
             </div>
             
             <!-- Accesibilidad -->
-            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-200">
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-300 transform translate-y-6 opacity-0 reveal-card">
                 <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl font-bold"><i class="fas fa-mobile-alt"></i></div>
                 <h3 class="font-bold text-slate-900 text-base">{{ _('Accesibilidad') }}</h3>
                 <p class="text-xs text-slate-500 leading-relaxed">{{ _('Funciona directamente desde el navegador de cualquier teléfono o tablet con conexión a internet, optimizado para un consumo mínimo de datos en zonas rurales.') }}</p>
             </div>
 
             <!-- Enfoque Local -->
-            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-200">
+            <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-premium flex flex-col gap-3 hover:-translate-y-0.5 transition-all duration-300 transform translate-y-6 opacity-0 reveal-card">
                 <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold"><i class="fas fa-users"></i></div>
                 <h3 class="font-bold text-slate-900 text-base">{{ _('Enfoque Local') }}</h3>
                 <p class="text-xs text-slate-500 leading-relaxed">{{ _('Especializados en cultivos andinos clave (papa, quinua, maíz, tomate). Ofrecemos tratamientos viables tanto orgánicos como químicos disponibles localmente.') }}</p>
@@ -49,59 +74,204 @@
         </div>
     </section>
 
-    <!-- Detalles del Modelo Científico -->
-    <section class="flex flex-col gap-8 mb-4">
+    <!-- Línea de Tiempo del Proyecto (Sleek trajectory) -->
+    <section class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-10 shadow-premium flex flex-col gap-8">
         <div class="text-center max-w-2xl mx-auto">
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ _('El Poder de Nuestro Modelo') }}</h2>
-            <p class="text-sm text-slate-400 mt-2">{{ _('Sustento técnico y métricas de desempeño de la red neuronal convolucional entrenada.') }}</p>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ _('Trayectoria de Desarrollo') }}</h2>
+            <p class="text-sm text-slate-400 mt-2">{{ _('Hitos principales en la creación e implementación de nuestra plataforma de diagnóstico.') }}</p>
         </div>
 
-        <div class="flex flex-col gap-10">
-            <!-- Bloque 1: Precisión -->
-            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col md:flex-row gap-8 items-center">
-                <div class="flex-1 flex flex-col gap-3">
-                    <h3 class="text-lg font-extrabold text-slate-950">{{ _('Sensibilidad y Precisión del 90%%') }}</h3>
-                    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{{ _('La precisión es la métrica clave que define la fiabilidad de nuestro modelo. Un 90%% significa que 9 de cada 10 diagnósticos que proveemos son correctos, dándole al agricultor una alta confianza para tomar acciones rápidas y proteger su cosecha.') }}</p>
-                </div>
-                <div class="w-full md:w-80 h-52 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0">
-                    <img src="{{ url_for('static', filename='img/recall.png') }}" alt="Precisión" class="w-full h-full object-contain bg-slate-50">
-                </div>
+        <div class="relative border-l-2 border-slate-100 ml-4 md:ml-10 flex flex-col gap-8 pb-4">
+            <!-- Hito 1 -->
+            <div class="relative pl-6 md:pl-10 timeline-item transition-all duration-500 transform translate-x-4 opacity-0">
+                <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-500 border-4 border-white shadow-sm ring-4 ring-brand-100"></div>
+                <span class="text-[10px] font-black text-brand-600 uppercase tracking-widest">Q1 2025</span>
+                <h3 class="font-bold text-slate-800 text-sm md:text-base mt-1">{{ _('Investigación y Recolección de Datos') }}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed mt-1">{{ _('Establecimiento de alianzas con agrónomos locales en Cusco para catalogar y recolectar más de 5,000 imágenes sintomáticas reales en cultivos locales.') }}</p>
+            </div>
+            
+            <!-- Hito 2 -->
+            <div class="relative pl-6 md:pl-10 timeline-item transition-all duration-500 transform translate-x-4 opacity-0">
+                <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-500 border-4 border-white shadow-sm ring-4 ring-brand-100"></div>
+                <span class="text-[10px] font-black text-brand-600 uppercase tracking-widest">Q3 2025</span>
+                <h3 class="font-bold text-slate-800 text-sm md:text-base mt-1">{{ _('Entrenamiento de la Red Neuronal (CNN)') }}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed mt-1">{{ _('Desarrollo del modelo clasificador multiclase utilizando MobileNetV3 con aumento de datos para maximizar la sensibilidad fúngica y bacteriana.') }}</p>
             </div>
 
-            <!-- Bloque 2: Curva de Pérdida -->
-            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col md:flex-row-reverse gap-8 items-center">
-                <div class="flex-1 flex flex-col gap-3">
-                    <h3 class="text-lg font-extrabold text-slate-950">{{ _('Curva de Pérdida (Plot the Loss)') }}</h3>
-                    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{{ _('Esta gráfica demuestra que nuestro modelo ha completado su entrenamiento correctamente. La línea de entrenamiento (azul) y la de validación (naranja) convergen y descienden progresivamente, indicando que el modelo no ha memorizado los datos (overfitting), sino que posee una alta capacidad de generalización en nuevas imágenes.') }}</p>
-                </div>
-                <div class="w-full md:w-80 h-52 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0">
-                    <img src="{{ url_for('static', filename='img/plot_the_loss.png') }}" alt="Curva de Pérdida" class="w-full h-full object-contain bg-slate-50">
-                </div>
+            <!-- Hito 3 -->
+            <div class="relative pl-6 md:pl-10 timeline-item transition-all duration-500 transform translate-x-4 opacity-0">
+                <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-500 border-4 border-white shadow-sm ring-4 ring-brand-100"></div>
+                <span class="text-[10px] font-black text-brand-600 uppercase tracking-widest">Q1 2026</span>
+                <h3 class="font-bold text-slate-800 text-sm md:text-base mt-1">{{ _('Lanzamiento PlantAndes e Integración de AndesGPT') }}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed mt-1">{{ _('Despliegue del ecosistema integrado con un chatbot inteligente contextualizado para guiar al agricultor paso a paso en tratamientos orgánicos y alertas epidemiológicas.') }}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detalles del Modelo Científico (Interactive Tabs Panel) -->
+    <section class="flex flex-col gap-8 mb-4">
+        <div class="text-center max-w-2xl mx-auto">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ _('Sustento Técnico del Modelo') }}</h2>
+            <p class="text-sm text-slate-400 mt-2">{{ _('Explora las gráficas de validación y desempeño científico de nuestra red neuronal convolucional (CNN).') }}</p>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col gap-6">
+            <!-- Tabs Menu -->
+            <div class="flex flex-wrap border-b border-slate-100 pb-3 gap-2">
+                <button class="metrics-tab px-4 py-2.5 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm transition-all" data-tab="precision">
+                    {{ _('Precisión & Sensibilidad') }}
+                </button>
+                <button class="metrics-tab px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 rounded-xl transition-all" data-tab="loss">
+                    {{ _('Curva de Pérdida') }}
+                </button>
+                <button class="metrics-tab px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 rounded-xl transition-all" data-tab="roc">
+                    {{ _('Curva ROC') }}
+                </button>
+                <button class="metrics-tab px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 rounded-xl transition-all" data-tab="confusion">
+                    {{ _('Matriz de Confusión') }}
+                </button>
             </div>
 
-            <!-- Bloque 3: ROC -->
-            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col md:flex-row gap-8 items-center">
-                <div class="flex-1 flex flex-col gap-3">
-                    <h3 class="text-lg font-extrabold text-slate-950">{{ _('Curva ROC de Clasificación') }}</h3>
-                    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{{ _('Esta métrica valida el diagnóstico diferencial de la IA. Con un coeficiente AUC promedio de 0.997, demuestra que la red neuronal distingue de manera precisa entre afecciones foliares similares (ej. manchas bacterianas vs fúngicas), minimizando falsos positivos en el campo.') }}</p>
+            <!-- Tab Contents -->
+            <div id="metrics-tab-content">
+                <!-- Tab: Precisión -->
+                <div class="metrics-content flex flex-col md:flex-row gap-8 items-center transition-all duration-300" id="content-precision">
+                    <div class="flex-1 flex flex-col gap-3">
+                        <h3 class="text-lg font-extrabold text-slate-950">{{ _('Sensibilidad y Precisión Superior al 90%%') }}</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
+                            {{ _('La precisión es la métrica clave que define la fiabilidad de nuestro modelo. Un 90%% significa que 9 de cada 10 diagnósticos que proveemos son correctos, dándole al agricultor una alta confianza para tomar acciones rápidas y proteger su cosecha.') }}
+                        </p>
+                    </div>
+                    <div class="w-full md:w-96 h-60 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0 bg-slate-50 flex items-center justify-center">
+                        <img src="{{ url_for('static', filename='img/recall.png') }}" alt="Precisión" class="w-full h-full object-contain p-2">
+                    </div>
                 </div>
-                <div class="w-full md:w-80 h-52 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0">
-                    <img src="{{ url_for('static', filename='img/curva_roc.png') }}" alt="Curva ROC" class="w-full h-full object-contain bg-slate-50">
-                </div>
-            </div>
 
-            <!-- Bloque 4: Matriz de Confusión -->
-            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col md:flex-row-reverse gap-8 items-center">
-                <div class="flex-1 flex flex-col gap-3">
-                    <h3 class="text-lg font-extrabold text-slate-950">{{ _('Matriz de Confusión Multiclase') }}</h3>
-                    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">{{ _('Representación visual de aciertos del modelo por clase. La diagonal principal con tonalidad intensa representa la correlación directa entre la predicción y el diagnóstico agronómico real, confirmando un error mínimo en clases andinas.') }}</p>
+                <!-- Tab: Curva de Pérdida -->
+                <div class="metrics-content hidden flex flex-col md:flex-row gap-8 items-center transition-all duration-300" id="content-loss">
+                    <div class="flex-1 flex flex-col gap-3">
+                        <h3 class="text-lg font-extrabold text-slate-950">{{ _('Curva de Pérdida (Plot the Loss)') }}</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
+                            {{ _('Esta gráfica demuestra que nuestro modelo ha completado su entrenamiento correctamente. La línea de entrenamiento (azul) y la de validación (naranja) convergen y descienden progresivamente, indicando que el modelo no ha memorizado los datos (overfitting), sino que posee una alta capacidad de generalización en nuevas imágenes.') }}
+                        </p>
+                    </div>
+                    <div class="w-full md:w-96 h-60 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0 bg-slate-50 flex items-center justify-center">
+                        <img src="{{ url_for('static', filename='img/plot_the_loss.png') }}" alt="Curva de Pérdida" class="w-full h-full object-contain p-2">
+                    </div>
                 </div>
-                <div class="w-full md:w-80 h-52 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0">
-                    <img src="{{ url_for('static', filename='img/plot_confusion.png') }}" alt="Matriz de Confusión" class="w-full h-full object-contain bg-slate-50">
+
+                <!-- Tab: ROC -->
+                <div class="metrics-content hidden flex flex-col md:flex-row gap-8 items-center transition-all duration-300" id="content-roc">
+                    <div class="flex-1 flex flex-col gap-3">
+                        <h3 class="text-lg font-extrabold text-slate-950">{{ _('Curva ROC de Clasificación') }}</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
+                            {{ _('Esta métrica valida el diagnóstico diferencial de la IA. Con un coeficiente AUC promedio de 0.997, demuestra que la red neuronal distingue de manera precisa entre afecciones foliares similares (ej. manchas bacterianas vs fúngicas), minimizando falsos positivos en el campo.') }}
+                        </p>
+                    </div>
+                    <div class="w-full md:w-96 h-60 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0 bg-slate-50 flex items-center justify-center">
+                        <img src="{{ url_for('static', filename='img/curva_roc.png') }}" alt="Curva ROC" class="w-full h-full object-contain p-2">
+                    </div>
+                </div>
+
+                <!-- Tab: Matriz de Confusión -->
+                <div class="metrics-content hidden flex flex-col md:flex-row gap-8 items-center transition-all duration-300" id="content-confusion">
+                    <div class="flex-1 flex flex-col gap-3">
+                        <h3 class="text-lg font-extrabold text-slate-950">{{ _('Matriz de Confusión Multiclase') }}</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
+                            {{ _('Representación visual de aciertos del modelo por clase. La diagonal principal con tonalidad intensa representa la correlación directa entre la predicción y el diagnóstico agronómico real, confirmando un error mínimo en clases andinas.') }}
+                        </p>
+                    </div>
+                    <div class="w-full md:w-96 h-60 rounded-2xl overflow-hidden border border-slate-50 shadow-sm flex-shrink-0 bg-slate-50 flex items-center justify-center">
+                        <img src="{{ url_for('static', filename='img/plot_confusion.png') }}" alt="Matriz de Confusión" class="w-full h-full object-contain p-2">
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statNumbers = document.querySelectorAll('.stat-number');
+        const metricsTabs = document.querySelectorAll('.metrics-tab');
+        const metricsContents = document.querySelectorAll('.metrics-content');
+        const revealCards = document.querySelectorAll('.reveal-card');
+        const timelineItems = document.querySelectorAll('.timeline-item');
+
+        // 1. Animaciones de contadores hero
+        function animateNumbers() {
+            statNumbers.forEach(num => {
+                const target = parseInt(num.getAttribute('data-target'), 10);
+                let current = 0;
+                const duration = 1200; // 1.2s
+                const stepTime = Math.max(Math.floor(duration / target), 20);
+                const timer = setInterval(() => {
+                    current++;
+                    num.textContent = current;
+                    if (current >= target) {
+                        num.textContent = target;
+                        clearInterval(timer);
+                    }
+                }, stepTime);
+            });
+        }
+
+        // Trigger inicial para los números del hero
+        setTimeout(animateNumbers, 200);
+
+        // 2. Tabs interactivos para métricas
+        metricsTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Estilos del tab activo
+                metricsTabs.forEach(t => {
+                    t.classList.remove('bg-brand-600', 'text-white', 'shadow-sm');
+                    t.classList.add('text-slate-600', 'hover:text-brand-600', 'bg-slate-50', 'hover:bg-brand-50');
+                    t.classList.remove('font-bold');
+                    t.classList.add('font-semibold');
+                });
+
+                this.classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+                this.classList.remove('text-slate-600', 'hover:text-brand-600', 'bg-slate-50', 'hover:bg-brand-50');
+                this.classList.add('font-bold');
+                this.classList.remove('font-semibold');
+
+                // Mostrar contenido respectivo
+                const activeTab = this.getAttribute('data-tab');
+                metricsContents.forEach(content => {
+                    if (content.id === `content-${activeTab}`) {
+                        content.classList.remove('hidden');
+                        setTimeout(() => {
+                            content.style.opacity = '1';
+                        }, 50);
+                    } else {
+                        content.classList.add('hidden');
+                        content.style.opacity = '0';
+                    }
+                });
+            });
+        });
+
+        // 3. Scroll Reveal para Propuesta de Valor y Timeline
+        const observerOptions = {
+            threshold: 0.15,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.remove('opacity-0', 'translate-y-6', 'translate-x-4');
+                    entry.target.classList.add('opacity-100', 'translate-y-0', 'translate-x-0');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        revealCards.forEach(card => revealObserver.observe(card));
+        timelineItems.forEach(item => revealObserver.observe(item));
+    });
+</script>
 {% endblock %}

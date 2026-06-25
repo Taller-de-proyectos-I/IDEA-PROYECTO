@@ -28,31 +28,50 @@
     <div class="grid md:grid-cols-5 gap-8">
         
         <!-- Formulario (Izquierda) -->
-        <div class="md:col-span-3 bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium">
-            <form action="{{ url_for('contact') }}" method="POST" class="flex flex-col gap-4">
-                <div class="flex flex-col gap-1.5">
+        <div class="md:col-span-3 bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium transform transition-all duration-500 translate-y-6 opacity-0" id="contact-form-container">
+            <form action="{{ url_for('contact') }}" method="POST" id="contact-form" class="flex flex-col gap-4">
+                
+                <div class="flex flex-col gap-1.5 relative">
                     <label for="name" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Nombre Completo') }}</label>
-                    <input type="text" id="name" name="name" required placeholder="Juan Pérez" class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20">
+                    <div class="relative">
+                        <input type="text" id="name" name="name" required placeholder="Juan Pérez" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20 pr-10 transition-all">
+                        <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400 hidden" id="name-validation-icon">
+                            <i class="fas fa-check-circle text-emerald-500"></i>
+                        </span>
+                    </div>
                 </div>
 
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1.5 relative">
                     <label for="email" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Correo Electrónico') }}</label>
-                    <input type="email" id="email" name="email" required placeholder="juan@correo.com" class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20">
+                    <div class="relative">
+                        <input type="email" id="email" name="email" required placeholder="juan@correo.com" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20 pr-10 transition-all">
+                        <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400 hidden" id="email-validation-icon">
+                            <i class="fas fa-check-circle text-emerald-500"></i>
+                        </span>
+                    </div>
                 </div>
 
-                <div class="flex flex-col gap-1.5">
-                    <label for="message" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Mensaje') }}</label>
-                    <textarea id="message" name="message" rows="5" required placeholder="Escribe tu mensaje aquí detallando tu consulta..." class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20"></textarea>
+                <div class="flex flex-col gap-1.5 relative">
+                    <div class="flex items-center justify-between">
+                        <label for="message" class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ _('Mensaje') }}</label>
+                        <span class="text-[10px] text-slate-400 font-semibold" id="char-counter">0 / 500</span>
+                    </div>
+                    <textarea id="message" name="message" rows="5" required max="500" placeholder="Escribe tu mensaje aquí detallando tu consulta..." class="px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/20 transition-all"></textarea>
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand-500/10 text-sm flex items-center justify-center gap-2 mt-2">
-                    <i class="fas fa-paper-plane text-xs"></i> {{ _('Enviar Mensaje') }}
+                <button type="submit" id="submit-btn" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-brand-500/10 text-sm flex items-center justify-center gap-2 mt-2">
+                    <span id="btn-text" class="flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i> {{ _('Enviar Mensaje') }}
+                    </span>
+                    <span id="btn-spinner" class="hidden items-center justify-center gap-2">
+                        <i class="fas fa-spinner animate-spin text-sm"></i> {{ _('Enviando...') }}
+                    </span>
                 </button>
             </form>
         </div>
 
         <!-- Información Lateral (Derecha) -->
-        <div class="md:col-span-2 bg-gradient-to-tr from-brand-900 to-brand-800 text-white rounded-3xl p-8 flex flex-col gap-8 shadow-xl">
+        <div class="md:col-span-2 bg-gradient-to-tr from-brand-900 to-brand-800 text-white rounded-3xl p-8 flex flex-col gap-8 shadow-xl transform transition-all duration-500 translate-y-6 opacity-0" id="contact-info-container">
             <div class="flex flex-col gap-3">
                 <h3 class="text-lg font-extrabold tracking-tight">{{ _('Contacto Directo') }}</h3>
                 <p class="text-xs text-brand-200 leading-relaxed font-medium">
@@ -90,5 +109,222 @@
 
     </div>
 
+    <!-- Sección de FAQs y Mapa de la Oficina -->
+    <div class="grid md:grid-cols-5 gap-8 mt-6">
+        <!-- FAQs (Izquierda) -->
+        <div class="md:col-span-3 bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-premium flex flex-col gap-6 transform transition-all duration-500 translate-y-6 opacity-0 faq-container">
+            <h3 class="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                <i class="fas fa-question-circle text-brand-600"></i>
+                {{ _('Preguntas Frecuentes') }}
+            </h3>
+            
+            <div class="flex flex-col gap-3">
+                <!-- FAQ 1 -->
+                <div class="faq-item border border-slate-100 rounded-2xl overflow-hidden transition-all duration-300">
+                    <button class="faq-toggle w-full px-5 py-4 text-left font-bold text-slate-800 text-xs sm:text-sm flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <span>{{ _('¿Cómo funciona el diagnóstico por imagen?') }}</span>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out bg-slate-50/50">
+                        <p class="p-5 text-xs text-slate-600 leading-relaxed">
+                            {{ _('Utilizamos una red neuronal convolucional entrenada para clasificar patrones visuales en las hojas. Solo debes subir una foto nítida de la hoja enferma enfocando los síntomas y nuestro modelo te dará una predicción en segundos junto con las recomendaciones de tratamiento.') }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ 2 -->
+                <div class="faq-item border border-slate-100 rounded-2xl overflow-hidden transition-all duration-300">
+                    <button class="faq-toggle w-full px-5 py-4 text-left font-bold text-slate-800 text-xs sm:text-sm flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <span>{{ _('¿El diagnóstico y la consulta son gratuitos?') }}</span>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out bg-slate-50/50">
+                        <p class="p-5 text-xs text-slate-600 leading-relaxed">
+                            {{ _('Sí, todos nuestros servicios básicos de diagnóstico, consulta en la biblioteca y alertas epidemiológicas son 100%% gratuitos para apoyar a la comunidad de agricultores.') }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ 3 -->
+                <div class="faq-item border border-slate-100 rounded-2xl overflow-hidden transition-all duration-300">
+                    <button class="faq-toggle w-full px-5 py-4 text-left font-bold text-slate-800 text-xs sm:text-sm flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <span>{{ _('¿Qué hago si mi diagnóstico no parece correcto?') }}</span>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out bg-slate-50/50">
+                        <p class="p-5 text-xs text-slate-600 leading-relaxed">
+                            {{ _('Aunque nuestro modelo tiene más de 90%% de precisión, la iluminación y la calidad de la foto pueden afectar el resultado. Te aconsejamos usar el chat interactivo AndesGPT para complementar tu diagnóstico con preguntas sobre los síntomas visuales o contactarnos directamente adjuntando la muestra.') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mapa de Ubicación (Derecha) -->
+        <div class="md:col-span-2 bg-white rounded-3xl border border-slate-100 p-6 shadow-premium flex flex-col gap-4 transform transition-all duration-500 translate-y-6 opacity-0 map-container">
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-800 flex items-center gap-1.5 border-b border-slate-50 pb-2">
+                <i class="fas fa-map-marked-alt text-brand-600"></i>
+                {{ _('Nuestra Oficina Principal') }}
+            </h3>
+            
+            <div class="w-full h-56 rounded-2xl overflow-hidden border border-slate-100 relative bg-slate-100 shadow-inner">
+                <iframe 
+                    width="100%" 
+                    height="100%" 
+                    frameborder="0" 
+                    scrolling="no" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=-72.05%2C-13.60%2C-71.85%2C-13.45&amp;layer=mapnik&amp;marker=-13.52264%2C-71.96734" 
+                    style="border: 0; filter: grayscale(0.1) contrast(1.05);"
+                    class="absolute inset-0">
+                </iframe>
+            </div>
+            
+            <p class="text-slate-500 text-[11px] leading-relaxed font-medium">
+                <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                {{ _('Visítanos en Cusco, Perú. Ofrecemos talleres gratuitos sobre manejo fitosanitario y soporte técnico presencial para comunidades locales.') }}
+            </p>
+        </div>
+    </div>
+
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const formContainer = document.getElementById('contact-form-container');
+        const infoContainer = document.getElementById('contact-info-container');
+        const faqContainer = document.querySelector('.faq-container');
+        const mapContainer = document.querySelector('.map-container');
+        
+        const form = document.getElementById('contact-form');
+        const nameInput = document.getElementById('name');
+        const nameIcon = document.getElementById('name-validation-icon');
+        const emailInput = document.getElementById('email');
+        const emailIcon = document.getElementById('email-validation-icon');
+        const messageInput = document.getElementById('message');
+        const charCounter = document.getElementById('char-counter');
+        
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+
+        // 1. Animaciones de entrada diferida (Fade-in + Slide-up)
+        setTimeout(() => {
+            formContainer.classList.remove('opacity-0', 'translate-y-6');
+            formContainer.classList.add('opacity-100', 'translate-y-0');
+        }, 100);
+
+        setTimeout(() => {
+            infoContainer.classList.remove('opacity-0', 'translate-y-6');
+            infoContainer.classList.add('opacity-100', 'translate-y-0');
+        }, 250);
+
+        const scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.remove('opacity-0', 'translate-y-6');
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    scrollObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        scrollObserver.observe(faqContainer);
+        scrollObserver.observe(mapContainer);
+
+        // 2. Validación de Nombre en Tiempo Real
+        nameInput.addEventListener('input', function() {
+            if (this.value.trim().length >= 3) {
+                this.classList.remove('border-red-400', 'focus:ring-red-500/20');
+                this.classList.add('border-emerald-400', 'focus:ring-emerald-500/20');
+                nameIcon.classList.remove('hidden');
+                nameIcon.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i>';
+            } else {
+                this.classList.remove('border-emerald-400', 'focus:ring-emerald-500/20');
+                if (this.value.trim().length > 0) {
+                    this.classList.add('border-red-400', 'focus:ring-red-500/20');
+                    nameIcon.classList.remove('hidden');
+                    nameIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
+                } else {
+                    this.classList.remove('border-red-400', 'focus:ring-red-500/20');
+                    nameIcon.classList.add('hidden');
+                }
+            }
+        });
+
+        // 3. Validación de Email en Tiempo Real
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        emailInput.addEventListener('input', function() {
+            if (emailRegex.test(this.value.trim())) {
+                this.classList.remove('border-red-400', 'focus:ring-red-500/20');
+                this.classList.add('border-emerald-400', 'focus:ring-emerald-500/20');
+                emailIcon.classList.remove('hidden');
+                emailIcon.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i>';
+            } else {
+                this.classList.remove('border-emerald-400', 'focus:ring-emerald-500/20');
+                if (this.value.trim().length > 0) {
+                    this.classList.add('border-red-400', 'focus:ring-red-500/20');
+                    emailIcon.classList.remove('hidden');
+                    emailIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
+                } else {
+                    this.classList.remove('border-red-400', 'focus:ring-red-500/20');
+                    emailIcon.classList.add('hidden');
+                }
+            }
+        });
+
+        // 4. Contador de Caracteres en Textarea
+        messageInput.addEventListener('input', function() {
+            const count = this.value.length;
+            charCounter.textContent = `${count} / 500`;
+            if (count >= 480) {
+                charCounter.className = "text-[10px] text-red-500 font-bold";
+            } else {
+                charCounter.className = "text-[10px] text-slate-400 font-semibold";
+            }
+        });
+
+        // 5. Estado de carga en Submit
+        form.addEventListener('submit', function(e) {
+            submitBtn.disabled = true;
+            btnText.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+            btnSpinner.classList.add('flex');
+        });
+
+        // 6. Accordion de FAQs
+        const faqToggles = document.querySelectorAll('.faq-toggle');
+        faqToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const item = this.closest('.faq-item');
+                const content = item.querySelector('.faq-content');
+                const icon = this.querySelector('i');
+
+                const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+
+                // Cerrar otros
+                document.querySelectorAll('.faq-item').forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.querySelector('.faq-content').style.maxHeight = '0px';
+                        otherItem.querySelector('.faq-toggle i').style.transform = 'rotate(0deg)';
+                        otherItem.classList.remove('border-brand-100');
+                    }
+                });
+
+                if (isOpen) {
+                    content.style.maxHeight = '0px';
+                    icon.style.transform = 'rotate(0deg)';
+                    item.classList.remove('border-brand-100');
+                } else {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    icon.style.transform = 'rotate(180deg)';
+                    item.classList.add('border-brand-100');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

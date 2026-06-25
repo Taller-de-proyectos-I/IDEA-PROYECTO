@@ -6,72 +6,330 @@
     
     <!-- Encabezado -->
     <div class="text-center max-w-2xl mx-auto">
-        <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{{ _('Vigilancia Sanitaria de Cultivos') }}</h1>
+        <span class="px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold uppercase tracking-wider">{{ _('Vigilancia Epidemiológica') }}</span>
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mt-2">{{ _('Centro de Control y Alertas Sanitarias') }}</h1>
         <p class="text-sm text-slate-400 mt-2">
-            {{ _('Consulta las zonas geográficas con una recurrencia notable de enfermedades en los últimos 14 días. Mantente informado para proteger tu parcela.') }}
+            {{ _('Consulta las zonas geográficas con recurrencia de afecciones en los últimos 14 días. Mantente informado y previene la propagación.') }}
         </p>
     </div>
 
-    <!-- Rejilla de Alertas -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% if alerts %}
-            {% for alert in alerts %}
-                {% set is_healthy = 'sano' in alert.disease|lower or 'saludable' in alert.disease|lower %}
-                <div class="bg-white rounded-3xl border border-slate-100 shadow-premium overflow-hidden flex flex-col hover:-translate-y-0.5 transition-all duration-200">
+    <!-- Cómputo de Estadísticas -->
+    {% set stats = namespace(total=alerts|length, high=0, healthy=0, locations=[]) %}
+    {% for alert in alerts %}
+        {% set is_healthy = 'sano' in alert.disease|lower or 'saludable' in alert.disease|lower or 'healthy' in alert.disease|lower %}
+        {% if is_healthy %}
+            {% set stats.healthy = stats.healthy + 1 %}
+        {% elif alert.risk|lower == 'alto' %}
+            {% set stats.high = stats.high + 1 %}
+        {% endif %}
+        {% if alert.location not in stats.locations %}
+            {% set stats.locations = stats.locations + [alert.location] %}
+        {% endif %}
+    {% endfor %}
+
+    <!-- Tarjetas de Estadísticas en el Hero (Contadores Animados) -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <!-- Stat 1: Total Alertas -->
+        <div class="bg-white border border-slate-100 p-5 rounded-3xl shadow-premium flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl flex-shrink-0">
+                <i class="fas fa-shield-virus"></i>
+            </div>
+            <div>
+                <span class="text-2xl font-black text-slate-800 tracking-tight stat-number" data-target="{{ stats.total }}">0</span>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wide">{{ _('Reportes Totales') }}</span>
+            </div>
+        </div>
+
+        <!-- Stat 2: Brotes Críticos -->
+        <div class="bg-white border border-slate-100 p-5 rounded-3xl shadow-premium flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-xl flex-shrink-0">
+                <i class="fas fa-biohazard"></i>
+            </div>
+            <div>
+                <span class="text-2xl font-black text-slate-800 tracking-tight stat-number" data-target="{{ stats.high }}">0</span>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wide">{{ _('Brotes de Riesgo Alto') }}</span>
+            </div>
+        </div>
+
+        <!-- Stat 3: Zonas Afectadas -->
+        <div class="bg-white border border-slate-100 p-5 rounded-3xl shadow-premium flex items-center gap-4 col-span-2 md:col-span-1">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl flex-shrink-0">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <div>
+                <span class="text-2xl font-black text-slate-800 tracking-tight stat-number" data-target="{{ stats.locations|length }}">0</span>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wide">{{ _('Zonas Afectadas') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Filtros y Última Actualización -->
+    <div class="bg-white border border-slate-100 rounded-3xl p-5 shadow-premium flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <!-- Filtros -->
+        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <button class="filter-tab px-4 py-2 text-xs font-bold rounded-xl bg-brand-600 text-white shadow-sm" data-filter="all">
+                {{ _('Todos') }}
+            </button>
+            <button class="filter-tab px-4 py-2 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 rounded-xl transition-all" data-filter="alto">
+                {{ _('Riesgo Alto') }}
+            </button>
+            <button class="filter-tab px-4 py-2 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 rounded-xl transition-all" data-filter="moderado">
+                {{ _('Riesgo Moderado') }}
+            </button>
+            <button class="filter-tab px-4 py-2 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 rounded-xl transition-all" data-filter="bajo">
+                {{ _('Riesgo Bajo') }}
+            </button>
+            <button class="filter-tab px-4 py-2 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 rounded-xl transition-all" data-filter="saludable">
+                {{ _('Saludables') }}
+            </button>
+        </div>
+        
+        <!-- Timestamp de actualización -->
+        <div class="text-right text-slate-400 text-xs font-medium flex items-center gap-1.5 flex-shrink-0">
+            <i class="far fa-clock text-slate-400"></i>
+            <span>{{ _('Actualizado:') }} <span id="update-timestamp" class="font-bold text-slate-600">--:--:--</span></span>
+        </div>
+    </div>
+
+    <!-- Layout de Dos Columnas: Alertas + Mapa -->
+    <div class="grid lg:grid-cols-5 gap-6 items-start">
+        
+        <!-- Columna Izquierda: Lista de Alertas (3/5 cols) -->
+        <div class="lg:col-span-3 flex flex-col gap-4" id="alerts-list">
+            {% if alerts %}
+                {% for alert in alerts %}
+                    {% set is_healthy = 'sano' in alert.disease|lower or 'saludable' in alert.disease|lower or 'healthy' in alert.disease|lower %}
+                    {% set risk_level = alert.risk|lower %}
                     
-                    <!-- Barra de Nivel de Riesgo -->
-                    <div class="px-5 py-3.5 text-white font-bold text-sm tracking-wide flex items-center gap-2
-                        {% if is_healthy %}
-                            bg-emerald-600
-                        {% elif alert.risk|lower == 'alto' %}
-                            bg-red-600
-                        {% elif alert.risk|lower == 'moderado' %}
-                            bg-amber-600
-                        {% else %}
-                            bg-yellow-500
-                        {% endif %}">
-                        {% if is_healthy %}
-                            <i class="fas fa-shield-halved text-base"></i>
-                            <span>{{ _('Tendencia Saludable') }}</span>
-                        {% else %}
-                            <i class="fas fa-triangle-exclamation text-base animate-pulse"></i>
-                            <span>{{ _('Riesgo') }} {{ alert.risk }}</span>
-                        {% endif %}
-                    </div>
-
-                    <!-- Cuerpo de la Alerta -->
-                    <div class="p-5 flex flex-col gap-3 flex-grow">
-                        <h3 class="font-extrabold text-slate-950 text-base sm:text-lg leading-snug {% if is_healthy %}text-emerald-700{% endif %}">
-                            {{ alert.disease }}
-                        </h3>
+                    <div class="alert-card bg-white rounded-3xl border border-slate-100 shadow-premium overflow-hidden flex flex-col transition-all duration-300 transform translate-y-4 opacity-0"
+                         data-risk="{% if is_healthy %}saludable{% else %}{{ risk_level }}{% endif %}"
+                         data-count="{{ alert.count }}">
                         
-                        <div class="flex items-center gap-2 text-slate-400 text-xs font-semibold">
-                            <i class="fas fa-map-marker-alt text-brand-500"></i>
-                            <span>{{ alert.location }}</span>
-                        </div>
-
-                        <div class="text-xs font-bold mt-2 pt-3 border-t border-slate-50 text-slate-700">
+                        <!-- Barra de Nivel de Riesgo -->
+                        <div class="px-5 py-3.5 text-white font-bold text-xs sm:text-sm tracking-wide flex items-center justify-between
                             {% if is_healthy %}
-                                <span class="text-lg font-black text-emerald-600 mr-1">{{ alert.count }}</span> {{ _('diagnósticos saludables recientes') }}
+                                bg-emerald-600
+                            {% elif risk_level == 'alto' %}
+                                bg-red-600
+                            {% elif risk_level == 'moderado' %}
+                                bg-amber-600
                             {% else %}
-                                <span class="text-lg font-black text-red-600 mr-1">{{ alert.count }}</span> {{ _('casos detectados recientemente') }}
-                            {% endif %}
+                                bg-yellow-500
+                            {% endif %}">
+                            <div class="flex items-center gap-2">
+                                {% if is_healthy %}
+                                    <i class="fas fa-shield-halved text-base"></i>
+                                    <span>{{ _('Tendencia Saludable') }}</span>
+                                {% else %}
+                                    <i class="fas fa-triangle-exclamation text-base animate-pulse"></i>
+                                    <span>{{ _('Riesgo') }} {{ alert.risk }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full uppercase">{{ alert.location.split(',')[0] }}</span>
                         </div>
-                    </div>
 
+                        <!-- Cuerpo de la Alerta -->
+                        <div class="p-5 flex flex-col gap-3">
+                            <div class="flex items-start justify-between gap-4">
+                                <h3 class="font-extrabold text-slate-950 text-base sm:text-lg leading-snug {% if is_healthy %}text-emerald-700{% endif %}">
+                                    {{ alert.disease }}
+                                </h3>
+                            </div>
+                            
+                            <div class="flex items-center gap-2 text-slate-400 text-xs font-semibold">
+                                <i class="fas fa-map-marker-alt text-brand-500"></i>
+                                <span>{{ alert.location }}</span>
+                            </div>
+
+                            <!-- Barra de Progreso de Intensidad/Riesgo -->
+                            <div class="mt-2 flex flex-col gap-1">
+                                <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                    <span>{{ _('Intensidad del Brote') }}</span>
+                                    <span>{{ alert.count }} {{ _('casos') }}</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    {% set percentage = alert.count * 10 if alert.count * 10 < 100 else 100 %}
+                                    <div class="h-full rounded-full transition-all duration-1000 ease-out progress-bar" 
+                                         data-width="{{ percentage }}%"
+                                         style="width: 0%;
+                                            {% if is_healthy %}
+                                                background-color: #059669;
+                                            {% elif risk_level == 'alto' %}
+                                                background-color: #dc2626;
+                                            {% elif risk_level == 'moderado' %}
+                                                background-color: #d97706;
+                                            {% else %}
+                                                background-color: #eab308;
+                                            {% endif %}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                {% endfor %}
+            {% else %}
+                <!-- Tarjeta cuando no hay alertas -->
+                <div class="col-span-full py-16 bg-emerald-50/30 border-2 border-dashed border-emerald-200 rounded-3xl text-center text-emerald-800 flex flex-col items-center justify-center gap-3 max-w-md mx-auto">
+                    <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shadow-sm"><i class="fas fa-shield-heart"></i></div>
+                    <div class="px-6">
+                        <h3 class="font-extrabold text-base">{{ _('No hay alertas activas') }}</h3>
+                        <p class="text-xs text-emerald-600/80 mt-1 leading-relaxed">{{ _('No se han detectado brotes significativos de enfermedades en ninguna zona recientemente. ¡Excelentes noticias para los cultivos!') }}</p>
+                    </div>
                 </div>
-            {% endfor %}
-        {% else %}
-            <!-- Tarjeta cuando no hay alertas -->
-            <div class="col-span-full py-16 bg-emerald-50/30 border-2 border-dashed border-emerald-200 rounded-3xl text-center text-emerald-800 flex flex-col items-center justify-center gap-3 max-w-md mx-auto">
-                <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shadow-sm"><i class="fas fa-shield-heart"></i></div>
-                <div class="px-6">
-                    <h3 class="font-extrabold text-base">{{ _('No hay alertas activas') }}</h3>
-                    <p class="text-xs text-emerald-600/80 mt-1 leading-relaxed">{{ _('No se han detectado brotes significativos de enfermedades en ninguna zona recientemente. ¡Excelentes noticias para los cultivos!') }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Columna Derecha: Mapa de Monitoreo (2/5 cols) -->
+        <div class="lg:col-span-2 lg:sticky lg:top-24 flex flex-col gap-4">
+            <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-premium flex flex-col gap-4">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-50">
+                    <h3 class="font-extrabold text-slate-800 text-sm sm:text-base flex items-center gap-1.5">
+                        <i class="fas fa-globe-americas text-brand-600"></i>
+                        {{ _('Mapa de Calor Sanitario') }}
+                    </h3>
+                    <span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping"></span>
+                        {{ _('En Vivo') }}
+                    </span>
+                </div>
+                
+                <!-- Iframe de OpenStreetMap con overlay estilizado -->
+                <div class="relative w-full h-80 rounded-2xl overflow-hidden border border-slate-100 shadow-inner bg-slate-100">
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        scrolling="no" 
+                        marginheight="0" 
+                        marginwidth="0" 
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=-72.05%2C-13.60%2C-71.85%2C-13.45&amp;layer=mapnik&amp;marker=-13.52264%2C-71.96734" 
+                        style="border: 0; filter: grayscale(0.2) contrast(1.1);"
+                        class="absolute inset-0">
+                    </iframe>
+                </div>
+
+                <div class="text-[11px] text-slate-500 leading-relaxed font-medium">
+                    <p><i class="fas fa-info-circle text-brand-500 mr-1"></i> {{ _('El mapa interactivo muestra el centro de monitoreo epidemiológico en Cusco. Los marcadores corresponden a alertas sanitarias activas reportadas en las últimas 48 horas.') }}</p>
                 </div>
             </div>
-        {% endif %}
+        </div>
+
     </div>
 
 </div>
+
+<style>
+    /* Efecto de entrada animada */
+    .alert-card.is-visible {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        const cards = document.querySelectorAll('.alert-card');
+        const progressBars = document.querySelectorAll('.progress-bar');
+        const statNumbers = document.querySelectorAll('.stat-number');
+        const updateTimestamp = document.getElementById('update-timestamp');
+
+        // 1. Animaciones de contadores hero
+        function animateNumbers() {
+            statNumbers.forEach(num => {
+                const target = parseInt(num.getAttribute('data-target'), 10);
+                if (target === 0) {
+                    num.textContent = "0";
+                    return;
+                }
+                let current = 0;
+                const duration = 1000; // 1s
+                const stepTime = Math.max(Math.floor(duration / target), 15);
+                const timer = setInterval(() => {
+                    current++;
+                    num.textContent = current;
+                    if (current >= target) {
+                        num.textContent = target;
+                        clearInterval(timer);
+                    }
+                }, stepTime);
+            });
+        }
+        animateNumbers();
+
+        // 2. Timestamp de última actualización (hora actual en tiempo real)
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            updateTimestamp.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        updateTime();
+        // Opcional: Actualizar hora cada segundo
+        setInterval(updateTime, 1000);
+
+        // 3. Animaciones de entrada diferida (staggered) y barras de progreso
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    // Animación de entrada diferida
+                    setTimeout(() => {
+                        entry.target.classList.add('is-visible');
+                        
+                        // Activar la barra de progreso dentro del card
+                        const bar = entry.target.querySelector('.progress-bar');
+                        if (bar) {
+                            bar.style.width = bar.getAttribute('data-width');
+                        }
+                    }, index * 100);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        cards.forEach((card) => {
+            observer.observe(card);
+        });
+
+        // 4. Filtrado interactivo
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Actualizar estilos activos de tabs
+                filterTabs.forEach(t => {
+                    t.classList.remove('bg-brand-600', 'text-white', 'shadow-sm');
+                    t.classList.add('text-slate-600', 'hover:text-brand-600', 'bg-slate-50', 'hover:bg-brand-50');
+                    t.classList.remove('font-bold');
+                    t.classList.add('font-semibold');
+                });
+
+                this.classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+                this.classList.remove('text-slate-600', 'hover:text-brand-600', 'bg-slate-50', 'hover:bg-brand-50');
+                this.classList.add('font-bold');
+                this.classList.remove('font-semibold');
+
+                const filter = this.getAttribute('data-filter');
+
+                cards.forEach(card => {
+                    const risk = card.getAttribute('data-risk');
+                    
+                    if (filter === 'all' || risk === filter) {
+                        card.style.display = '';
+                        setTimeout(() => {
+                            card.classList.add('is-visible');
+                            const bar = card.querySelector('.progress-bar');
+                            if (bar) bar.style.width = bar.getAttribute('data-width');
+                        }, 50);
+                    } else {
+                        card.style.display = 'none';
+                        card.classList.remove('is-visible');
+                    }
+                });
+            });
+        });
+    });
+</script>
 {% endblock %}
